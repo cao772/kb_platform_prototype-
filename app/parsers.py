@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass, field
+from html.parser import HTMLParser
 from pathlib import Path
 
 from app.docx_parser import parse_docx
@@ -34,6 +36,17 @@ class StandardDocument:
         return "\n".join(block.text for block in self.blocks if block.text.strip())
 
 
+class _HTMLTextExtractor(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.parts: list[str] = []
+
+    def handle_data(self, data: str) -> None:
+        text = data.strip()
+        if text:
+            self.parts.append(text)
+
+
 def parse_file(path: str | Path) -> StandardDocument:
     file_path = Path(path)
     if os.getenv("KB_PARSER_BACKEND", "lightweight").lower() == "docling":
@@ -46,8 +59,16 @@ def parse_file(path: str | Path) -> StandardDocument:
         return parse_docx_standard(file_path)
     if suffix == ".pdf":
         return parse_pdf_standard(file_path)
+    if suffix == ".xlsx":
+        return parse_xlsx_standard(file_path)
+    if suffix == ".pptx":
+        return parse_pptx_standard(file_path)
     if suffix in {".txt", ".md", ".csv"}:
         return parse_text_standard(file_path)
+    if suffix == ".json":
+        return parse_json_standard(file_path)
+    if suffix in {".html", ".htm"}:
+        return parse_html_standard(file_path)
     if suffix in {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}:
         return parse_image_standard(file_path)
     raise ValueError(f"Unsupported file type: {file_path.suffix}")
@@ -57,28 +78,132 @@ def parse_docx_standard(path: Path) -> StandardDocument:
     parsed = parse_docx(path)
     blocks = [StandardBlock("paragraph", text) for text in parsed.paragraphs]
     for index, table in enumerate(parsed.tables, 1):
-        blocks.append(StandardBlock("table", "\n".join(" | ".join(cell for cell in row if cell) for row in table), metadata={"table_index": index}))
-    return StandardDocument(str(path.resolve()), path.name, parsed.title, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx-xml", blocks)
+        blocks.append(StandardBlock(
+            "table",
+            "\n".join(" | ".join(cell for cell in row if cell) for row in table),
+            metadata={"table_index": index},
+        ))
+    return StandardDocument(
+        str(path.resolve()), path.name, parsed.title,
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "docx-xml", blocks,
+    )
 
 
 def parse_pdf_standard(path: Path) -> StandardDocument:
     from pypdf import PdfReader
     reader = PdfReader(str(path))
-    blocks = [StandardBlock("page_text", (page.extract_text() or "").strip(), page_no=i) for i, page in enumerate(reader.pages, 1) if (page.extract_text() or "").strip()]
-    return StandardDocument(str(path.resolve()), path.name, path.stem, "application/pdf", "pypdf", blocks, {"page_count": len(reader.pages)})
+    blocks = []
+    for i, page in enumerate(reader.pages, 1):
+        text = (page.extract_text() or "").strip()
+        if text:
+            blocks.append(StandardBlock("page_text", text, page_no=i))
+    return StandardDocument(
+        str(path.resolve()), path.name, path.stem, "application/pdf", "pypdf",
+        blocks, {"page_count": len(reader.pages)},
+    )
+
+
+def parse_xlsx_standard(path: Path) -> StandardDocument:
+    from openpyxl import load_workbook
+    wb = load_workbook(path, read_only=True, data_only=True)
+    blocks: list[StandardBlock] = []
+    total_rows = 0
+    for sheet in wb.worksheets:
+        lines = []
+        for row_index, row in enumerate(sheet.iter_rows(values_only=True), 1):
+            if row_index > 2000:
+                lines.append("[工作表内容过长，轻量解析器已截断；生产环境建议使用结构化表格解析服务]")
+                break
+            cells = [str(value).strip() for value in row[:100] if value is not None and str(value).strip()]
+            if cells:
+                lines.append(" | ".join(cells))
+                total_rows += 1
+        if lines:
+            blocks.append(StandardBlock(
+                "sheet",
+                "\n".join(lines),
+                section_title=sheet.title,
+                metadata={"sheet_name": sheet.title, "non_empty_rows": len(lines)},
+            ))
+    return StandardDocument(
+        str(path.resolve()), path.name, path.stem,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "openpyxl", blocks, {"sheet_count": len(wb.sheetnames), "non_empty_rows": total_rows},
+    )
+
+
+def parse_pptx_standard(path: Path) -> StandardDocument:
+    from pptx import Presentation
+    deck = Presentation(str(path))
+    blocks: list[StandardBlock] = []
+    for index, slide in enumerate(deck.slides, 1):
+        texts: list[str] = []
+        for shape in slide.shapes:
+            text = getattr(shape, "text", "")
+            if text and text.strip():
+                texts.append(text.strip())
+        if texts:
+            blocks.append(StandardBlock(
+                "slide",
+                "\n".join(texts),
+                page_no=index,
+                metadata={"slide_index": index},
+            ))
+    return StandardDocument(
+        str(path.resolve()), path.name, path.stem,
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "python-pptx", blocks, {"slide_count": len(deck.slides)},
+    )
 
 
 def parse_text_standard(path: Path) -> StandardDocument:
     text = path.read_text(encoding="utf-8", errors="ignore")
-    return StandardDocument(str(path.resolve()), path.name, path.stem, "text/plain", "plain-text", [StandardBlock("text", text)])
+    return StandardDocument(
+        str(path.resolve()), path.name, path.stem, "text/plain", "plain-text",
+        [StandardBlock("text", text)],
+    )
+
+
+def parse_json_standard(path: Path) -> StandardDocument:
+    raw = path.read_text(encoding="utf-8", errors="ignore")
+    try:
+        text = json.dumps(json.loads(raw), ensure_ascii=False, indent=2)
+    except json.JSONDecodeError:
+        text = raw
+    return StandardDocument(
+        str(path.resolve()), path.name, path.stem, "application/json", "json",
+        [StandardBlock("json", text)],
+    )
+
+
+def parse_html_standard(path: Path) -> StandardDocument:
+    parser = _HTMLTextExtractor()
+    parser.feed(path.read_text(encoding="utf-8", errors="ignore"))
+    return StandardDocument(
+        str(path.resolve()), path.name, path.stem, "text/html", "html-parser",
+        [StandardBlock("html_text", "\n".join(parser.parts))],
+    )
 
 
 def parse_image_standard(path: Path) -> StandardDocument:
     from PIL import Image
     image = Image.open(path)
-    metadata = {"width": image.width, "height": image.height, "mode": image.mode, "ocr_status": "adapter_required"}
-    text = f"[图片待OCR] {path.name} {image.width}x{image.height}。生产环境建议接入 Docling/PaddleOCR 或企业 OCR 服务。"
-    return StandardDocument(str(path.resolve()), path.name, path.stem, f"image/{path.suffix.lower().lstrip('.')}", "image-metadata", [StandardBlock("image", text, metadata=metadata)], metadata)
+    metadata = {
+        "width": image.width,
+        "height": image.height,
+        "mode": image.mode,
+        "ocr_status": "adapter_required",
+    }
+    text = (
+        f"[图片待OCR] {path.name} {image.width}x{image.height}。"
+        "生产环境建议接入 Docling/PaddleOCR 或企业 OCR 服务。"
+    )
+    return StandardDocument(
+        str(path.resolve()), path.name, path.stem,
+        f"image/{path.suffix.lower().lstrip('.')}", "image-metadata",
+        [StandardBlock("image", text, metadata=metadata)], metadata,
+    )
 
 
 def parse_docling_standard(path: Path) -> StandardDocument:

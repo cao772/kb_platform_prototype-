@@ -6,7 +6,10 @@ from app.parsers import parse_file
 from app.store import KnowledgeStore
 from app.text_processing import chunk_blocks, infer_knowledge_type, infer_tags
 
-SUPPORTED_SUFFIXES = {".docx", ".pdf", ".txt", ".md", ".csv", ".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}
+SUPPORTED_SUFFIXES = {
+    ".docx", ".pdf", ".txt", ".md", ".csv", ".xlsx", ".pptx", ".json", ".html", ".htm",
+    ".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff",
+}
 
 
 def ingest_file(store: KnowledgeStore, path: str | Path) -> int:
@@ -15,15 +18,21 @@ def ingest_file(store: KnowledgeStore, path: str | Path) -> int:
     knowledge_type = infer_knowledge_type(file_path.name, parsed.full_text)
     tags = infer_tags(parsed.full_text)
     chunks = [
-        {"chunk_index": index, "text": chunk["text"], "metadata": {
-            "source": file_path.name,
-            "title": parsed.title,
-            "knowledge_type": knowledge_type,
-            "tags": tags,
-            **chunk["metadata"],
-        }}
+        {
+            "chunk_index": index,
+            "text": chunk["text"],
+            "metadata": {
+                "source": file_path.name,
+                "title": parsed.title,
+                "knowledge_type": knowledge_type,
+                "tags": tags,
+                **chunk["metadata"],
+            },
+        }
         for index, chunk in enumerate(chunk_blocks(parsed.blocks), 1)
     ]
+    if not chunks:
+        raise ValueError("document contains no indexable text")
     return store.upsert_document(
         filename=file_path.name,
         title=parsed.title,
@@ -46,5 +55,9 @@ def ingest_directory(store: KnowledgeStore, directory: str | Path) -> list[int]:
         try:
             ids.append(ingest_file(store, path))
         except Exception as exc:
-            store.record_ingestion_failure(filename=path.name, source_path=str(path.resolve()), message=str(exc))
+            store.record_ingestion_failure(
+                filename=path.name,
+                source_path=str(path.resolve()),
+                message=str(exc),
+            )
     return ids

@@ -23,3 +23,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_graph_reasoning.py
       - name: Compliance governance tests
         run: PYTHONPATH=. python tests/test_compliance_workflow.py
+      - name: Stage2 workflow tests
+        run: PYTHONPATH=. python tests/test_stage2_workflow.py
