@@ -27,3 +27,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage2_workflow.py
       - name: Stage3 governed graph tests
         run: PYTHONPATH=. python tests/test_stage3_graph_governance.py
+      - name: Stage4 GraphRAG backend tests
+        run: PYTHONPATH=. python tests/test_stage4_graphrag_backend.py
