@@ -1,0 +1,23 @@
+name: knowledge-platform-quality
+
+on:
+  push:
+    branches: ["通用知识库平台"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Compile
+        run: python -m compileall -q app tests
+      - name: Modern chain tests
+        run: PYTHONPATH=. python tests/test_modern_chain.py
+      - name: Graph isolation tests
+        run: PYTHONPATH=. python tests/test_graph_reasoning.py
