@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>通用知识库平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#172033;background:#f4f7fb}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0b2d5c;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top b{font-size:20px}.badge{font-size:12px;padding:5px 10px;border:1px solid #6d8bb1;border-radius:999px;color:#dce8f7}.wrap{max-width:1320px;margin:22px auto;padding:0 22px}.hero{background:linear-gradient(120deg,#103f7d,#0d5b8b);color:#fff;border-radius:16px;padding:28px 30px;margin-bottom:18px}.hero h1{margin:0 0 8px;font-size:25px}.hero p{margin:0;color:#dceafb;line-height:1.8}.tabs{display:flex;gap:8px;margin-bottom:16px}.tab{border:0;background:#fff;padding:10px 16px;border-radius:9px;cursor:pointer;color:#526079}.tab.active{background:#0d4f91;color:#fff}.panel{display:none}.panel.active{display:block}.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.card{background:#fff;border:1px solid #e3e8f0;border-radius:14px;padding:18px;box-shadow:0 4px 14px rgba(25,48,75,.04)}h2{font-size:17px;margin:0 0 14px}.muted{color:#7d8797;font-size:13px;line-height:1.65}textarea,input,select{width:100%;border:1px solid #ccd5e1;border-radius:9px;padding:11px 12px;font:inherit;background:#fff}textarea{height:110px;resize:vertical}.row{display:flex;gap:10px;margin-top:10px}.btn{border:0;border-radius:9px;background:#0d4f91;color:#fff;padding:10px 16px;cursor:pointer}.btn.secondary{background:#eef4fb;color:#0d4f91}.result{margin-top:14px;white-space:pre-wrap;line-height:1.75;background:#f8fafc;border-radius:10px;padding:13px;min-height:70px}.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{background:#eef4fb;color:#214c79;border-radius:999px;padding:6px 10px;font-size:12px}.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.step{background:#fff;border:1px solid #dce4ef;border-radius:11px;padding:14px;min-height:90px}.step strong{display:block;color:#0d4f91;margin-bottom:6px}.ontology{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.node{background:#fff;border:1px solid #dce4ef;border-left:4px solid #0d4f91;border-radius:10px;padding:13px}.node b{font-size:14px}.node span{display:block;color:#7b8797;font-size:12px;margin-top:5px}.trace{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;white-space:pre-wrap;background:#0f1c2e;color:#d8e6fa;border-radius:10px;padding:13px;overflow:auto;max-height:360px}.mapflow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.mapflow span{background:#fff;border:1px solid #dbe3ed;border-radius:9px;padding:10px 12px}.arrow{color:#8793a3}.warning{background:#fff7e8;border:1px solid #f4d79e;color:#7f5a13;padding:11px 13px;border-radius:9px;font-size:13px;margin-bottom:12px}@media(max-width:900px){.grid{grid-template-columns:1fr}.steps,.ontology{grid-template-columns:1fr 1fr}.top{padding:0 16px}}
+</style>
+</head>
+<body>
+<div class="top"><b>通用知识库平台</b><span class="badge">2026 现代化链路原型</span></div>
+<div class="wrap">
+  <div class="hero"><h1>通用知识底座 + 法规认证知识本体 + 可审计智能体</h1><p>普通问题走混合检索；法规/认证路径问题再进入本体与图谱增强。所有回答保留查询计划、检索轨迹和证据引用。</p></div>
+  <div class="tabs">
+    <button class="tab active" data-tab="qa">问答与检索</button>
+    <button class="tab" data-tab="ontology">知识本体</button>
+    <button class="tab" data-tab="map">认证地图链路</button>
+    <button class="tab" data-tab="architecture">技术链路</button>
+  </div>
+
+  <section id="qa" class="panel active">
+    <div class="grid">
+      <div class="card"><h2>带证据智能问答</h2>
+        <textarea id="question">家用电器出口欧盟需要核对哪些法规和认证依据？</textarea>
+        <div class="row"><select id="type"><option value="法规知识">法规知识</option><option value="">全部知识</option><option value="通用知识">通用知识</option></select><button class="btn" onclick="ask()">分析并回答</button><button class="btn secondary" onclick="searchKb()">仅检索</button></div>
+        <div id="answer" class="result">等待查询。</div>
+      </div>
+      <div class="card"><h2>查询计划与执行轨迹</h2><div id="plan" class="trace">尚未执行。</div></div>
+    </div>
+  </section>
+
+  <section id="ontology" class="panel">
+    <div class="card"><h2>法规 / 认证领域本体</h2><p class="muted">实体与关系先结构化，再让模型做受约束抽取。法规版本、生效状态和适用范围不交给模型自由推断。</p><div id="ontologyNodes" class="ontology"></div></div>
+  </section>
+
+  <section id="map" class="panel">
+    <div class="card"><h2>世界认证地图的数据链路</h2><div class="warning">地图是知识关系在国家/地区维度的应用投影，不单独维护一套“静态地图事实”。</div>
+      <div class="mapflow"><span>产品</span><b class="arrow">→</b><span>产品分类</span><b class="arrow">→</b><span>国家/地区</span><b class="arrow">→</b><span>法规/标准</span><b class="arrow">→</b><span>认证</span><b class="arrow">→</b><span>要求/检测</span><b class="arrow">→</b><span>版本</span><b class="arrow">→</b><span>证据</span></div>
+      <div class="row"><button class="btn secondary" onclick="loadGraphDemo()">查看演示图谱遍历</button></div><div id="graphDemo" class="result">演示数据不会参与正式法规回答。</div>
+    </div>
+  </section>
+
+  <section id="architecture" class="panel"><div class="card"><h2>当前推荐技术链路</h2><div id="steps" class="steps"></div></div></section>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('.tab').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$(btn.dataset.tab).classList.add('active')});
+async function json(url,opt){const r=await fetch(url,opt);return r.json()}
+async function ask(){try{const q=$('question').value;const type=$('type').value;const data=await json('/api/answer-v2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,knowledge_type:type||null})});$('answer').textContent=data.answer+'\n\n证据：\n'+(data.citations||[]).map(x=>`• ${x.title} / ${x.filename} / chunk ${x.chunk}`).join('\n');$('plan').textContent=JSON.stringify({query_plan:data.query_plan,retrieval_trace:data.retrieval_trace,graph_trace:data.graph_trace,workflow:data.workflow,verification:data.verification},null,2)}catch(e){$('answer').textContent='请求失败：'+e}}
+async function searchKb(){try{const q=encodeURIComponent($('question').value),t=encodeURIComponent($('type').value);const data=await json(`/api/search?q=${q}&type=${t}`);$('answer').textContent=(data.items||[]).map((x,i)=>`${i+1}. ${x.title}\n${x.text.slice(0,260)}\nscore=${x.score} channels=${(x.retrieval_channels||[]).join(',')}`).join('\n\n')||'未检索到证据';$('plan').textContent=JSON.stringify({query_plan:data.query_plan,trace:data.trace},null,2)}catch(e){$('answer').textContent='请求失败：'+e}}
+async function loadOntology(){const data=await json('/api/ontology');$('ontologyNodes').innerHTML=(data.node_types||[]).map(n=>`<div class="node"><b>${n.label}</b><span>${n.key}</span><span>${(n.required_properties||[]).join(' · ')}</span></div>`).join('')}
+async function loadArchitecture(){const data=await json('/api/architecture');$('steps').innerHTML=(data.pipeline||[]).map(s=>`<div class="step"><strong>${s.stage} ${s.name}</strong><div class="muted">原型：${s.prototype}<br>生产：${s.production}</div></div>`).join('')}
+async function loadGraphDemo(){const data=await json('/api/graph/demo');$('graphDemo').textContent=data.warning+'\n\n'+(data.items||[]).map(x=>`${x.target_type}：${x.target_label}\n${x.path.join(' → ')}`).join('\n\n')}
+loadOntology();loadArchitecture();
+</script>
+</body>
+</html>
