@@ -1,41 +1,64 @@
-# 通用知识库平台原型（2026 现代化链路）
+# 通用知识库平台原型（2026 法规认证知识治理版）
 
-这是旧“通用/法规知识库链路原型”的升级版。目标不是再堆一个 RAG 框架，而是把目前较成熟的企业知识库链路落实成可运行、可观测、可替换的最小原型：
+这个分支用于把旧“通用/法规知识库原型”升级为一套可落地、可审计的知识链路。首期业务场景是**世界认证地图 + 法规认证知识库 + 产品准入分析 + 智能问答**，底层仍保持通用知识中台能力。
 
-`多格式解析 -> 标准证据对象 -> 关键词/语义双路召回 -> RRF -> 重排 -> 问题路由 -> 本体/图谱增强位 -> 可审计智能体 -> 带来源回答`
+当前核心链路：
 
-## 本轮升级
+`多格式解析 -> 标准证据对象 -> 结构化候选抽取 -> 人工审核 -> 正式知识目录 -> 混合检索/RRF/重排 -> 本体/图谱增强 -> 可审计智能体 -> 地图/准入/问答`
 
-- `QueryRouter`：普通问答、法规/认证路径、全局概览分开路由；
-- `RetrievalPipeline`：关键词 + 语义双通道，RRF 融合，再做透明重排；
-- `ontology.py`：产品、产品分类、国家/地区、法规、标准、认证、要求、检测项目、版本、证据的领域本体；
-- `KnowledgeAgent`：固定状态机编排，返回检索计划、图谱状态、工作流和校验结果；
-- `architecture.py`：原型与生产部署的能力映射；
-- 图谱演示数据与正式回答隔离，避免把样例关系当真实法规事实；
-- 可选 `KB_PARSER_BACKEND=docling`，为生产级结构化解析预留适配位。
+完整技术调研见 [`RESEARCH_2026.md`](./RESEARCH_2026.md)。
 
-完整调研见 [`RESEARCH_2026.md`](./RESEARCH_2026.md)。
+## 这一版已经完成什么
 
-## 推荐生产链路
+### 成熟 RAG 主链路
 
-1. 结构化文档解析与 OCR；
-2. Document / Block / Chunk / Evidence 标准对象；
-3. 全文/BM25 + dense semantic + metadata filter；
-4. RRF 融合；
-5. Cross-Encoder / late-interaction 重排；
-6. 问题路由：普通 RAG / 法规图谱增强 / 全局主题分析；
-7. 领域本体与 Neo4j GraphRAG（只用于关系密集问题）；
-8. 可审计状态机式智能体；
-9. 带来源生成、版本/适用范围校验、无证据拒答；
-10. Recall@K、nDCG、faithfulness、citation correctness、成本和时延评测。
+- 普通知识问答与法规认证问题分开路由；
+- 关键词 + 语义双路召回；
+- RRF 融合 + 透明重排；
+- 回答保留查询计划、检索轨迹、证据引用和校验状态；
+- 无证据时拒绝生成推断性结论。
 
-## 世界认证地图定位
+### 法规认证知识治理闭环
 
-地图不是独立知识源，而是以下知识关系在国家/地区维度的投影：
+`已接入文档 -> Chunk证据 -> 候选实体/要求 -> 待审核队列 -> 人工通过/驳回 -> 正式法规认证目录`
+
+关键原则：**未经人工审核的抽取候选不能参与正式法规事实回答。**
+
+当前候选类型包括法规、标准、认证、要求、检测项目。原型先使用规则受约束抽取，生产版可以加入 LLM 结构化抽取，但仍必须进入同一审核队列。
+
+### 产品准入分析
+
+新增 `产品 + 产品分类 + 目标国家/地区` 查询入口。系统只汇总已审核的结构化知识，并统计法规、标准、认证、要求、检测项目和原始证据覆盖情况。
+
+当前不会自动给出“已合规 / 可以出口”的法律结论；正式结论还需要版本、生效状态、适用范围和专家规则共同校验。
+
+### 世界认证地图
+
+地图不是独立事实库，而是正式知识目录在国家/地区维度的投影：
 
 `产品 -> 产品分类 -> 国家/地区 -> 法规/标准 -> 认证 -> 要求/检测 -> 版本 -> 证据`
 
-因此同一份知识可以同时服务地图浏览、产品准入查询、法规问答、认证路径分析和法规变化影响分析。
+正式地图默认只显示审核通过的知识。原型提供显式“演示结构”模式，演示记录不会写入正式数据库，也不会参与正式回答。
+
+### 知识本体
+
+当前本体包含产品、产品分类、国家/地区、主管机构、法规、标准、认证、要求、检测项目、版本和证据。
+
+知识生命周期：
+
+`document_ingested -> candidate_extracted -> human_reviewed -> approved_catalog_record -> graph_projected -> answer_with_evidence`
+
+## 推荐生产架构
+
+首期建议尽量减少组件：
+
+- PostgreSQL：业务主数据、知识目录、审核状态、版本与适用性；
+- MinIO：原始文件及附件；
+- OpenSearch：全文 + 向量/稀疏检索；
+- Neo4j：只承载法规认证关系密集与复杂路径场景；
+- 解析服务、Embedding/Rerank 服务、知识抽取与审核服务、RAG/Agent 服务。
+
+不建议首期同时引入 MySQL + Elasticsearch + Milvus + MongoDB + 图数据库。
 
 ## 启动
 
@@ -50,30 +73,22 @@ PYTHONPATH=. python3 app/server.py
 
 ## 主要 API
 
-- `GET /api/health`
-- `GET /api/architecture`
-- `GET /api/ontology`
-- `GET /api/query-plan?q=...`
-- `GET /api/search?q=...&type=...`
-- `POST /api/answer-v2`
-- `POST /api/regulation-self-check`
-- `GET /api/graph/demo`
+通用知识链路：`GET /api/health`、`GET /api/architecture`、`GET /api/ontology`、`GET /api/search`、`POST /api/answer-v2`。
+
+知识治理：`GET /api/documents`、`POST /api/extraction/run`、`GET /api/extraction-tasks`、`POST /api/extraction/review`、`GET /api/compliance/records`。
+
+世界认证与准入：`GET /api/compliance/map`、`GET /api/compliance/map?include_demo=1`、`POST /api/compliance/access-check`。
+
+所有 `demo` 数据均与正式知识目录隔离。
 
 ## 测试
 
 ```bash
 PYTHONPATH=. python3 tests/test_modern_chain.py
 PYTHONPATH=. python3 tests/test_graph_reasoning.py
+PYTHONPATH=. python3 tests/test_compliance_workflow.py
 ```
 
-## 当前边界
+## 当前边界与下一阶段
 
-当前仍是“技术链路原型”，不是完整生产系统。生产化时重点替换：
-
-- SQLite FTS / 本地 hashing embedding -> OpenSearch、Qdrant 或 PostgreSQL/pgvector；
-- 透明规则重排 -> Cross-Encoder / late-interaction reranker；
-- 图谱编排位 -> 正式 Neo4j 图谱、法规版本与适用性数据；
-- 单进程 HTTP -> FastAPI/企业服务框架 + 队列 + RBAC + 审计 + 监控；
-- 公共原型不内置真实模型调用凭据，部署时接企业模型网关。
-
-首期不建议同时引入 MySQL + Elasticsearch + Milvus + MongoDB + 图数据库。优先减少组件，后续按数据规模拆分。
+目前仍是可运行的产品/技术原型，不是完整生产系统。下一阶段重点：浏览器多文件上传和版本管理；规则 + LLM 结构化抽取；法规版本、生效/废止、适用/例外条件和主管机构主数据；将审核通过目录投影到 Neo4j；接入真实世界地图；补专家审核、RBAC、审计和评测集。
