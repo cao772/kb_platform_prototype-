@@ -1,0 +1,7 @@
+# Optional production-grade adapters discussed in RESEARCH_2026.md.
+# Install selectively; the prototype does not require them to run.
+docling>=2.0.0
+neo4j>=5.18.0
+neo4j-graphrag>=1.0.0
+qdrant-client>=1.15.0
+opensearch-py>=3.0.0
