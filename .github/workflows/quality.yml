@@ -21,3 +21,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_modern_chain.py
       - name: Graph isolation tests
         run: PYTHONPATH=. python tests/test_graph_reasoning.py
+      - name: Compliance governance tests
+        run: PYTHONPATH=. python tests/test_compliance_workflow.py
