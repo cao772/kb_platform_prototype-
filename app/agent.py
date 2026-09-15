@@ -22,14 +22,19 @@ def _best_excerpt(question: str, text: str, *, max_chars: int = 280) -> str:
 
 
 def _dedupe_citations(items: list[dict]) -> list[dict]:
-    output = []
-    seen = set()
-    for item in items:
+    output: list[dict] = []
+    index: dict[object, dict] = {}
+    for source in items:
+        item = dict(source)
         key = item.get("evidence_id") or (item.get("filename"), item.get("chunk"))
-        if key in seen:
+        if key not in index:
+            item["channels"] = list(dict.fromkeys(item.get("channels", [])))
+            index[key] = item
+            output.append(item)
             continue
-        seen.add(key)
-        output.append(item)
+        existing = index[key]
+        existing["channels"] = list(dict.fromkeys(existing.get("channels", []) + item.get("channels", [])))
+        existing["score"] = max(float(existing.get("score") or 0), float(item.get("score") or 0))
     return output
 
 
