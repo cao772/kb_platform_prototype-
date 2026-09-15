@@ -30,6 +30,46 @@ CREATE TABLE IF NOT EXISTS ingestion_events (
  id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT NOT NULL, source_path TEXT NOT NULL,
  status TEXT NOT NULL, message TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS extraction_tasks (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ document_id INTEGER NOT NULL,
+ chunk_id INTEGER NOT NULL,
+ candidate_type TEXT NOT NULL,
+ candidate_name TEXT NOT NULL,
+ candidate_code TEXT DEFAULT '',
+ region_code TEXT DEFAULT '',
+ region_name TEXT DEFAULT '',
+ product_class TEXT DEFAULT '',
+ confidence REAL DEFAULT 0,
+ candidate_payload TEXT NOT NULL,
+ status TEXT NOT NULL DEFAULT 'pending',
+ reviewer_note TEXT DEFAULT '',
+ created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+ reviewed_at TEXT DEFAULT ''
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_extraction_candidate_unique
+ ON extraction_tasks(document_id,chunk_id,candidate_type,candidate_name);
+CREATE TABLE IF NOT EXISTS compliance_records (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ record_type TEXT NOT NULL,
+ code TEXT DEFAULT '',
+ name TEXT NOT NULL,
+ region_code TEXT DEFAULT '',
+ region_name TEXT DEFAULT '',
+ product_class TEXT DEFAULT '',
+ status TEXT DEFAULT 'unknown',
+ version TEXT DEFAULT '',
+ effective_from TEXT DEFAULT '',
+ effective_to TEXT DEFAULT '',
+ source_document_id INTEGER,
+ source_chunk_id INTEGER,
+ review_status TEXT NOT NULL DEFAULT 'approved',
+ attributes TEXT DEFAULT '{}',
+ created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+ updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_compliance_record_unique
+ ON compliance_records(record_type,code,name,region_code,product_class,version);
 """
 
 
@@ -44,7 +84,10 @@ class KnowledgeStore:
 
     def reset(self) -> None:
         with self.lock:
-            self.conn.executescript("DELETE FROM chunk_fts; DELETE FROM chunk_vectors; DELETE FROM chunks; DELETE FROM documents; DELETE FROM ingestion_events;")
+            self.conn.executescript(
+                "DELETE FROM compliance_records; DELETE FROM extraction_tasks; DELETE FROM chunk_fts; "
+                "DELETE FROM chunk_vectors; DELETE FROM chunks; DELETE FROM documents; DELETE FROM ingestion_events;"
+            )
             self.conn.commit()
 
     def upsert_document(self, *, filename: str, title: str, knowledge_type: str, tags: list[str], source_path: str,
@@ -57,6 +100,8 @@ class KnowledgeStore:
                 for chunk_id in ids:
                     self.conn.execute("DELETE FROM chunk_fts WHERE chunk_id=?", (chunk_id,))
                     self.conn.execute("DELETE FROM chunk_vectors WHERE chunk_id=?", (chunk_id,))
+                self.conn.execute("DELETE FROM extraction_tasks WHERE document_id=?", (old["id"],))
+                self.conn.execute("DELETE FROM compliance_records WHERE source_document_id=?", (old["id"],))
                 self.conn.execute("DELETE FROM chunks WHERE document_id=?", (old["id"],))
                 self.conn.execute("DELETE FROM documents WHERE id=?", (old["id"],))
             cur = self.conn.execute(
@@ -89,13 +134,112 @@ class KnowledgeStore:
         with self.lock:
             documents = self.conn.execute("SELECT COUNT(*) count FROM documents").fetchone()["count"]
             chunks = self.conn.execute("SELECT COUNT(*) count FROM chunks").fetchone()["count"]
+            compliance_records = self.conn.execute("SELECT COUNT(*) count FROM compliance_records WHERE review_status='approved'").fetchone()["count"]
+            pending_review = self.conn.execute("SELECT COUNT(*) count FROM extraction_tasks WHERE status='pending'").fetchone()["count"]
             types = [dict(row) for row in self.conn.execute("SELECT knowledge_type,COUNT(*) count FROM documents GROUP BY knowledge_type")]
-        return {"documents": documents, "chunks": chunks, "types": types}
+        return {"documents": documents, "chunks": chunks, "types": types, "compliance_records": compliance_records, "pending_review": pending_review}
 
     def list_documents(self) -> list[dict[str, Any]]:
         with self.lock:
             rows = self.conn.execute("SELECT id,filename,title,knowledge_type,mime_type,parser,ingestion_status,tags,created_at FROM documents ORDER BY id").fetchall()
         return [{**dict(row), "tags": json.loads(row["tags"])} for row in rows]
+
+    def document_chunks(self, document_id: int) -> list[dict[str, Any]]:
+        with self.lock:
+            rows = self.conn.execute("SELECT id,document_id,chunk_index,text,metadata FROM chunks WHERE document_id=? ORDER BY chunk_index,id", (document_id,)).fetchall()
+        return [{**dict(row), "metadata": json.loads(row["metadata"] or "{}")} for row in rows]
+
+    def create_extraction_task(self, *, document_id: int, chunk_id: int, candidate_type: str, candidate_name: str,
+                               candidate_code: str, region_code: str, region_name: str, product_class: str,
+                               confidence: float, candidate_payload: dict[str, Any]) -> int | None:
+        with self.lock:
+            existing = self.conn.execute(
+                "SELECT id FROM extraction_tasks WHERE document_id=? AND chunk_id=? AND candidate_type=? AND candidate_name=?",
+                (document_id, chunk_id, candidate_type, candidate_name),
+            ).fetchone()
+            if existing:
+                return None
+            cur = self.conn.execute(
+                "INSERT INTO extraction_tasks(document_id,chunk_id,candidate_type,candidate_name,candidate_code,region_code,region_name,product_class,confidence,candidate_payload) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                (document_id, chunk_id, candidate_type, candidate_name, candidate_code, region_code, region_name, product_class, confidence, json.dumps(candidate_payload, ensure_ascii=False)),
+            )
+            self.conn.commit()
+            return int(cur.lastrowid)
+
+    def list_extraction_tasks(self, *, status: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
+        where = "WHERE t.status=?" if status else ""
+        params: list[Any] = [status] if status else []
+        params.append(limit)
+        with self.lock:
+            rows = self.conn.execute(
+                f"SELECT t.*,d.filename,d.title document_title,c.chunk_index,c.text chunk_text FROM extraction_tasks t "
+                f"JOIN documents d ON d.id=t.document_id JOIN chunks c ON c.id=t.chunk_id {where} "
+                f"ORDER BY CASE t.status WHEN 'pending' THEN 0 ELSE 1 END,t.id DESC LIMIT ?",
+                params,
+            ).fetchall()
+        output = []
+        for row in rows:
+            item = dict(row)
+            item["candidate_payload"] = json.loads(item["candidate_payload"] or "{}")
+            output.append(item)
+        return output
+
+    def review_extraction_task(self, task_id: int, *, action: str, reviewer_note: str = "") -> dict[str, Any]:
+        if action not in {"approve", "reject"}:
+            raise ValueError("action must be approve or reject")
+        with self.lock:
+            row = self.conn.execute("SELECT * FROM extraction_tasks WHERE id=?", (task_id,)).fetchone()
+            if not row:
+                raise ValueError("extraction task not found")
+            if row["status"] != "pending":
+                raise ValueError(f"extraction task already {row['status']}")
+            new_status = "approved" if action == "approve" else "rejected"
+            self.conn.execute("UPDATE extraction_tasks SET status=?,reviewer_note=?,reviewed_at=CURRENT_TIMESTAMP WHERE id=?", (new_status, reviewer_note, task_id))
+            record_id = None
+            if action == "approve":
+                record_id = self._upsert_compliance_record_locked(json.loads(row["candidate_payload"] or "{}"))
+            self.conn.commit()
+        return {"task_id": task_id, "status": new_status, "compliance_record_id": record_id}
+
+    def _upsert_compliance_record_locked(self, payload: dict[str, Any]) -> int:
+        key = (payload.get("record_type", "requirement"), payload.get("code", ""), payload.get("name", ""), payload.get("region_code", ""), payload.get("product_class", ""), payload.get("version", ""))
+        existing = self.conn.execute("SELECT id FROM compliance_records WHERE record_type=? AND code=? AND name=? AND region_code=? AND product_class=? AND version=?", key).fetchone()
+        values = (payload.get("region_name", ""), payload.get("status", "unknown"), payload.get("effective_from", ""), payload.get("effective_to", ""), payload.get("source_document_id"), payload.get("source_chunk_id"), json.dumps(payload.get("attributes", {}), ensure_ascii=False))
+        if existing:
+            self.conn.execute("UPDATE compliance_records SET region_name=?,status=?,effective_from=?,effective_to=?,source_document_id=?,source_chunk_id=?,attributes=?,review_status='approved',updated_at=CURRENT_TIMESTAMP WHERE id=?", (*values, existing["id"]))
+            return int(existing["id"])
+        cur = self.conn.execute(
+            "INSERT INTO compliance_records(record_type,code,name,region_code,region_name,product_class,status,version,effective_from,effective_to,source_document_id,source_chunk_id,review_status,attributes) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (payload.get("record_type", "requirement"), payload.get("code", ""), payload.get("name", ""), payload.get("region_code", ""), payload.get("region_name", ""), payload.get("product_class", ""), payload.get("status", "unknown"), payload.get("version", ""), payload.get("effective_from", ""), payload.get("effective_to", ""), payload.get("source_document_id"), payload.get("source_chunk_id"), "approved", json.dumps(payload.get("attributes", {}), ensure_ascii=False)),
+        )
+        return int(cur.lastrowid)
+
+    def list_compliance_records(self, *, review_status: str | None = "approved", region_code: str | None = None,
+                                product_class: str | None = None, limit: int = 500) -> list[dict[str, Any]]:
+        clauses: list[str] = []
+        params: list[Any] = []
+        if review_status:
+            clauses.append("r.review_status=?")
+            params.append(review_status)
+        if region_code:
+            clauses.append("r.region_code=?")
+            params.append(region_code)
+        if product_class:
+            clauses.append("(r.product_class='' OR r.product_class='*' OR lower(r.product_class)=lower(?))")
+            params.append(product_class)
+        where = "WHERE " + " AND ".join(clauses) if clauses else ""
+        params.append(limit)
+        with self.lock:
+            rows = self.conn.execute(
+                f"SELECT r.*,d.filename source_filename,c.chunk_index source_chunk_index FROM compliance_records r "
+                f"LEFT JOIN documents d ON d.id=r.source_document_id LEFT JOIN chunks c ON c.id=r.source_chunk_id "
+                f"{where} ORDER BY r.region_code,r.record_type,r.name LIMIT ?", params).fetchall()
+        output = []
+        for row in rows:
+            item = dict(row)
+            item["attributes"] = json.loads(item["attributes"] or "{}")
+            output.append(item)
+        return output
 
     def _rows(self, knowledge_type: str | None = None) -> list[dict[str, Any]]:
         where = "WHERE d.knowledge_type=?" if knowledge_type else ""
@@ -127,8 +271,7 @@ class KnowledgeStore:
             rows = []
         output = []
         for rank, row in enumerate(rows, 1):
-            output.append({**dict(row), "metadata": json.loads(row["metadata"] or "{}"), "tags": json.loads(row["tags"] or "[]"),
-                           "keyword_rank": rank, "keyword_score": round(1.0 / rank, 4)})
+            output.append({**dict(row), "metadata": json.loads(row["metadata"] or "{}"), "tags": json.loads(row["tags"] or "[]"), "keyword_rank": rank, "keyword_score": round(1.0 / rank, 4)})
         return output[:limit]
 
     def semantic_search(self, query: str, *, limit: int = 20, knowledge_type: str | None = None) -> list[dict[str, Any]]:
