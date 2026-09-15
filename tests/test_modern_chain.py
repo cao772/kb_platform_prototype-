@@ -43,7 +43,8 @@ def main() -> None:
         assert answer["citations"]
         assert answer["verification"]["grounded"] is True
         assert answer["query_plan"]["route"] == "compliance_path"
-        assert answer["graph_trace"]["status"] == "schema_ready_data_not_connected"
+        assert answer["graph_trace"]["status"] == "approved_graph_empty"
+        assert answer["verification"]["graph_fact_count"] == 0
         assert len(answer["workflow"]) >= 5
 
     print("OK: modern routing/retrieval/agent chain passed")
