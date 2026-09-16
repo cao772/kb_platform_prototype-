@@ -234,6 +234,9 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path in {"/admin", "/admin.html"}:
             self._send_file(STATIC_DIR / "admin.html")
             return
+        if parsed.path in {"/catalog", "/catalog.html"}:
+            self._send_file(STATIC_DIR / "catalog.html")
+            return
         if parsed.path in {"/graph", "/graph.html"}:
             self._send_file(STATIC_DIR / "graph.html")
             return
@@ -415,6 +418,7 @@ class Handler(BaseHTTPRequestHandler):
 def main() -> None:
     server = ThreadingHTTPServer(("127.0.0.1", 8765), Handler)
     print("Knowledge platform running at http://127.0.0.1:8765")
+    print("Formal knowledge catalog: http://127.0.0.1:8765/catalog")
     print("Document & model management: http://127.0.0.1:8765/admin")
     server.serve_forever()
 
