@@ -41,3 +41,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage9_formal_catalog.py
       - name: Stage10 formal knowledge maintenance tests
         run: PYTHONPATH=. python tests/test_stage10_formal_knowledge_maintenance.py
+      - name: Stage11 regulation change monitoring tests
+        run: PYTHONPATH=. python tests/test_stage11_change_monitor.py
