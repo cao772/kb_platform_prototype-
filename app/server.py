@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, urlparse
 from app.agent import KnowledgeAgent
 from app.architecture import current_architecture
 from app.catalog import catalog_detail, list_catalog
+from app.catalog_maintenance import CatalogMaintenanceService
 from app.demo_graph import build_world_certification_demo_graph
 from app.governance import ALLOWED_STATUSES, analyze_product_access_v2, review_task_with_edits, world_map_v2
 from app.graph_backend import GraphBackendRouter
@@ -34,6 +35,7 @@ SETTINGS_PATH = ROOT / "data" / "runtime_settings.json"
 PROCESSING_TASK_PATH = ROOT / "data" / "processing_tasks.json"
 
 store = KnowledgeStore(DB_PATH)
+catalog_maintenance = CatalogMaintenanceService(store)
 router = QueryRouter()
 retrieval = RetrievalPipeline(store)
 graph_service = GraphGovernanceService(store)
@@ -95,7 +97,7 @@ class Handler(BaseHTTPRequestHandler):
                 "graph": graph_service.summary(),
                 "graph_backend": graph_backend.status(ping=False),
                 "processing": {"tasks": len(processing.tasks.list(limit=300))},
-                "version": "2026.09-business-catalog-v9",
+                "version": "2026.09-business-maintenance-v10",
             })
             return
         if parsed.path == "/api/capabilities":
@@ -107,7 +109,18 @@ class Handler(BaseHTTPRequestHandler):
                 "document_processing": {"task_tracking": True, "structured_parse": True, "vision_ocr": vision.configured},
                 "knowledge_extraction": {"rule": True, "model_optional": True, "model_configured": extraction.configured},
                 "question_answering": {"model_optional": True, "model_configured": qa.configured},
-                "formal_catalog": {"enabled": True, "version_history": True, "evidence_trace": True, "relation_summary": True},
+                "formal_catalog": {
+                    "enabled": True,
+                    "version_history": True,
+                    "evidence_trace": True,
+                    "relation_summary": True,
+                    "editable": True,
+                    "status_maintenance": True,
+                    "replacement_version": True,
+                    "evidence_attachment": True,
+                    "change_audit": True,
+                    "hard_delete": False,
+                },
                 "governance": {"editable_review": True, "lifecycle_statuses": sorted(ALLOWED_STATUSES), "evidence_required": True},
                 "knowledge_graph": {
                     "relation_review": True,
@@ -201,6 +214,22 @@ class Handler(BaseHTTPRequestHandler):
                 if record_id <= 0:
                     raise ValueError("id is required")
                 self._send_json(catalog_detail(store, record_id, as_of=params.get("as_of", [None])[0] or None))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        if parsed.path == "/api/catalog/history":
+            try:
+                record_id = int(params.get("id", ["0"])[0] or 0)
+                if record_id <= 0:
+                    raise ValueError("id is required")
+                self._send_json({"items": catalog_maintenance.history(record_id, limit=int(params.get("limit", ["100"])[0] or 100))})
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        if parsed.path == "/api/catalog/evidence-options":
+            try:
+                document_id = int(params.get("document_id", ["0"])[0] or 0)
+                self._send_json(catalog_maintenance.evidence_options(document_id=document_id or None))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
@@ -335,6 +364,69 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
             self._send_json({"ok": True, **result, "stats": store.stats()})
+            return
+        if parsed.path == "/api/catalog/update":
+            payload = self._read_json()
+            try:
+                result = catalog_maintenance.update_record(
+                    int(payload.get("record_id") or 0),
+                    changes=payload.get("changes") or {},
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
+                )
+                self._send_json({"ok": True, **result})
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        if parsed.path == "/api/catalog/status":
+            payload = self._read_json()
+            try:
+                result = catalog_maintenance.set_status(
+                    int(payload.get("record_id") or 0),
+                    status=payload.get("status", ""),
+                    effective_to=payload.get("effective_to", ""),
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
+                )
+                self._send_json({"ok": True, **result})
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        if parsed.path == "/api/catalog/version":
+            payload = self._read_json()
+            try:
+                result = catalog_maintenance.create_replacement_version(
+                    int(payload.get("record_id") or 0),
+                    version=payload.get("version", ""),
+                    effective_from=payload.get("effective_from", ""),
+                    effective_to=payload.get("effective_to", ""),
+                    status=payload.get("status", "active"),
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
+                    copy_evidence=as_bool(payload.get("copy_evidence", True)),
+                    mark_source_superseded=as_bool(payload.get("mark_source_superseded", True)),
+                    close_source_day_before=as_bool(payload.get("close_source_day_before", False)),
+                )
+                self._send_json({"ok": True, **result})
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        if parsed.path == "/api/catalog/evidence":
+            payload = self._read_json()
+            try:
+                result = catalog_maintenance.attach_evidence(
+                    int(payload.get("record_id") or 0),
+                    document_id=int(payload.get("document_id") or 0) or None,
+                    chunk_id=int(payload.get("chunk_id") or 0) or None,
+                    chunk_index=int(payload["chunk_index"]) if payload.get("chunk_index") not in (None, "") else None,
+                    source_url=payload.get("source_url", ""),
+                    review_basis=payload.get("review_basis", ""),
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
+                )
+                self._send_json({"ok": True, **result})
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
         if parsed.path == "/api/compliance/access-check":
             payload = self._read_json()
