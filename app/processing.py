@@ -63,6 +63,7 @@ class ProcessingTaskStore:
                 "message": "已进入处理队列",
                 "document_id": None,
                 "candidate_count": 0,
+                "change_watch_count": 0,
                 "parser": "",
                 "error": "",
                 "options": options,
@@ -108,10 +109,11 @@ class ProcessingTaskStore:
 
 
 class DocumentProcessingService:
-    def __init__(self, store, upload_dir: str | Path, task_path: str | Path):
+    def __init__(self, store, upload_dir: str | Path, task_path: str | Path, change_monitor=None):
         self.store = store
         self.upload_dir = Path(upload_dir)
         self.tasks = ProcessingTaskStore(task_path)
+        self.change_monitor = change_monitor
         self._threads: dict[str, threading.Thread] = {}
 
     def start_browser_upload(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -152,26 +154,41 @@ class DocumentProcessingService:
                 sha256=saved.get("sha256"),
             )
             candidate_count = 0
+            change_watch_count = 0
             extraction = None
+            change_watch = None
             if options.get("auto_extract"):
                 self.tasks.update(task_id, stage="extracting", status="running", message="正在识别法规、标准、认证和要求")
                 extraction = extract_review_candidates_v2(self.store, int(document_id), use_llm=bool(options.get("use_model")))
                 candidate_count = int(extraction.get("total_created") or 0)
+                if self.change_monitor is not None:
+                    change_watch = self.change_monitor.scan(document_id=int(document_id))
+                    change_watch_count = int(change_watch.get("created") or 0)
+                message = f"已识别 {candidate_count} 条待校核内容"
+                if change_watch_count:
+                    message += f"，发现 {change_watch_count} 项变化待办"
                 self.tasks.update(
                     task_id,
                     stage="review_ready",
                     status="running",
-                    message=f"已识别 {candidate_count} 条待校核内容",
+                    message=message,
                     candidate_count=candidate_count,
+                    change_watch_count=change_watch_count,
                     extraction=extraction,
+                    change_watch=change_watch,
                 )
+            final_message = "处理完成，待校核内容可进入知识审核" if options.get("auto_extract") else "文件解析完成"
+            if change_watch_count:
+                final_message += f"；{change_watch_count} 项变化需复核"
             self.tasks.update(
                 task_id,
                 stage="completed",
                 status="completed",
-                message="处理完成，待校核内容可进入知识审核" if options.get("auto_extract") else "文件解析完成",
+                message=final_message,
                 candidate_count=candidate_count,
+                change_watch_count=change_watch_count,
                 extraction=extraction,
+                change_watch=change_watch,
             )
         except Exception as exc:
             self.tasks.update(
