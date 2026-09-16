@@ -37,3 +37,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage7_business_navigation.py
       - name: Stage8 ontology graph visualization tests
         run: PYTHONPATH=. python tests/test_stage8_business_ontology_graph.py
+      - name: Stage9 formal catalog tests
+        run: PYTHONPATH=. python tests/test_stage9_formal_catalog.py
