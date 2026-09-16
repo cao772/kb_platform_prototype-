@@ -122,7 +122,7 @@ def build_rag_prompt(
         f"查询计划：{json.dumps(query_plan or {}, ensure_ascii=False)}\n"
         f"问题：{question}\n\n"
         f"文档依据：\n{context_text or '[无直接文档召回]'}\n\n"
-        f"已确认知识关系：\n{graph_text or '[无已确认关系]'}"
+        f"已审核图谱事实（已确认知识关系）：\n{graph_text or '[无已确认关系]'}"
     )
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 
