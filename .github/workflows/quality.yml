@@ -31,3 +31,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage4_graphrag_backend.py
       - name: Stage5 customer demo tests
         run: PYTHONPATH=. python tests/test_stage5_demo_scenario.py
+      - name: Stage6 document and model admin tests
+        run: PYTHONPATH=. python tests/test_stage6_document_model_admin.py
