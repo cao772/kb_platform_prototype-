@@ -10,19 +10,16 @@ from urllib.parse import parse_qs, urlparse
 from app.agent import KnowledgeAgent
 from app.architecture import current_architecture
 from app.demo_graph import build_world_certification_demo_graph
-from app.governance import (
-    ALLOWED_STATUSES,
-    analyze_product_access_v2,
-    review_task_with_edits,
-    world_map_v2,
-)
+from app.governance import ALLOWED_STATUSES, analyze_product_access_v2, review_task_with_edits, world_map_v2
 from app.graph_backend import GraphBackendRouter
 from app.graph_governance import GraphGovernanceService
 from app.ingest import ingest_directory, ingest_file
-from app.model_gateway import build_rag_prompt, current_model_config
+from app.model_gateway import build_rag_prompt, current_model_config, test_model_connection
 from app.ontology import ontology_schema
+from app.processing import DocumentProcessingService
 from app.query_router import QueryRouter
 from app.retrieval import RetrievalPipeline
+from app.runtime_settings import RuntimeSettingsStore
 from app.store import KnowledgeStore
 from app.structured_extraction import extract_review_candidates_v2
 from app.upload import ALLOWED_SUFFIXES, DEFAULT_MAX_BYTES, save_browser_upload
@@ -32,6 +29,8 @@ DB_PATH = ROOT / "data" / "knowledge.db"
 SOURCE_DIR = ROOT.parent
 UPLOAD_DIR = ROOT / "data" / "uploads"
 STATIC_DIR = ROOT / "static"
+SETTINGS_PATH = ROOT / "data" / "runtime_settings.json"
+PROCESSING_TASK_PATH = ROOT / "data" / "processing_tasks.json"
 
 store = KnowledgeStore(DB_PATH)
 router = QueryRouter()
@@ -39,6 +38,8 @@ retrieval = RetrievalPipeline(store)
 graph_service = GraphGovernanceService(store)
 graph_backend = GraphBackendRouter(graph_service)
 agent = KnowledgeAgent(store, graph_service=graph_service, graph_backend=graph_backend)
+runtime_settings = RuntimeSettingsStore(SETTINGS_PATH)
+processing = DocumentProcessingService(store, UPLOAD_DIR, PROCESSING_TASK_PATH)
 
 
 def json_bytes(payload: object) -> bytes:
@@ -49,6 +50,20 @@ def as_bool(value: str | bool | None) -> bool:
     if isinstance(value, bool):
         return value
     return str(value or "").lower() in {"1", "true", "yes", "on"}
+
+
+def public_model_config(purpose: str) -> dict:
+    config = current_model_config(purpose)
+    return {
+        "purpose": purpose,
+        "provider": config.provider,
+        "base_url": config.base_url,
+        "model": config.model,
+        "enabled": config.enabled,
+        "configured": config.configured,
+        "timeout_seconds": config.timeout_seconds,
+        "api_key_set": bool(config.api_key),
+    }
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -78,28 +93,20 @@ class Handler(BaseHTTPRequestHandler):
                 "stats": store.stats(),
                 "graph": graph_service.summary(),
                 "graph_backend": graph_backend.status(ping=False),
-                "version": "2026.09-graphrag-v4",
+                "processing": {"tasks": len(processing.tasks.list(limit=300))},
+                "version": "2026.09-business-admin-v6",
             })
             return
         if parsed.path == "/api/capabilities":
-            config = current_model_config()
+            extraction = current_model_config("extraction")
+            vision = current_model_config("vision")
+            qa = current_model_config("qa")
             self._send_json({
-                "upload": {
-                    "suffixes": sorted(ALLOWED_SUFFIXES),
-                    "max_bytes": DEFAULT_MAX_BYTES,
-                    "browser_upload": True,
-                },
-                "structured_extraction": {
-                    "rule": True,
-                    "llm_optional": True,
-                    "llm_configured": config.configured,
-                    "model": config.model,
-                },
-                "governance": {
-                    "editable_review": True,
-                    "lifecycle_statuses": sorted(ALLOWED_STATUSES),
-                    "evidence_required": True,
-                },
+                "upload": {"suffixes": sorted(ALLOWED_SUFFIXES), "max_bytes": DEFAULT_MAX_BYTES, "browser_upload": True},
+                "document_processing": {"task_tracking": True, "structured_parse": True, "vision_ocr": vision.configured},
+                "knowledge_extraction": {"rule": True, "model_optional": True, "model_configured": extraction.configured},
+                "question_answering": {"model_optional": True, "model_configured": qa.configured},
+                "governance": {"editable_review": True, "lifecycle_statuses": sorted(ALLOWED_STATUSES), "evidence_required": True},
                 "knowledge_graph": {
                     "relation_review": True,
                     "version_chain": True,
@@ -111,6 +118,21 @@ class Handler(BaseHTTPRequestHandler):
                 },
             })
             return
+        if parsed.path == "/api/admin/settings":
+            self._send_json(runtime_settings.public())
+            return
+        if parsed.path == "/api/processing/tasks":
+            limit = min(int(params.get("limit", ["100"])[0] or 100), 300)
+            self._send_json({"items": processing.tasks.list(limit=limit)})
+            return
+        if parsed.path == "/api/processing/task":
+            task_id = params.get("id", [""])[0]
+            item = processing.tasks.get(task_id)
+            if not item:
+                self._send_json({"error": "processing task not found"}, HTTPStatus.NOT_FOUND)
+            else:
+                self._send_json(item)
+            return
         if parsed.path == "/api/architecture":
             self._send_json(current_architecture())
             return
@@ -118,8 +140,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(ontology_schema())
             return
         if parsed.path == "/api/query-plan":
-            query = params.get("q", [""])[0]
-            self._send_json(router.plan(query).to_dict())
+            self._send_json(router.plan(params.get("q", [""])[0]).to_dict())
             return
         if parsed.path == "/api/documents":
             self._send_json({"items": store.list_documents()})
@@ -128,14 +149,9 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json({"items": store.recent_ingestion_events()})
             return
         if parsed.path == "/api/model-config":
-            config = current_model_config()
             self._send_json({
-                "config": config.__dict__,
-                "sample_prompt": build_rag_prompt(
-                    "某产品出口欧盟需要哪些法规和认证依据？",
-                    [],
-                    query_plan={"route": "compliance_path"},
-                ),
+                "models": {purpose: public_model_config(purpose) for purpose in ("extraction", "qa", "vision")},
+                "sample_prompt": build_rag_prompt("某产品出口欧盟需要哪些法规和认证依据？", [], query_plan={"route": "compliance_path"}),
             })
             return
         if parsed.path == "/api/search":
@@ -143,34 +159,26 @@ class Handler(BaseHTTPRequestHandler):
             knowledge_type = params.get("type", [None])[0] or None
             plan = router.plan(query)
             items, trace = retrieval.retrieve(query, plan=plan, knowledge_type=knowledge_type)
-            self._send_json({
-                "query": query,
-                "query_plan": plan.to_dict(),
-                "trace": trace,
-                "items": items,
-            })
+            self._send_json({"query": query, "query_plan": plan.to_dict(), "trace": trace, "items": items})
             return
         if parsed.path == "/api/compliance/map":
-            include_demo = as_bool(params.get("include_demo", [""])[0])
-            as_of = params.get("as_of", [None])[0] or None
             try:
-                self._send_json(world_map_v2(store, include_demo=include_demo, as_of=as_of))
+                self._send_json(world_map_v2(
+                    store,
+                    include_demo=as_bool(params.get("include_demo", [""])[0]),
+                    as_of=params.get("as_of", [None])[0] or None,
+                ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
         if parsed.path == "/api/compliance/records":
-            region_code = params.get("region", [None])[0] or None
-            product_class = params.get("product_class", [None])[0] or None
-            self._send_json({
-                "items": store.list_compliance_records(
-                    region_code=region_code,
-                    product_class=product_class,
-                )
-            })
+            self._send_json({"items": store.list_compliance_records(
+                region_code=params.get("region", [None])[0] or None,
+                product_class=params.get("product_class", [None])[0] or None,
+            )})
             return
         if parsed.path == "/api/extraction-tasks":
-            status = params.get("status", [None])[0] or None
-            self._send_json({"items": store.list_extraction_tasks(status=status)})
+            self._send_json({"items": store.list_extraction_tasks(status=params.get("status", [None])[0] or None)})
             return
         if parsed.path == "/api/graph/summary":
             self._send_json(graph_service.summary())
@@ -179,8 +187,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(graph_backend.status(ping=as_bool(params.get("ping", [""])[0])))
             return
         if parsed.path == "/api/graph/relations":
-            status = params.get("status", [None])[0] or None
-            self._send_json({"items": graph_service.list_relations(status=status)})
+            self._send_json({"items": graph_service.list_relations(status=params.get("status", [None])[0] or None)})
             return
         if parsed.path == "/api/graph/project":
             try:
@@ -195,11 +202,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/graph/demo":
             graph = build_world_certification_demo_graph()
-            self._send_json({
-                "demo_data": True,
-                "warning": "仅演示图谱遍历，不代表真实法规/认证要求。",
-                "items": graph.reachable_requirements("product:demo_appliance", max_depth=5),
-            })
+            self._send_json({"demo_data": True, "warning": "仅用于展示关系结构。", "items": graph.reachable_requirements("product:demo_appliance", max_depth=5)})
+            return
+        if parsed.path in {"/admin", "/admin.html"}:
+            self._send_file(STATIC_DIR / "admin.html")
             return
         if parsed.path in {"/graph", "/graph.html"}:
             self._send_file(STATIC_DIR / "graph.html")
@@ -212,6 +218,29 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
 
+        if parsed.path == "/api/admin/settings":
+            try:
+                self._send_json(runtime_settings.save(self._read_json()))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        if parsed.path == "/api/admin/model-test":
+            try:
+                purpose = str(self._read_json().get("purpose") or "")
+                if purpose not in {"extraction", "qa", "vision"}:
+                    raise ValueError("unsupported model purpose")
+                self._send_json(test_model_connection(purpose))
+            except Exception as exc:
+                self._send_json({"ok": False, "error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        if parsed.path == "/api/processing/start":
+            try:
+                payload = self._read_json(max_bytes=40 * 1024 * 1024)
+                task = processing.start_browser_upload(payload)
+                self._send_json({"ok": True, "task": task})
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
         if parsed.path == "/api/ingest":
             ids = ingest_directory(store, SOURCE_DIR)
             self._send_json({"ok": True, "document_ids": ids, "stats": store.stats()})
@@ -219,49 +248,24 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/reset":
             graph_service.reset()
             store.reset()
-            self._send_json({
-                "ok": True,
-                "stats": store.stats(),
-                "graph": graph_service.summary(),
-            })
+            self._send_json({"ok": True, "stats": store.stats(), "graph": graph_service.summary()})
             return
         if parsed.path in {"/api/answer", "/api/answer-v2"}:
             payload = self._read_json()
-            self._send_json(agent.answer(
-                payload.get("question", ""),
-                knowledge_type=payload.get("knowledge_type") or None,
-            ))
+            self._send_json(agent.answer(payload.get("question", ""), knowledge_type=payload.get("knowledge_type") or None))
             return
         if parsed.path == "/api/upload":
             try:
                 payload = self._read_json(max_bytes=40 * 1024 * 1024)
-                saved = save_browser_upload(
-                    filename=payload.get("filename", ""),
-                    content_base64=payload.get("content_base64", ""),
-                    upload_dir=UPLOAD_DIR,
-                )
+                saved = save_browser_upload(filename=payload.get("filename", ""), content_base64=payload.get("content_base64", ""), upload_dir=UPLOAD_DIR)
                 document_id = ingest_file(store, saved["path"])
                 extraction = None
                 if as_bool(payload.get("auto_extract", True)):
-                    extraction = extract_review_candidates_v2(
-                        store,
-                        document_id,
-                        use_llm=as_bool(payload.get("use_llm", True)),
-                    )
+                    extraction = extract_review_candidates_v2(store, document_id, use_llm=as_bool(payload.get("use_llm", True)))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
-            self._send_json({
-                "ok": True,
-                "upload": {
-                    "filename": saved["filename"],
-                    "size": saved["size"],
-                    "sha256": saved["sha256"],
-                },
-                "document_id": document_id,
-                "extraction": extraction,
-                "stats": store.stats(),
-            })
+            self._send_json({"ok": True, "upload": {"filename": saved["filename"], "size": saved["size"], "sha256": saved["sha256"]}, "document_id": document_id, "extraction": extraction, "stats": store.stats()})
             return
         if parsed.path == "/api/upload-file":
             payload = self._read_json()
@@ -283,11 +287,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json({"error": "document_id is required"}, HTTPStatus.BAD_REQUEST)
                 return
             try:
-                result = extract_review_candidates_v2(
-                    store,
-                    int(document_id),
-                    use_llm=as_bool(payload.get("use_llm", True)),
-                )
+                result = extract_review_candidates_v2(store, int(document_id), use_llm=as_bool(payload.get("use_llm", True)))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
@@ -296,18 +296,11 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/extraction/review":
             payload = self._read_json()
             task_id = payload.get("task_id")
-            action = payload.get("action", "")
             if not task_id:
                 self._send_json({"error": "task_id is required"}, HTTPStatus.BAD_REQUEST)
                 return
             try:
-                result = review_task_with_edits(
-                    store,
-                    int(task_id),
-                    action=action,
-                    edits=payload.get("edits") or {},
-                    reviewer_note=payload.get("note", ""),
-                )
+                result = review_task_with_edits(store, int(task_id), action=payload.get("action", ""), edits=payload.get("edits") or {}, reviewer_note=payload.get("note", ""))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
@@ -332,10 +325,7 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/graph/suggest":
             payload = self._read_json()
             try:
-                result = graph_service.suggest_relations(
-                    region_code=payload.get("region_code", ""),
-                    product_class=payload.get("product_class", ""),
-                )
+                result = graph_service.suggest_relations(region_code=payload.get("region_code", ""), product_class=payload.get("product_class", ""))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
@@ -344,11 +334,7 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/graph/review":
             payload = self._read_json()
             try:
-                result = graph_service.review_relation(
-                    int(payload.get("relation_id")),
-                    action=payload.get("action", ""),
-                    note=payload.get("note", ""),
-                )
+                result = graph_service.review_relation(int(payload.get("relation_id")), action=payload.get("action", ""), note=payload.get("note", ""))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
@@ -365,11 +351,7 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/graph/path":
             payload = self._read_json()
             try:
-                result = graph_service.certification_paths(
-                    region_code=payload.get("region_code", ""),
-                    product_class=payload.get("product_class", ""),
-                    as_of=payload.get("as_of") or None,
-                )
+                result = graph_service.certification_paths(region_code=payload.get("region_code", ""), product_class=payload.get("product_class", ""), as_of=payload.get("as_of") or None)
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
@@ -386,10 +368,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/regulation-self-check":
             payload = self._read_json()
-            question = (
-                f"{payload.get('product', '')} 出口 {payload.get('region', '')} "
-                "的法规、认证、GMA、准入和风险要求是什么？"
-            )
+            question = f"{payload.get('product', '')} 出口 {payload.get('region', '')} 的法规、认证、准入和风险要求是什么？"
             self._send_json(agent.answer(question, knowledge_type="法规知识"))
             return
         self._send_json({"error": "not found"}, HTTPStatus.NOT_FOUND)
@@ -408,7 +387,8 @@ class Handler(BaseHTTPRequestHandler):
 
 def main() -> None:
     server = ThreadingHTTPServer(("127.0.0.1", 8765), Handler)
-    print("Knowledge platform prototype running at http://127.0.0.1:8765")
+    print("Knowledge platform running at http://127.0.0.1:8765")
+    print("Document & model management: http://127.0.0.1:8765/admin")
     server.serve_forever()
 
 
