@@ -114,7 +114,7 @@ class ChangeMonitorService:
                        fingerprint,event_type,severity,status,title,summary,
                        existing_record_id,candidate_task_id,related_record_id,
                        source_document_id,source_chunk_id,region_code,product_class,payload_json)
-                   VALUES(?,?,?,'open',?,?,?,?,?,?,?,?,?,?,?)""",
+                   VALUES(?,?,?,'open',?,?,?,?,?,?,?,?,?,?)""",
                 (
                     fingerprint, event_type, severity, title, summary,
                     existing_record_id, candidate_task_id, related_record_id,
