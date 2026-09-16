@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import urllib.error
 import urllib.request
@@ -92,9 +91,9 @@ def _extract_json_object(text: str) -> dict[str, Any]:
 
 
 def _call_structured_model(chunks: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    config = current_model_config()
+    config = current_model_config("extraction")
     if not config.configured:
-        return [], {"mode": "rule_only", "reason": "model gateway not configured"}
+        return [], {"mode": "rule_only", "reason": "知识抽取模型未配置或未启用"}
 
     body_chunks = [
         {"chunk_index": item["chunk_index"], "text": item["text"][:5500]}
@@ -116,19 +115,17 @@ def _call_structured_model(chunks: list[dict[str, Any]]) -> tuple[list[dict[str,
         "response_format": {"type": "json_object"},
     }, ensure_ascii=False).encode("utf-8")
     headers = {"Content-Type": "application/json"}
-    api_key = os.getenv("KB_LLM_API_KEY", "")
-    if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
+    if config.api_key:
+        headers["Authorization"] = f"Bearer {config.api_key}"
     req = urllib.request.Request(_chat_completions_url(config.base_url), data=request_body, headers=headers, method="POST")
-    timeout = float(os.getenv("KB_LLM_TIMEOUT", "60"))
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with urllib.request.urlopen(req, timeout=config.timeout_seconds) as resp:
             payload = json.loads(resp.read().decode("utf-8"))
         content = payload["choices"][0]["message"]["content"]
         data = _extract_json_object(content)
         candidates = data.get("candidates") if isinstance(data.get("candidates"), list) else []
         return candidates, {
-            "mode": "rule_plus_llm",
+            "mode": "rule_plus_model",
             "provider": config.provider,
             "model": config.model,
             "candidate_count": len(candidates),
@@ -157,7 +154,7 @@ def _create_llm_tasks(store: KnowledgeStore, document_id: int, chunks: list[dict
         confidence = max(0.0, min(float(raw.get("confidence") or 0.75), 0.99))
         attributes = {
             "excerpt": chunk["text"][:500],
-            "extraction_method": "llm_constrained_v1",
+            "extraction_method": "model_constrained_v2",
             "source_chunk_index": chunk_index,
             "authority": str(raw.get("authority") or ""),
             "applicability_scope": str(raw.get("applicability_scope") or ""),
@@ -204,17 +201,17 @@ def extract_review_candidates_v2(
     rule = extract_review_candidates(store, document_id)
     enriched = _enrich_rule_tasks(store, document_id)
     chunks = store.document_chunks(document_id)
-    llm_candidates: list[dict[str, Any]] = []
-    llm_trace: dict[str, Any] = {"mode": "disabled"}
+    model_candidates: list[dict[str, Any]] = []
+    model_trace: dict[str, Any] = {"mode": "disabled"}
     if use_llm:
-        llm_candidates, llm_trace = _call_structured_model(chunks)
-    llm_created = _create_llm_tasks(store, document_id, chunks, llm_candidates) if llm_candidates else 0
+        model_candidates, model_trace = _call_structured_model(chunks)
+    model_created = _create_llm_tasks(store, document_id, chunks, model_candidates) if model_candidates else 0
     return {
         "document_id": document_id,
         "rule_created": rule["created"],
         "rule_enriched": enriched,
-        "llm_created": llm_created,
-        "total_created": rule["created"] + llm_created,
-        "llm_trace": llm_trace,
-        "note": "规则和模型只生成候选；人工审核通过后才进入正式知识目录。",
+        "llm_created": model_created,
+        "total_created": rule["created"] + model_created,
+        "llm_trace": model_trace,
+        "note": "规则和模型只生成待校核内容，确认后才进入正式知识库。",
     }
