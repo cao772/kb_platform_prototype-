@@ -8,7 +8,8 @@ from typing import Any
 
 ALLOWED_SUFFIXES = {
     ".docx", ".pdf", ".txt", ".md", ".csv", ".xlsx", ".pptx",
-    ".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff",
+    ".json", ".html", ".htm",
+    ".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp",
 }
 DEFAULT_MAX_BYTES = 25 * 1024 * 1024
 
