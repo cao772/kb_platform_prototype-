@@ -47,7 +47,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
         if parsed.path in {"/", "/demo", "/demo.html"}:
-            self._send_file(STATIC_DIR / "demo.html")
+            self._send_file(STATIC_DIR / "business_demo.html")
             return
         self._send_json({"error": "not found"}, HTTPStatus.NOT_FOUND)
 
@@ -82,8 +82,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main() -> None:
     server = ThreadingHTTPServer(("127.0.0.1", 8766), Handler)
-    print("Customer demo sandbox running at http://127.0.0.1:8766")
-    print("Synthetic demo data only; never use as real compliance advice.")
+    print("Business demo running at http://127.0.0.1:8766")
     server.serve_forever()
 
 
