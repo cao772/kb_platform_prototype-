@@ -11,6 +11,7 @@ from app.agent import KnowledgeAgent
 from app.architecture import current_architecture
 from app.catalog import catalog_detail, list_catalog
 from app.catalog_maintenance import CatalogMaintenanceService
+from app.change_monitor import ChangeMonitorService
 from app.demo_graph import build_world_certification_demo_graph
 from app.governance import ALLOWED_STATUSES, analyze_product_access_v2, review_task_with_edits, world_map_v2
 from app.graph_backend import GraphBackendRouter
@@ -36,13 +37,14 @@ PROCESSING_TASK_PATH = ROOT / "data" / "processing_tasks.json"
 
 store = KnowledgeStore(DB_PATH)
 catalog_maintenance = CatalogMaintenanceService(store)
+change_monitor = ChangeMonitorService(store)
 router = QueryRouter()
 retrieval = RetrievalPipeline(store)
 graph_service = GraphGovernanceService(store)
 graph_backend = GraphBackendRouter(graph_service)
 agent = KnowledgeAgent(store, graph_service=graph_service, graph_backend=graph_backend)
 runtime_settings = RuntimeSettingsStore(SETTINGS_PATH)
-processing = DocumentProcessingService(store, UPLOAD_DIR, PROCESSING_TASK_PATH)
+processing = DocumentProcessingService(store, UPLOAD_DIR, PROCESSING_TASK_PATH, change_monitor=change_monitor)
 
 
 def json_bytes(payload: object) -> bytes:
@@ -97,7 +99,8 @@ class Handler(BaseHTTPRequestHandler):
                 "graph": graph_service.summary(),
                 "graph_backend": graph_backend.status(ping=False),
                 "processing": {"tasks": len(processing.tasks.list(limit=300))},
-                "version": "2026.09-business-maintenance-v10",
+                "change_watch": change_monitor.summary(),
+                "version": "2026.09-change-watch-v11",
             })
             return
         if parsed.path == "/api/capabilities":
@@ -120,6 +123,15 @@ class Handler(BaseHTTPRequestHandler):
                     "evidence_attachment": True,
                     "change_audit": True,
                     "hard_delete": False,
+                },
+                "change_monitoring": {
+                    "enabled": True,
+                    "automatic_after_extraction": True,
+                    "version_difference": True,
+                    "status_difference": True,
+                    "requirement_difference": True,
+                    "impact_review_after_formal_change": True,
+                    "human_confirmation_required": True,
                 },
                 "governance": {"editable_review": True, "lifecycle_statuses": sorted(ALLOWED_STATUSES), "evidence_required": True},
                 "knowledge_graph": {
@@ -233,6 +245,26 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
+        if parsed.path == "/api/change-watch/summary":
+            self._send_json(change_monitor.summary())
+            return
+        if parsed.path == "/api/change-watch/tasks":
+            self._send_json({"items": change_monitor.list_tasks(
+                status=params.get("status", ["open"])[0],
+                event_type=params.get("type", [""])[0],
+                severity=params.get("severity", [""])[0],
+                limit=min(int(params.get("limit", ["200"])[0] or 200), 500),
+            )})
+            return
+        if parsed.path == "/api/change-watch/detail":
+            try:
+                task_id = int(params.get("id", ["0"])[0] or 0)
+                if task_id <= 0:
+                    raise ValueError("id is required")
+                self._send_json(change_monitor.detail(task_id))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
         if parsed.path == "/api/extraction-tasks":
             self._send_json({"items": store.list_extraction_tasks(status=params.get("status", [None])[0] or None)})
             return
@@ -265,6 +297,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path in {"/catalog", "/catalog.html"}:
             self._send_file(STATIC_DIR / "catalog.html")
+            return
+        if parsed.path in {"/changes", "/changes.html"}:
+            self._send_file(STATIC_DIR / "changes.html")
             return
         if parsed.path in {"/graph", "/graph.html"}:
             self._send_file(STATIC_DIR / "graph.html")
@@ -306,8 +341,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/reset":
             graph_service.reset()
+            change_monitor.reset()
             store.reset()
-            self._send_json({"ok": True, "stats": store.stats(), "graph": graph_service.summary()})
+            self._send_json({"ok": True, "stats": store.stats(), "graph": graph_service.summary(), "change_watch": change_monitor.summary()})
             return
         if parsed.path in {"/api/answer", "/api/answer-v2"}:
             payload = self._read_json()
@@ -319,12 +355,14 @@ class Handler(BaseHTTPRequestHandler):
                 saved = save_browser_upload(filename=payload.get("filename", ""), content_base64=payload.get("content_base64", ""), upload_dir=UPLOAD_DIR)
                 document_id = ingest_file(store, saved["path"])
                 extraction = None
+                change_watch = None
                 if as_bool(payload.get("auto_extract", True)):
                     extraction = extract_review_candidates_v2(store, document_id, use_llm=as_bool(payload.get("use_llm", True)))
+                    change_watch = change_monitor.scan(document_id=int(document_id))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
-            self._send_json({"ok": True, "upload": {"filename": saved["filename"], "size": saved["size"], "sha256": saved["sha256"]}, "document_id": document_id, "extraction": extraction, "stats": store.stats()})
+            self._send_json({"ok": True, "upload": {"filename": saved["filename"], "size": saved["size"], "sha256": saved["sha256"]}, "document_id": document_id, "extraction": extraction, "change_watch": change_watch, "stats": store.stats()})
             return
         if parsed.path == "/api/upload-file":
             payload = self._read_json()
@@ -347,10 +385,11 @@ class Handler(BaseHTTPRequestHandler):
                 return
             try:
                 result = extract_review_candidates_v2(store, int(document_id), use_llm=as_bool(payload.get("use_llm", True)))
+                change_watch = change_monitor.scan(document_id=int(document_id))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
-            self._send_json({"ok": True, **result, "stats": store.stats()})
+            self._send_json({"ok": True, **result, "change_watch": change_watch, "stats": store.stats()})
             return
         if parsed.path == "/api/extraction/review":
             payload = self._read_json()
@@ -365,6 +404,26 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._send_json({"ok": True, **result, "stats": store.stats()})
             return
+        if parsed.path == "/api/change-watch/scan":
+            payload = self._read_json()
+            try:
+                document_id = int(payload.get("document_id") or 0) or None
+                self._send_json({"ok": True, **change_monitor.scan(document_id=document_id)})
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        if parsed.path == "/api/change-watch/review":
+            payload = self._read_json()
+            try:
+                self._send_json({"ok": True, **change_monitor.review(
+                    int(payload.get("task_id") or 0),
+                    action=payload.get("action", ""),
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
+                )})
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
         if parsed.path == "/api/catalog/update":
             payload = self._read_json()
             try:
@@ -374,7 +433,8 @@ class Handler(BaseHTTPRequestHandler):
                     operator=payload.get("operator", ""),
                     note=payload.get("note", ""),
                 )
-                self._send_json({"ok": True, **result})
+                impact_todo = change_monitor.create_impact_review(record_id=result["record_id"], change_id=result["change_id"], action="update")
+                self._send_json({"ok": True, **result, "impact_todo": impact_todo})
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
@@ -388,7 +448,8 @@ class Handler(BaseHTTPRequestHandler):
                     operator=payload.get("operator", ""),
                     note=payload.get("note", ""),
                 )
-                self._send_json({"ok": True, **result})
+                impact_todo = change_monitor.create_impact_review(record_id=result["record_id"], change_id=result["change_id"], action="status")
+                self._send_json({"ok": True, **result, "impact_todo": impact_todo})
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
@@ -407,7 +468,11 @@ class Handler(BaseHTTPRequestHandler):
                     mark_source_superseded=as_bool(payload.get("mark_source_superseded", True)),
                     close_source_day_before=as_bool(payload.get("close_source_day_before", False)),
                 )
-                self._send_json({"ok": True, **result})
+                impact_todo = change_monitor.create_impact_review(
+                    record_id=result["record_id"], change_id=result["change_id"], action="create_version",
+                    related_record_id=result.get("replacement_record_id"),
+                )
+                self._send_json({"ok": True, **result, "impact_todo": impact_todo})
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
@@ -511,6 +576,7 @@ def main() -> None:
     server = ThreadingHTTPServer(("127.0.0.1", 8765), Handler)
     print("Knowledge platform running at http://127.0.0.1:8765")
     print("Formal knowledge catalog: http://127.0.0.1:8765/catalog")
+    print("Regulation change & todo center: http://127.0.0.1:8765/changes")
     print("Document & model management: http://127.0.0.1:8765/admin")
     server.serve_forever()
 
