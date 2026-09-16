@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, urlparse
 
 from app.agent import KnowledgeAgent
 from app.architecture import current_architecture
+from app.catalog import catalog_detail, list_catalog
 from app.demo_graph import build_world_certification_demo_graph
 from app.governance import ALLOWED_STATUSES, analyze_product_access_v2, review_task_with_edits, world_map_v2
 from app.graph_backend import GraphBackendRouter
@@ -94,7 +95,7 @@ class Handler(BaseHTTPRequestHandler):
                 "graph": graph_service.summary(),
                 "graph_backend": graph_backend.status(ping=False),
                 "processing": {"tasks": len(processing.tasks.list(limit=300))},
-                "version": "2026.09-business-admin-v6",
+                "version": "2026.09-business-catalog-v9",
             })
             return
         if parsed.path == "/api/capabilities":
@@ -106,6 +107,7 @@ class Handler(BaseHTTPRequestHandler):
                 "document_processing": {"task_tracking": True, "structured_parse": True, "vision_ocr": vision.configured},
                 "knowledge_extraction": {"rule": True, "model_optional": True, "model_configured": extraction.configured},
                 "question_answering": {"model_optional": True, "model_configured": qa.configured},
+                "formal_catalog": {"enabled": True, "version_history": True, "evidence_trace": True, "relation_summary": True},
                 "governance": {"editable_review": True, "lifecycle_statuses": sorted(ALLOWED_STATUSES), "evidence_required": True},
                 "knowledge_graph": {
                     "relation_review": True,
@@ -176,6 +178,31 @@ class Handler(BaseHTTPRequestHandler):
                 region_code=params.get("region", [None])[0] or None,
                 product_class=params.get("product_class", [None])[0] or None,
             )})
+            return
+        if parsed.path == "/api/catalog":
+            try:
+                self._send_json(list_catalog(
+                    store,
+                    record_type=params.get("type", [""])[0],
+                    region_code=params.get("region", [""])[0],
+                    product_class=params.get("product_class", [""])[0],
+                    lifecycle=params.get("lifecycle", [""])[0],
+                    query=params.get("q", [""])[0],
+                    evidence=params.get("evidence", [""])[0],
+                    as_of=params.get("as_of", [None])[0] or None,
+                    limit=min(int(params.get("limit", ["500"])[0] or 500), 1000),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        if parsed.path == "/api/catalog/detail":
+            try:
+                record_id = int(params.get("id", ["0"])[0] or 0)
+                if record_id <= 0:
+                    raise ValueError("id is required")
+                self._send_json(catalog_detail(store, record_id, as_of=params.get("as_of", [None])[0] or None))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
         if parsed.path == "/api/extraction-tasks":
             self._send_json({"items": store.list_extraction_tasks(status=params.get("status", [None])[0] or None)})
