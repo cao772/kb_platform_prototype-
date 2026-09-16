@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>法规认证知识平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#1e2a3a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:62px;background:#0b376a;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 30px}.brand{font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px}.brand i{width:10px;height:10px;border-radius:50%;background:#48d49b;box-shadow:0 0 0 4px #48d49b25}.market{font-size:12px;color:#dbe8f6}.wrap{max-width:1480px;margin:18px auto;padding:0 20px}.hero{background:linear-gradient(125deg,#0f447f,#0e678b);color:#fff;border-radius:15px;padding:26px 30px;display:grid;grid-template-columns:1.35fr .65fr;gap:20px}.hero h1{margin:0 0 8px;font-size:27px}.hero p{margin:0;color:#dceafa;line-height:1.7;font-size:14px}.hero-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px}.btn{border:0;border-radius:8px;background:#0e5598;color:#fff;padding:10px 15px;cursor:pointer;font:inherit}.hero .btn{background:#fff;color:#0e5598}.hero .btn.alt{background:#ffffff18;color:#fff;border:1px solid #ffffff50}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}.metric,.card{background:#fff;border:1px solid #e0e6ee;border-radius:12px;box-shadow:0 4px 14px #1d355008}.metric{padding:14px 16px}.metric span{font-size:12px;color:#7d8998}.metric strong{display:block;font-size:23px;color:#164a80;margin-top:4px}.grid{display:grid;grid-template-columns:1.4fr .6fr;gap:14px}.card{padding:17px}.card h2{font-size:16px;margin:0 0 12px;color:#1d2b3c}.muted{font-size:12px;color:#738094;line-height:1.7}.overview{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.biz-node{position:relative;background:#f7f9fc;border:1px solid #dde5ee;border-radius:10px;padding:13px;min-height:96px}.biz-node:not(:last-child):after{content:'›';position:absolute;right:-8px;top:35px;color:#9cadbf;font-size:24px;z-index:2}.biz-node .tag{font-size:10px;color:#718096}.biz-node b{display:block;font-size:13px;margin:8px 0 4px;color:#26394f}.biz-node span{font-size:11px;color:#7d8998}.summary-box{background:#f7fafd;border-radius:10px;padding:13px;margin-bottom:9px}.summary-box b{font-size:13px;color:#184f85}.summary-box p{font-size:12px;color:#657487;line-height:1.65;margin:6px 0 0}.section{margin-top:14px}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.source,.path,.impact{background:#f7f9fc;border:1px solid #e3e8ef;border-radius:9px;padding:10px 12px;margin-top:7px}.source b,.path b,.impact b{font-size:12px}.source span,.path span,.impact span{display:block;font-size:11px;color:#7a8797;margin-top:4px;line-height:1.55}.qa{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.qa textarea{width:100%;min-height:84px;border:1px solid #cbd5e1;border-radius:9px;padding:10px;font:inherit;resize:vertical}.answer{background:#f7f9fc;border-radius:9px;padding:12px;white-space:pre-wrap;line-height:1.75;font-size:13px;min-height:108px}.evidence{display:flex;flex-direction:column;gap:7px}.evidence-item{background:#f7f9fc;border:1px solid #e3e8ef;border-radius:9px;padding:10px 12px}.evidence-item b{font-size:12px}.evidence-item span{display:block;font-size:11px;color:#7b8797;margin-top:4px}.status{display:inline-block;border-radius:999px;background:#eaf8f0;color:#2d7452;padding:4px 8px;font-size:11px}.soft{background:#edf4fb;color:#42698e}.footer-note{font-size:11px;color:#8994a2;margin:14px 2px 24px}.empty{font-size:12px;color:#8a96a5;padding:10px 0}.loading{opacity:.7}@media(max-width:1050px){.hero,.grid,.two,.qa{grid-template-columns:1fr}.hero-actions{justify-content:flex-start}.metrics{grid-template-columns:1fr 1fr}.overview{grid-template-columns:1fr 1fr}.biz-node:not(:last-child):after{display:none}}@media(max-width:650px){.metrics,.overview{grid-template-columns:1fr}.top{padding:0 14px}.wrap{padding:0 12px}.hero{padding:20px}.hero h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="top"><div class="brand"><i></i>法规认证知识平台</div><div class="market">欧盟 · 家用电器</div></div>
+<div class="wrap">
+  <div class="hero">
+    <div><h1>智能家电进入欧盟市场</h1><p>围绕产品和目标市场，集中查看适用法规、产品标准、认证要求、技术资料和检测项目，并支持法规变化后的影响范围查询。</p></div>
+    <div class="hero-actions"><button class="btn" onclick="askBusiness()">查询准入要求</button><button class="btn alt" onclick="loadScenario()">刷新</button></div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><span>适用法规</span><strong id="mReg">-</strong></div>
+    <div class="metric"><span>相关标准</span><strong id="mStd">-</strong></div>
+    <div class="metric"><span>认证事项</span><strong id="mCert">-</strong></div>
+    <div class="metric"><span>技术要求</span><strong id="mReq">-</strong></div>
+    <div class="metric"><span>检测项目</span><strong id="mTest">-</strong></div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h2>准入要求总览</h2><div id="overview" class="overview"></div></div>
+    <div class="card"><h2>当前判断</h2><div id="currentSummary"></div></div>
+  </div>
+
+  <div class="two section">
+    <div class="card"><h2>认证与合规路径</h2><div id="paths"></div></div>
+    <div class="card"><h2>法规依据</h2><div id="sources"></div></div>
+  </div>
+
+  <div class="qa">
+    <div class="card"><h2>法规问答</h2><textarea id="question">智能家电进入欧盟市场，需要核对哪些法规、认证和检测要求？</textarea><button class="btn" style="margin-top:8px" onclick="askBusiness()">查询</button><div id="answer" class="answer" style="margin-top:10px">请输入问题并点击“查询”。</div></div>
+    <div class="card"><h2>依据来源</h2><div id="evidence" class="evidence"><div class="empty">查询后显示相关法规资料和依据。</div></div></div>
+  </div>
+
+  <div class="two section">
+    <div class="card"><h2>法规变化影响</h2><div id="impactSummary" class="muted"></div><div id="impact"></div></div>
+    <div class="card"><h2>版本与适用情况</h2><div id="versionSummary"></div></div>
+  </div>
+
+  <div class="footer-note">当前页面用于业务场景展示，实际项目接入正式法规认证资料后，查询结果随正式知识库同步更新。</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url,opt){const r=await fetch(url,opt);const d=await r.json();if(!r.ok)throw new Error(d.error||r.statusText);return d}
+function clean(s){return String(s||'').replace(/^演示[：:]?\s*/,'').replace(/演示/g,'').replace(/^DEMO[-_]/,'')}
+function typeLabel(t){return{regulation:'法规',standard:'标准',certification:'认证',requirement:'技术要求',test_item:'检测项目'}[t]||t}
+function nodeByType(nodes,t){return (nodes||[]).filter(x=>x.node_type===t)}
+function renderScenario(d){
+  const nodes=d.graph.nodes||[];
+  const groups={regulation:nodeByType(nodes,'regulation'),standard:nodeByType(nodes,'standard'),certification:nodeByType(nodes,'certification'),requirement:nodeByType(nodes,'requirement'),test_item:nodeByType(nodes,'test_item')};
+  $('mReg').textContent=groups.regulation.length;$('mStd').textContent=groups.standard.length;$('mCert').textContent=groups.certification.length;$('mReq').textContent=groups.requirement.length;$('mTest').textContent=groups.test_item.length;
+  const order=['regulation','standard','certification','requirement','test_item'];
+  $('overview').innerHTML=order.map(t=>{const n=groups[t][0];return `<div class="biz-node"><div class="tag">${typeLabel(t)}</div><b>${esc(n?clean(n.label):'待补充')}</b><span>${n?('版本 '+esc(n.version||'-')):'暂无已确认内容'}</span></div>`}).join('');
+  const st=d.access||{};const ready=st.status==='evidence_ready';
+  $('currentSummary').innerHTML=`<div class="summary-box"><span class="status">${ready?'依据完整':'待补充依据'}</span><p>已按家用电器和欧盟市场范围整理当前适用要求。</p></div><div class="summary-box"><b>判断日期</b><p>${esc(st.as_of||d.scenario.as_of||'-')}</p></div><div class="summary-box"><b>下一步</b><p>${ready?'可继续核对产品具体型号、参数和检测资料，形成项目级准入清单。':'补齐缺失法规、认证或检测依据后再形成准入清单。'}</p></div>`;
+  const paths=d.paths.paths||[];
+  $('paths').innerHTML=paths.length?paths.slice(0,6).map((p,i)=>`<div class="path"><b>路径 ${i+1}</b><span>${p.nodes.map(n=>esc(clean(n.label||n.name))).join(' → ')}</span></div>`).join(''):'<div class="empty">暂未形成完整认证路径。</div>';
+  $('sources').innerHTML=(d.documents||[]).map(x=>`<div class="source"><b>${esc(clean(x.title))}</b><span>已纳入法规知识库，并关联到当前准入要求。</span></div>`).join('')||'<div class="empty">暂无法规资料。</div>';
+  const impact=d.impact||{};$('impactSummary').textContent=`当前法规变化后，需要重点复核 ${impact.summary?.downstream_count||0} 项关联要求。`;
+  $('impact').innerHTML=(impact.downstream||[]).slice(0,8).map(x=>`<div class="impact"><b>${esc(clean(x.record?.name||''))}</b><span>${esc(typeLabel(x.record?.record_type||''))} · 关联层级 ${esc(x.depth||'')}</span></div>`).join('')||'<div class="empty">暂无受影响事项。</div>';
+  const current=groups.regulation[0];
+  $('versionSummary').innerHTML=`<div class="summary-box"><b>当前适用版本</b><p>${current?esc(clean(current.label))+' · '+esc(current.version||'-'):'待确认'}</p></div><div class="summary-box"><b>适用范围</b><p>产品类别：家用电器<br>目标市场：欧盟</p></div><div class="summary-box"><b>更新机制</b><p>法规或标准发生变化后，关联认证、技术资料和检测项目可同步进入复核范围。</p></div>`;
+}
+async function loadScenario(){try{const d=await api('/api/demo/scenario');renderScenario(d)}catch(e){alert(e.message)}}
+async function askBusiness(){try{$('answer').textContent='正在查询…';$('evidence').innerHTML='<div class="empty">正在整理依据…</div>';const d=await api('/api/demo/answer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:$('question').value.trim()})});$('answer').textContent=clean(d.answer||'当前没有足够依据。');const cs=d.citations||[];$('evidence').innerHTML=cs.length?cs.slice(0,8).map((x,i)=>`<div class="evidence-item"><b>依据 ${i+1}：${esc(clean(x.title||x.filename||'法规资料'))}</b><span>已关联知识库证据 · 相关度 ${Number(x.score||0).toFixed(2)}</span></div>`).join(''):'<div class="empty">当前没有检索到可引用的依据。</div>'}catch(e){$('answer').textContent=e.message}}
+loadScenario();
+</script>
+</body>
+</html>
