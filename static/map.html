@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>法规认证地图 · 法规认证知识平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.brand{font-size:19px;font-weight:700}.top a{color:#dceafb;text-decoration:none;font-size:13px}.wrap{max-width:1580px;margin:18px auto;padding:0 20px}.hero{background:linear-gradient(125deg,#103d78,#0d608b);color:#fff;border-radius:16px;padding:23px 27px;margin-bottom:13px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px}.hero h1{margin:0 0 7px;font-size:25px}.hero p{margin:0;color:#dceafb;line-height:1.7}.badge{font-size:12px;border:1px solid #ffffff44;background:#ffffff12;border-radius:9px;padding:8px 10px;white-space:nowrap}.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-bottom:13px}.metric,.card{background:#fff;border:1px solid #e0e7ef;border-radius:12px;box-shadow:0 4px 14px #19304b0a}.metric{padding:13px 14px}.metric span{font-size:11px;color:#7e8998}.metric strong{display:block;font-size:22px;color:#123d6c;margin-top:2px}.card{padding:15px}.filters{display:grid;grid-template-columns:1.25fr 180px 170px 160px auto;gap:8px;align-items:end}.filters label{display:block;font-size:11px;color:#718095;margin-bottom:5px}input,select{width:100%;border:1px solid #cad4e1;border-radius:8px;padding:9px 10px;background:#fff;font:inherit}.check{height:39px;border:1px solid #d8e1eb;border-radius:8px;display:flex;align-items:center;gap:7px;padding:0 10px;font-size:12px;color:#617084;background:#f9fbfd}.check input{width:auto}.btn{border:0;border-radius:8px;background:#0d4f91;color:#fff;padding:9px 14px;cursor:pointer;white-space:nowrap}.layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(360px,.45fr);gap:13px;margin-top:13px}.map-card{padding:0;overflow:hidden}.map-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #e4eaf1}.map-head h2{font-size:16px;margin:0}.legend{display:flex;gap:11px;flex-wrap:wrap;font-size:11px;color:#718095}.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}.world{background:linear-gradient(#edf7ff,#fbfdff);position:relative;overflow:auto}.world svg{display:block;width:100%;min-width:880px;min-height:520px}.ocean-line{stroke:#d8e7f2;stroke-width:1;stroke-dasharray:4 8}.land{fill:#dfe8ef;stroke:#c8d6e2;stroke-width:1.2}.coast2{fill:#e8eef3;stroke:#d4dee7;stroke-width:1}.marker{cursor:pointer}.marker .halo{fill:#0d5c9e18}.marker .bubble{stroke:#fff;stroke-width:3}.marker.stable .bubble{fill:#2b8a5b}.marker.attention .bubble{fill:#d4952d}.marker.high .bubble{fill:#c74e4e}.marker text{font-size:12px;fill:#173b5d;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3px}.marker .count{font-size:10px;fill:#fff;stroke:none}.marker.selected .halo{fill:#0d5c9e2f}.marker.selected .bubble{stroke:#173b5d;stroke-width:4}.map-foot{padding:10px 14px;border-top:1px solid #e4eaf1;font-size:11px;color:#7d8998;display:flex;justify-content:space-between;gap:10px}.detail{min-height:670px}.empty{font-size:13px;color:#7c8999;padding:28px 10px;text-align:center}.detail h2{font-size:20px;margin:6px 0 2px}.code{font-size:12px;color:#7b8797}.section{border-top:1px solid #e4eaf1;margin-top:14px;padding-top:13px}.section h3{font-size:13px;margin:0 0 8px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.summary div{background:#f6f9fc;border-radius:8px;padding:9px;text-align:center}.summary b{display:block;color:#0d4f91;font-size:18px}.summary span{font-size:10px;color:#7b8798}.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{font-size:10px;padding:4px 7px;border-radius:999px;background:#edf3f8;color:#56687b}.record,.change{border:1px solid #e0e7ef;border-radius:8px;padding:9px 10px;margin-top:7px;background:#fff}.record b,.change b{font-size:12px}.record p,.change p{font-size:11px;color:#657388;line-height:1.5;margin:4px 0 0}.meta{font-size:10px;color:#8a96a5;margin-top:4px}.change.high{border-left:3px solid #c74e4e}.change.medium{border-left:3px solid #d4952d}.quick{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}.link{font-size:12px;text-decoration:none;color:#0d4f91;background:#edf4fb;border-radius:7px;padding:7px 9px}.unmapped{margin-top:13px}.unmapped h3{font-size:13px;margin:0 0 8px}.region-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #e3e9f0;border-radius:8px;margin-top:6px;font-size:12px;cursor:pointer;background:#fff}.region-row:hover{border-color:#8baed0}@media(max-width:1180px){.metrics{grid-template-columns:repeat(3,1fr)}.filters{grid-template-columns:1fr 1fr 1fr}.layout{grid-template-columns:1fr}}@media(max-width:680px){.top{padding:0 14px}.wrap{padding:0 11px}.hero{flex-direction:column;align-items:flex-start}.metrics{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr}.summary{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="top"><div class="brand">法规认证地图</div><a href="/">← 返回法规认证知识平台</a></div>
+<div class="wrap">
+  <div class="hero"><div><h1>按市场查看法规、认证与近期变化</h1><p>从国家和地区维度查看正式法规知识、认证事项、检测要求和近期变化，快速定位重点市场与待处理事项。</p></div><div class="badge" id="dateBadge">判断日期 -</div></div>
+  <div class="metrics">
+    <div class="metric"><span>覆盖国家/地区</span><strong id="mRegions">-</strong></div>
+    <div class="metric"><span>正式知识</span><strong id="mKnowledge">-</strong></div>
+    <div class="metric"><span>当前生效</span><strong id="mActive">-</strong></div>
+    <div class="metric"><span>变化待办</span><strong id="mChanges">-</strong></div>
+    <div class="metric"><span>90天内生效</span><strong id="mUpcoming">-</strong></div>
+    <div class="metric"><span>待补充依据</span><strong id="mEvidence">-</strong></div>
+  </div>
+  <div class="card">
+    <div class="filters">
+      <div><label>产品分类</label><input id="productClass" placeholder="例如：家用电器"></div>
+      <div><label>知识类别</label><select id="recordType"><option value="">全部正式知识</option><option value="regulation">法规</option><option value="standard">标准</option><option value="certification">认证</option><option value="requirement">技术要求</option><option value="test_item">检测项目</option></select></div>
+      <div><label>判断日期</label><input id="asOf" type="date"></div>
+      <label class="check"><input id="onlyChanged" type="checkbox">只看有变化地区</label>
+      <button class="btn" onclick="loadMap()">刷新地图</button>
+    </div>
+  </div>
+  <div class="layout">
+    <div>
+      <div class="card map-card">
+        <div class="map-head"><h2>全球法规认证分布</h2><div class="legend"><span><i class="dot" style="background:#2b8a5b"></i>当前稳定</span><span><i class="dot" style="background:#d4952d"></i>有变化/待关注</span><span><i class="dot" style="background:#c74e4e"></i>有高优先级变化</span></div></div>
+        <div class="world"><svg id="worldSvg" viewBox="0 0 1000 500" role="img" aria-label="法规认证世界地图">
+          <line class="ocean-line" x1="0" y1="125" x2="1000" y2="125"/><line class="ocean-line" x1="0" y1="250" x2="1000" y2="250"/><line class="ocean-line" x1="0" y1="375" x2="1000" y2="375"/>
+          <path class="land" d="M72 112 L113 80 L180 70 L223 97 L247 132 L227 155 L188 151 L170 172 L132 165 L111 145 L83 143 Z"/>
+          <path class="land" d="M205 169 L236 188 L248 221 L237 251 L249 284 L229 328 L206 353 L188 329 L193 292 L180 258 L184 220 Z"/>
+          <path class="coast2" d="M174 62 L199 50 L220 61 L204 77 Z"/>
+          <path class="land" d="M439 94 L480 78 L525 91 L552 108 L593 103 L638 119 L691 108 L739 123 L784 147 L825 174 L812 196 L764 191 L738 205 L695 196 L670 215 L632 201 L605 218 L570 202 L543 185 L516 183 L495 161 L462 157 L441 136 Z"/>
+          <path class="land" d="M489 174 L528 171 L559 194 L572 232 L557 269 L532 305 L497 298 L479 260 L462 229 L469 196 Z"/>
+          <path class="coast2" d="M566 214 L582 224 L580 249 L567 257 L560 239 Z"/>
+          <path class="land" d="M777 307 L815 287 L861 296 L888 323 L875 352 L836 365 L798 349 Z"/>
+          <path class="coast2" d="M892 356 L904 365 L899 381 L887 374 Z"/>
+          <path class="coast2" d="M847 191 L858 183 L866 196 L858 213 L849 205 Z"/>
+          <g id="markers"></g>
+        </svg></div>
+        <div class="map-foot"><span>圆点大小代表该市场正式知识数量，点击圆点查看详情。</span><span id="mappedText">-</span></div>
+      </div>
+      <div class="card unmapped" id="unmappedCard" style="display:none"><h3>其他已入库地区</h3><div id="unmappedList"></div></div>
+    </div>
+    <div class="card detail"><div id="detailBox" class="empty">点击地图上的国家或地区，查看法规、标准、认证、技术要求、检测项目和近期变化。</div></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));$('asOf').value=new Date().toISOString().slice(0,10);let regions=[],selected='';
+function typeLabel(v){return{regulation:'法规',standard:'标准',certification:'认证',requirement:'技术要求',test_item:'检测项目'}[v]||v}function lifeLabel(v){return{active:'生效',transition:'过渡期',future:'尚未生效',expired:'已过期',repealed:'废止',withdrawn:'撤回',superseded:'被替代',unknown:'待确认'}[v]||v}
+async function api(url){const r=await fetch(url);let d={};try{d=await r.json()}catch(e){throw new Error('服务返回格式异常')}if(!r.ok||d.error)throw new Error(d.error||`HTTP ${r.status}`);return d}
+function qs(extra={}){return new URLSearchParams({product_class:$('productClass').value.trim(),as_of:$('asOf').value,...extra}).toString()}
+async function loadMap(){try{const d=await api('/api/map/overview?'+new URLSearchParams({product_class:$('productClass').value.trim(),type:$('recordType').value,as_of:$('asOf').value,only_changed:$('onlyChanged').checked?'1':''}).toString());regions=d.regions||[];const s=d.summary||{};$('mRegions').textContent=s.regions||0;$('mKnowledge').textContent=s.knowledge||0;$('mActive').textContent=s.active||0;$('mChanges').textContent=s.pending_changes||0;$('mUpcoming').textContent=s.upcoming_effective||0;$('mEvidence').textContent=s.evidence_missing||0;$('dateBadge').textContent='判断日期 '+(d.as_of||'-');renderMarkers();if(selected&&regions.some(x=>x.region_code===selected))await showRegion(selected);else if(regions.length){await showRegion(regions[0].region_code)}else{$('detailBox').innerHTML='<div class="empty">当前筛选条件下暂无正式知识或变化待办。</div>'}}catch(e){$('detailBox').innerHTML='<div class="empty">地图加载失败：'+esc(e.message)+'</div>'}}
+function renderMarkers(){const box=$('markers');const mapped=regions.filter(x=>x.mappable),unmapped=regions.filter(x=>!x.mappable);$('mappedText').textContent=`地图展示 ${mapped.length} 个地区`;box.innerHTML=mapped.map(x=>{const r=Math.max(10,Math.min(23,9+Math.sqrt(Number(x.knowledge_count||0))*3));const label=x.region_name||x.region_code;return `<g class="marker ${esc(x.attention)} ${selected===x.region_code?'selected':''}" transform="translate(${Number(x.x)},${Number(x.y)})" onclick="showRegion('${esc(x.region_code)}')"><circle class="halo" r="${r+10}"></circle><circle class="bubble" r="${r}"></circle><text class="count" text-anchor="middle" dy="3">${Number(x.knowledge_count||0)}</text><text text-anchor="middle" y="${r+20}">${esc(label)}</text></g>`}).join('');$('unmappedCard').style.display=unmapped.length?'block':'none';$('unmappedList').innerHTML=unmapped.map(x=>`<div class="region-row" onclick="showRegion('${esc(x.region_code)}')"><span>${esc(x.region_name||x.region_code)}</span><span>${Number(x.knowledge_count||0)} 条 · ${Number(x.pending_changes||0)} 项变化</span></div>`).join('')}
+async function showRegion(code){selected=code;renderMarkers();const box=$('detailBox');box.innerHTML='<div class="empty">正在加载地区详情…</div>';try{const d=await api('/api/map/detail?'+qs({region:code})),s=d.summary||{},c=s.type_counts||{},lc=s.lifecycle_counts||{};let html=`<div class="code">${esc(d.region_code)}</div><h2>${esc(d.region_name||d.region_code)}</h2><div class="section"><div class="summary"><div><b>${s.knowledge||0}</b><span>正式知识</span></div><div><b>${s.pending_changes||0}</b><span>变化待办</span></div><div><b>${s.high_changes||0}</b><span>重点变化</span></div><div><b>${c.regulation||0}</b><span>法规</span></div><div><b>${c.certification||0}</b><span>认证</span></div><div><b>${c.test_item||0}</b><span>检测项目</span></div></div></div>`;
+if((s.product_classes||[]).length)html+=`<div class="section"><h3>已覆盖产品分类</h3><div class="chips">${s.product_classes.map(x=>`<span class="chip">${esc(x.name)} · ${x.count}</span>`).join('')}</div></div>`;
+const active=(d.records||[]).filter(x=>['active','transition','future'].includes(x.lifecycle_state)).slice(0,12);html+=`<div class="section"><h3>法规认证知识</h3>${active.length?active.map(x=>`<div class="record"><b>${esc(x.code||'')} ${esc(x.name||'')}</b><p>${esc(typeLabel(x.record_type))} · ${esc(lifeLabel(x.lifecycle_state))} · 版本 ${esc(x.version||'未标注')}</p><div class="meta">${esc(x.product_class||'未标注产品分类')} · ${x.source_document_id&&x.source_chunk_id?'已有原始依据':'待补充依据'}</div></div>`).join(''):'<div class="empty">暂无当前有效知识。</div>'}</div>`;
+const changes=(d.changes||[]).slice(0,10);html+=`<div class="section"><h3>近期变化与待办</h3>${changes.length?changes.map(x=>`<div class="change ${esc(x.severity)}"><b>${esc(x.title||'待核对变化')}</b><p>${esc(x.summary||'')}</p><div class="meta">${x.severity==='high'?'重点关注':'待核对'} · ${esc(x.created_at||'')}</div></div>`).join(''):'<div class="empty">当前没有待处理变化。</div>'}</div>`;
+html+=`<div class="quick"><a class="link" href="/catalog">查看正式知识目录</a><a class="link" href="/changes">查看变化待办</a><a class="link" href="/">返回产品准入查询</a></div>`;box.innerHTML=html}catch(e){box.innerHTML='<div class="empty">详情加载失败：'+esc(e.message)+'</div>'}}
+loadMap();
+</script>
+</body>
+</html>
