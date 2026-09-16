@@ -39,3 +39,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage8_business_ontology_graph.py
       - name: Stage9 formal catalog tests
         run: PYTHONPATH=. python tests/test_stage9_formal_catalog.py
+      - name: Stage10 formal knowledge maintenance tests
+        run: PYTHONPATH=. python tests/test_stage10_formal_knowledge_maintenance.py
