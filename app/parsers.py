@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import os
 from dataclasses import dataclass, field
@@ -7,6 +8,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 from app.docx_parser import parse_docx
+from app.model_gateway import call_vision_ocr, current_model_config
+from app.runtime_settings import current_parser_settings
 from app.vendor_path import activate_vendor
 
 activate_vendor()
@@ -47,9 +50,20 @@ class _HTMLTextExtractor(HTMLParser):
             self.parts.append(text)
 
 
+def _parser_backend() -> str:
+    return (os.getenv("KB_PARSER_BACKEND", "") or current_parser_settings().get("backend") or "lightweight").lower()
+
+
+def _ocr_enabled() -> bool:
+    mode = str(current_parser_settings().get("ocr_mode") or "auto").lower()
+    if mode == "off":
+        return False
+    return current_model_config("vision").configured
+
+
 def parse_file(path: str | Path) -> StandardDocument:
     file_path = Path(path)
-    if os.getenv("KB_PARSER_BACKEND", "lightweight").lower() == "docling":
+    if _parser_backend() == "docling":
         try:
             return parse_docling_standard(file_path)
         except Exception:
@@ -69,7 +83,7 @@ def parse_file(path: str | Path) -> StandardDocument:
         return parse_json_standard(file_path)
     if suffix in {".html", ".htm"}:
         return parse_html_standard(file_path)
-    if suffix in {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}:
+    if suffix in {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp"}:
         return parse_image_standard(file_path)
     raise ValueError(f"Unsupported file type: {file_path.suffix}")
 
@@ -90,17 +104,61 @@ def parse_docx_standard(path: Path) -> StandardDocument:
     )
 
 
+def _render_pdf_page(path: Path, page_index: int) -> bytes | None:
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        return None
+    doc = fitz.open(str(path))
+    try:
+        page = doc.load_page(page_index)
+        pix = page.get_pixmap(matrix=fitz.Matrix(1.6, 1.6), alpha=False)
+        return pix.tobytes("png")
+    finally:
+        doc.close()
+
+
 def parse_pdf_standard(path: Path) -> StandardDocument:
     from pypdf import PdfReader
+
     reader = PdfReader(str(path))
-    blocks = []
+    blocks: list[StandardBlock] = []
+    ocr_pages = 0
+    empty_pages = 0
+    max_vision_pages = int(current_parser_settings().get("vision_max_pages") or 6)
     for i, page in enumerate(reader.pages, 1):
         text = (page.extract_text() or "").strip()
         if text:
-            blocks.append(StandardBlock("page_text", text, page_no=i))
+            blocks.append(StandardBlock("page_text", text, page_no=i, metadata={"source": "text_layer"}))
+            continue
+        empty_pages += 1
+        if _ocr_enabled() and ocr_pages < max_vision_pages:
+            rendered = _render_pdf_page(path, i - 1)
+            if rendered:
+                recognized, trace = call_vision_ocr(
+                    rendered,
+                    "image/png",
+                    instruction=(
+                        f"这是PDF第{i}页。请识别页面中的正文、条款编号、表格文字、日期、法规标准编号和认证要求。"
+                        "尽量保持阅读顺序；无法确认的字符不要猜测。"
+                    ),
+                )
+                if recognized:
+                    ocr_pages += 1
+                    blocks.append(StandardBlock("page_ocr", recognized, page_no=i, metadata={"source": "vision_model", "trace": trace}))
+                    continue
+        blocks.append(StandardBlock("page_unreadable", f"[第{i}页未识别到可提取文字]", page_no=i, metadata={"source": "unreadable"}))
+
+    parser_name = "pypdf+vision" if ocr_pages else "pypdf"
     return StandardDocument(
-        str(path.resolve()), path.name, path.stem, "application/pdf", "pypdf",
-        blocks, {"page_count": len(reader.pages)},
+        str(path.resolve()), path.name, path.stem, "application/pdf", parser_name,
+        blocks,
+        {
+            "page_count": len(reader.pages),
+            "empty_text_pages": empty_pages,
+            "vision_ocr_pages": ocr_pages,
+            "ocr_available": _ocr_enabled(),
+        },
     )
 
 
@@ -113,7 +171,7 @@ def parse_xlsx_standard(path: Path) -> StandardDocument:
         lines = []
         for row_index, row in enumerate(sheet.iter_rows(values_only=True), 1):
             if row_index > 2000:
-                lines.append("[工作表内容过长，轻量解析器已截断；生产环境建议使用结构化表格解析服务]")
+                lines.append("[工作表内容过长，已截断]")
                 break
             cells = [str(value).strip() for value in row[:100] if value is not None and str(value).strip()]
             if cells:
@@ -188,20 +246,29 @@ def parse_html_standard(path: Path) -> StandardDocument:
 
 def parse_image_standard(path: Path) -> StandardDocument:
     from PIL import Image
+
     image = Image.open(path)
+    mime_type = f"image/{'jpeg' if path.suffix.lower() in {'.jpg', '.jpeg'} else path.suffix.lower().lstrip('.')}"
     metadata = {
         "width": image.width,
         "height": image.height,
         "mode": image.mode,
-        "ocr_status": "adapter_required",
     }
-    text = (
-        f"[图片待OCR] {path.name} {image.width}x{image.height}。"
-        "生产环境建议接入 Docling/PaddleOCR 或企业 OCR 服务。"
-    )
+    if _ocr_enabled():
+        raw = path.read_bytes()
+        recognized, trace = call_vision_ocr(raw, mime_type)
+        if recognized:
+            metadata.update({"ocr_status": "completed", "ocr_trace": trace})
+            return StandardDocument(
+                str(path.resolve()), path.name, path.stem, mime_type, "vision-model",
+                [StandardBlock("image_ocr", recognized, metadata=metadata)], metadata,
+            )
+        metadata.update({"ocr_status": "failed", "ocr_trace": trace})
+    else:
+        metadata["ocr_status"] = "model_not_configured"
+    text = f"[图片待识别] {path.name} {image.width}x{image.height}"
     return StandardDocument(
-        str(path.resolve()), path.name, path.stem,
-        f"image/{path.suffix.lower().lstrip('.')}", "image-metadata",
+        str(path.resolve()), path.name, path.stem, mime_type, "image-metadata",
         [StandardBlock("image", text, metadata=metadata)], metadata,
     )
 
