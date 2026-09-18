@@ -70,11 +70,18 @@ def main() -> None:
         assert overview["summary"]["pending_changes"] == 1
         assert overview["summary"]["upcoming_effective"] == 1
         assert overview["summary"]["evidence_missing"] == 1
+        assert overview["summary"]["complete_markets"] == 0
         eu = next(item for item in overview["regions"] if item["region_code"] == "EU")
         assert eu["attention"] == "high"
         assert eu["mappable"] is True
         assert eu["knowledge_count"] == 3
         assert eu["type_counts"]["certification"] == 1
+
+        de_market = next(item for item in overview["target_markets"] if item["region_code"] == "DE")
+        assert de_market["chain_stage_count"] == 3
+        assert de_market["chain_completeness"] == 0.6
+        assert de_market["chain_complete"] is False
+        assert de_market["chain_type_counts"]["standard"] == 1
 
         changed = service.overview(product_class="家用电器", as_of="2026-09-16", only_changed=True)
         assert [item["region_code"] for item in changed["regions"]] == ["EU"]
@@ -83,12 +90,19 @@ def main() -> None:
         assert detail["region_name"] == "欧盟"
         assert detail["summary"]["knowledge"] == 3
         assert detail["summary"]["pending_changes"] == 1
+        assert detail["summary"]["chain_stage_count"] == 3
+        assert detail["summary"]["chain_completeness"] == 0.6
+        assert detail["summary"]["chain_complete"] is False
         assert detail["changes"][0]["severity"] == "high"
 
         page = Path("static/map.html").read_text(encoding="utf-8")
         assert "法规认证地图" in page
         assert "全球法规认证分布" in page
         assert "近期变化与待办" in page
+        assert "市场准入链完整度" in page
+        assert "准入链完整市场" in page
+        assert "进入该市场GMA准入" in page
+        assert "chain_completeness" in page
         assert "/api/map/overview" in page
         assert "/api/map/detail" in page
         assert "GraphRAG" not in page
