@@ -9,6 +9,7 @@ from app.ontology_governance import OntologyGovernanceService
 from app.regions import target_market_catalog
 from app.source_registry import SourceRegistryService
 from app.source_collection import SourceCollectionService
+from app.source_diff import SourceDifferenceService
 from app.server import Handler as BaseHandler
 from app.server import ROOT, STATIC_DIR, change_monitor, store
 
@@ -16,6 +17,7 @@ regulation_map = RegulationMapService(store)
 ontology_governance = OntologyGovernanceService(store)
 source_registry = SourceRegistryService(store)
 source_collection = SourceCollectionService(store, source_registry, ROOT / "data" / "source_downloads", change_monitor=change_monitor)
+source_diff = SourceDifferenceService(store)
 
 
 class Handler(BaseHandler):
@@ -78,6 +80,25 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/collection/diff":
+            try:
+                self._send_json(source_diff.analyze(
+                    int(params.get("event_id", ["0"])[0] or 0),
+                    refresh=str(params.get("refresh", [""])[0]).lower() in {"1","true","yes","on"},
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/diff-reports":
+            try:
+                self._send_json(source_diff.list_reports(
+                    limit=min(int(params.get("limit", ["100"])[0] or 100), 500)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/map/overview":
             try:
                 self._send_json(regulation_map.overview(
@@ -133,6 +154,10 @@ class Handler(BaseHandler):
                 ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path in {"/source-diff", "/source-diff.html"}:
+            self._send_file(STATIC_DIR / "source_diff.html")
             return
 
         if parsed.path in {"/collection", "/collection.html"}:
