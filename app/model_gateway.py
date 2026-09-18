@@ -177,3 +177,70 @@ def call_vision_ocr(image_bytes: bytes, mime_type: str, *, instruction: str | No
             "error_type": type(exc).__name__,
             "model": config.model,
         }
+
+
+def call_translation_model(
+    texts: list[str],
+    *,
+    target_language: str = "zh-CN",
+) -> tuple[list[str] | None, dict[str, Any]]:
+    """Translate text without replacing the source text.
+
+    Translation reuses the configured knowledge-extraction model so deployments
+    do not need a separate model endpoint. The caller must keep the original
+    content as the factual evidence and treat translations as derived display
+    data that can be manually corrected.
+    """
+    values = [str(text or "") for text in texts]
+    if not values:
+        return [], {"mode": "translation_empty", "purpose": "extraction"}
+
+    config = current_model_config("extraction")
+    if not config.configured:
+        return None, {
+            "mode": "translation_not_configured",
+            "purpose": "extraction",
+            "reason": "知识抽取模型未配置或未启用，无法自动生成双语翻译",
+            "model": config.model,
+        }
+
+    target_label = "简体中文" if target_language.lower() in {"zh-cn", "zh", "chinese"} else target_language
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "你是法规、标准和认证资料翻译助手。"
+                "只做忠实翻译，不总结、不解释、不补充、不改写法律含义。"
+                "法规编号、标准编号、条款号、日期、版本号、机构名缩写和专有代码应原样保留。"
+                "输入是JSON字符串数组，输出必须是等长JSON字符串数组，不要输出Markdown。"
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                f"目标语言：{target_label}\n"
+                f"请逐项翻译以下内容：\n{json.dumps(values, ensure_ascii=False)}"
+            ),
+        },
+    ]
+    try:
+        content, trace = _request_chat(config, messages, temperature=0)
+        cleaned = content.strip()
+        if cleaned.startswith("\`\`\`"):
+            cleaned = cleaned.strip("\`").strip()
+            if cleaned.lower().startswith("json"):
+                cleaned = cleaned[4:].strip()
+        parsed = json.loads(cleaned)
+        if not isinstance(parsed, list) or len(parsed) != len(values):
+            raise ValueError("translation model returned unexpected item count")
+        translated = [str(item or "").strip() for item in parsed]
+        return translated, {**trace, "mode": "translation_model", "target_language": target_language}
+    except Exception as exc:
+        return None, {
+            "mode": "translation_failed",
+            "purpose": "extraction",
+            "reason": str(exc),
+            "error_type": type(exc).__name__,
+            "model": config.model,
+            "target_language": target_language,
+        }
