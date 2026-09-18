@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GMA准入路径 · 法规认证知识平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top a{color:#dce8f5;text-decoration:none}.wrap{max-width:1500px;margin:18px auto;padding:0 20px}.card,.metric{background:#fff;border:1px solid #e1e7ef;border-radius:12px}.hero{padding:21px 23px}.hero h1{margin:0 0 8px;font-size:24px;color:#113f72}.hero p{margin:0;color:#65758a;line-height:1.7}.filters{display:grid;grid-template-columns:220px 1fr 180px auto auto;gap:9px;align-items:end;padding:15px;margin-top:14px}.filters label{display:block;font-size:11px;color:#718095;margin-bottom:5px}input,select,button{font:inherit}input,select{width:100%;border:1px solid #cad4e1;border-radius:8px;padding:9px 10px;background:#fff}.btn{border:0;border-radius:8px;background:#0d4f91;color:#fff;padding:9px 14px;cursor:pointer;white-space:nowrap}.btn.secondary{background:#eef4fb;color:#0d4f91}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.metric{padding:13px}.metric span{font-size:11px;color:#8190a3}.metric strong{display:block;font-size:21px;color:#123e6e;margin-top:4px}.scope{font-size:12px;color:#5f7084;margin-top:8px}.path{padding:15px;margin-bottom:12px}.path h2{font-size:15px;margin:0 0 10px}.chain{display:flex;align-items:stretch;gap:8px;overflow-x:auto;padding-bottom:4px}.node{min-width:210px;max-width:260px;border:1px solid #dce5ee;border-radius:10px;padding:11px;background:#fbfdff}.node.regulation{border-top:3px solid #386fa4}.node.standard{border-top:3px solid #4b8f70}.node.certification{border-top:3px solid #c47b32}.node.requirement{border-top:3px solid #8b63a8}.node.test_item{border-top:3px solid #aa5c67}.type{font-size:10px;color:#718095}.original{font-size:13px;font-weight:700;line-height:1.45;margin-top:5px}.zh{font-size:12px;color:#0d5b8f;line-height:1.5;margin-top:5px}.meta{font-size:11px;color:#7c8998;line-height:1.55;margin-top:6px}.arrow{display:flex;align-items:center;color:#8997a7;font-size:20px}.notice{background:#f4f8fd;border:1px solid #dce8f6;border-radius:9px;padding:11px;font-size:12px;color:#566e8a;line-height:1.65}.empty{padding:30px;text-align:center;color:#8491a2}.gap{border:1px solid #efd9b2;background:#fff9ec;border-radius:9px;padding:10px;margin:8px 0;font-size:12px}.status{font-size:10px;padding:3px 7px;border-radius:999px;background:#eef2f6;color:#637083}.status.confirmed{background:#e9f8ef;color:#2e7350}.status.draft{background:#fff4dd;color:#8b641c}@media(max-width:900px){.filters,.metrics{grid-template-columns:1fr 1fr}.top{padding:0 14px}.wrap{padding:0 12px}}@media(max-width:600px){.filters,.metrics{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top"><div style="font-size:19px;font-weight:700">法规认证知识平台 · GMA准入路径</div><div><a href="/catalog">正式知识目录</a>　<a href="/">返回平台</a></div></div>
+<div class="wrap">
+  <div class="card hero"><h1>产品市场准入知识路径</h1><p>GMA不重复维护法规、标准和认证事实，而是复用已经人工确认的正式知识和关系，按产品与目标市场组织准入路径。路径节点至少展示原名称与中文名称，原始依据仍以原文为准。</p></div>
+  <div class="card filters">
+    <div><label>目标国家/地区</label><select id="region"></select></div>
+    <div><label>产品分类</label><input id="productClass" placeholder="例如：家用电器"></div>
+    <div><label>判断日期</label><input id="asOf" type="date"></div>
+    <button class="btn" onclick="loadPath()">查询准入路径</button>
+    <button class="btn secondary" onclick="translatePath(false)">补齐中文</button>
+  </div>
+  <div class="metrics">
+    <div class="metric"><span>准入路径</span><strong id="mPaths">-</strong></div>
+    <div class="metric"><span>路径知识对象</span><strong id="mRecords">-</strong></div>
+    <div class="metric"><span>已有中文</span><strong id="mChinese">-</strong></div>
+    <div class="metric"><span>已人工确认中文</span><strong id="mConfirmed">-</strong></div>
+  </div>
+  <div class="card" style="padding:15px;margin-bottom:14px"><div id="summary" class="notice">选择目标市场和产品分类后查询。</div></div>
+  <div id="paths"></div>
+  <div id="gaps"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url,opt){const r=await fetch(url,opt);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
+const today=new Date().toISOString().slice(0,10);$('asOf').value=today;let current=null;
+const typeLabel=v=>({regulation:'法规',standard:'标准',certification:'认证',requirement:'技术要求',test_item:'检测项目'}[v]||v);
+async function loadRegions(){try{const d=await api('/api/regions');$('region').innerHTML=Object.entries(d.groups||{}).map(([group,items])=>'<optgroup label="'+esc(group)+'">'+items.map(x=>'<option value="'+esc(x.code)+'">'+esc(x.name)+' · '+esc(x.code)+'</option>').join('')+'</optgroup>').join('')}catch(e){$('region').innerHTML='<option value="">国家列表加载失败</option>'}}
+function nodeHtml(n){return '<div class="node '+esc(n.node_type)+'"><div class="type">'+esc(typeLabel(n.node_type))+' · '+esc(n.code||'未标编号')+'</div><div class="original">'+esc(n.name_original||n.label||'未命名')+'</div><div class="zh">'+esc(n.name_zh||'中文待生成/校对')+'</div><div class="meta">版本 '+esc(n.version||'未标注')+' · '+esc(n.region_code||'')+'</div><div class="meta"><span class="status '+esc(n.translation_status||'draft')+'">'+esc(n.translation_status==='confirmed'?'中文已确认':n.translation_status==='missing'?'中文待生成':'中文待复核')+'</span></div></div>'}
+function render(d){current=d;const b=d.bilingual_summary||{},s=d.summary||{};$('mPaths').textContent=s.paths||0;$('mRecords').textContent=b.records||0;$('mChinese').textContent=b.with_chinese||0;$('mConfirmed').textContent=b.confirmed_chinese||0;$('summary').innerHTML='<b>'+esc(d.region_name||d.region_code)+' · '+esc($('productClass').value.trim())+'</b><div class="scope">知识适用范围：'+esc((d.knowledge_scope_codes||[]).join(' + '))+' · 状态：'+esc(d.status||'-')+'</div><div class="scope">'+esc(d.next_action||'')+'</div>';const paths=d.paths||[];$('paths').innerHTML=paths.length?paths.map((p,i)=>'<div class="card path"><h2>准入路径 '+(i+1)+'</h2><div class="chain">'+(p.nodes||[]).map((n,j)=>nodeHtml(n)+(j<(p.nodes||[]).length-1?'<div class="arrow">→</div>':'')).join('')+'</div></div>').join(''):'<div class="card empty">当前已审核知识关系尚未形成可展示的准入路径。</div>';const gaps=d.unconnected_targets||[];$('gaps').innerHTML=gaps.length?'<div class="card" style="padding:15px"><h2 style="font-size:15px;margin:0 0 8px">待补关系/待复核知识</h2>'+gaps.map(n=>'<div class="gap">'+esc(typeLabel(n.node_type))+' · '+esc(n.name_original||n.label||'')+(n.name_zh?' / '+esc(n.name_zh):'')+'</div>').join('')+'</div>':''}
+async function loadPath(){const region=$('region').value,pc=$('productClass').value.trim();if(!region||!pc){$('summary').textContent='请选择目标国家/地区并填写产品分类。';return}try{$('summary').textContent='正在查询…';const q=new URLSearchParams({region,product_class:pc,as_of:$('asOf').value});render(await api('/api/gma/path?'+q))}catch(e){$('summary').textContent='查询失败：'+e.message}}
+async function translatePath(force){const region=$('region').value,pc=$('productClass').value.trim();if(!region||!pc){$('summary').textContent='请先选择目标市场并填写产品分类。';return}try{$('summary').textContent='正在补齐中文翻译…';const d=await api('/api/gma/path/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({region_code:region,product_class:pc,as_of:$('asOf').value,force:!!force,max_records:100})});render(d);const failures=d.translation_run?.failures||[];if(failures.length)$('summary').innerHTML+='<div class="scope">部分节点未翻译，可能尚未配置模型；原文和路径不受影响。</div>'}catch(e){$('summary').textContent='翻译失败：'+e.message}}
+loadRegions();
+</script>
+</body>
+</html>
