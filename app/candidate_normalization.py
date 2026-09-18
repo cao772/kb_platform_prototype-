@@ -85,7 +85,7 @@ class CandidateNormalizationService:
             "original_code": region_code,
             "original_name": str(payload.get("region_name") or ""),
             "canonical_code": canonical,
-            "canonical_name": market.name_zh if market else str(payload.get("region_name") or ""),
+            "canonical_name": market.name if market else str(payload.get("region_name") or ""),
             "recognized_target_market": bool(market),
         }
 
@@ -159,7 +159,7 @@ class CandidateNormalizationService:
             after["region_code"] = code
             after["region_name"] = str(
                 changes.get("region_name")
-                or (market.name_zh if market else after.get("region_name") or "")
+                or (market.name if market else after.get("region_name") or "")
             ).strip()
 
         attrs["normalization_review"] = {
