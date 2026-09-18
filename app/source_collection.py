@@ -301,6 +301,43 @@ class SourceCollectionService:
             change_watch_count = 0
             if auto_ingest:
                 document_id = ingest_file(self.store, target)
+                with self.store.lock:
+                    doc_row = self.store.conn.execute(
+                        "SELECT metadata FROM documents WHERE id=?", (int(document_id),)
+                    ).fetchone()
+                    metadata = json.loads(doc_row["metadata"] or "{}") if doc_row else {}
+                    metadata.update({
+                        "source_registry_id": source["id"],
+                        "source_key": source["source_key"],
+                        "source_name": source["source_name"],
+                        "source_type": source["source_type"],
+                        "region_code": source["region_code"],
+                        "authority": source.get("authority", ""),
+                        "source_url": profile["entry_url"],
+                        "collection_profile": profile["profile_key"],
+                        "collection_run_id": run_id,
+                        "collected_at": _now(),
+                    })
+                    self.store.conn.execute(
+                        "UPDATE documents SET metadata=? WHERE id=?",
+                        (json.dumps(metadata, ensure_ascii=False), int(document_id)),
+                    )
+                    chunk_rows = self.store.conn.execute(
+                        "SELECT id,metadata FROM chunks WHERE document_id=?", (int(document_id),)
+                    ).fetchall()
+                    for chunk_row in chunk_rows:
+                        chunk_metadata = json.loads(chunk_row["metadata"] or "{}")
+                        chunk_metadata.update({
+                            "source_key": source["source_key"],
+                            "region_code": source["region_code"],
+                            "source_url": profile["entry_url"],
+                            "collection_run_id": run_id,
+                        })
+                        self.store.conn.execute(
+                            "UPDATE chunks SET metadata=? WHERE id=?",
+                            (json.dumps(chunk_metadata, ensure_ascii=False), int(chunk_row["id"])),
+                        )
+                    self.store.conn.commit()
                 if auto_extract:
                     extraction = extract_review_candidates_v2(
                         self.store,
