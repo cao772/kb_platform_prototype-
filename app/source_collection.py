@@ -412,6 +412,9 @@ class SourceCollectionService:
                         "collection_profile": profile["profile_key"],
                         "collection_run_id": run_id,
                         "collected_at": _now(),
+                        "original_content_preserved": True,
+                        "original_file_path": str(target.resolve()),
+                        "translation_policy": "source_original_plus_zh-CN",
                     })
                     self.store.conn.execute(
                         "UPDATE documents SET metadata=? WHERE id=?",
