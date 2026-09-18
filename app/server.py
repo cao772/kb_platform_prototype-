@@ -11,6 +11,7 @@ from app.agent import KnowledgeAgent
 from app.architecture import current_architecture
 from app.catalog import catalog_detail, list_catalog
 from app.catalog_maintenance import CatalogMaintenanceService
+from app.business_dashboard import BusinessDashboardService
 from app.change_monitor import ChangeMonitorService
 from app.demo_graph import build_world_certification_demo_graph
 from app.governance import ALLOWED_STATUSES, analyze_product_access_v2, review_task_with_edits, world_map_v2
@@ -39,6 +40,7 @@ PROCESSING_TASK_PATH = ROOT / "data" / "processing_tasks.json"
 store = KnowledgeStore(DB_PATH)
 catalog_maintenance = CatalogMaintenanceService(store)
 change_monitor = ChangeMonitorService(store)
+business_dashboard = BusinessDashboardService(store, change_monitor)
 router = QueryRouter()
 retrieval = RetrievalPipeline(store)
 graph_service = GraphGovernanceService(store)
@@ -244,6 +246,12 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 document_id = int(params.get("document_id", ["0"])[0] or 0)
                 self._send_json(catalog_maintenance.evidence_options(document_id=document_id or None))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        if parsed.path == "/api/business/dashboard":
+            try:
+                self._send_json(business_dashboard.snapshot(as_of=params.get("as_of", [None])[0] or None))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
