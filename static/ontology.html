@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>知识本体 - 法规认证知识平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.brand{font-size:18px;font-weight:700}.nav{display:flex;gap:8px}.nav a{color:#eef5fd;text-decoration:none;border:1px solid #6f8daf;border-radius:8px;padding:7px 11px;font-size:12px}.wrap{max-width:1460px;margin:18px auto;padding:0 20px}.hero{background:#fff;border:1px solid #e1e7ef;border-radius:14px;padding:22px 24px;margin-bottom:14px}.hero h1{font-size:25px;margin:0 0 8px;color:#113f72}.hero p{margin:0;color:#637187;line-height:1.7}.filters{display:grid;grid-template-columns:1fr 1fr auto;gap:9px;margin-top:16px;max-width:760px}input,select,button{font:inherit;border-radius:8px;padding:9px 11px}input,select{border:1px solid #cad4e1;background:#fff}button{border:0;background:#0d4f91;color:#fff;cursor:pointer}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}.metric,.card{background:#fff;border:1px solid #e1e7ef;border-radius:12px}.metric{padding:14px}.metric span{display:block;color:#8190a3;font-size:12px}.metric strong{font-size:23px;color:#123e6e;margin-top:4px;display:block}.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.card{padding:16px}h2{font-size:17px;margin:0 0 12px}h3{font-size:14px;margin:0 0 8px}.muted{font-size:12px;color:#758397;line-height:1.65}.domains{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.domain{border:1px solid #dce5ef;border-radius:10px;padding:12px;cursor:pointer;background:#fff}.domain:hover,.domain.active{border-color:#4e86bd;background:#f5f9fd}.domain b{display:block;color:#174d7e;font-size:14px}.domain p{margin:6px 0 0;font-size:12px;color:#69788d;line-height:1.55}.domain .count{font-size:20px;font-weight:700;color:#0d4f91;margin-top:8px}.path{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.path span{padding:8px 10px;border-radius:999px;background:#eef4fb;color:#315d86;font-size:12px}.path i{font-style:normal;color:#95a5b7}.list{display:flex;flex-direction:column;gap:7px;max-height:470px;overflow:auto}.row{border:1px solid #e1e7ef;border-radius:9px;padding:10px;background:#fafcfe}.row b{font-size:13px}.row p{margin:5px 0 0;color:#6d7b8f;font-size:12px;line-height:1.55}.tag{display:inline-block;padding:2px 7px;border-radius:999px;background:#edf3f9;color:#5b6d82;font-size:10px;margin-right:4px}.ok{background:#eaf8f0;color:#2e7350}.warn{background:#fff4dd;color:#8b641c}.bad{background:#fbeaea;color:#963d3d}.table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{border-bottom:1px solid #e6ebf1;padding:8px;text-align:left}.table th{color:#68788d;font-weight:600}.objects{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.object{border:1px solid #dfe6ee;border-radius:9px;padding:9px}.object b{font-size:13px}.object div{font-size:11px;color:#758397;margin-top:4px}.note{background:#f4f8fd;border:1px solid #dce8f6;border-radius:9px;padding:11px;font-size:12px;color:#566e8a;line-height:1.65}.section{margin-top:14px}@media(max-width:1000px){.metrics,.domains{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.objects{grid-template-columns:1fr 1fr}}@media(max-width:650px){.metrics,.domains,.objects,.filters{grid-template-columns:1fr}.top{padding:0 14px}.wrap{padding:0 12px}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">法规认证知识平台 · 知识本体</div>
+  <div class="nav"><a href="/">返回首页</a><a href="/catalog">正式知识目录</a><a href="/graph">知识图谱</a><a href="/map">法规认证地图</a></div>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>知识本体建设与应用</h1>
+    <p>统一定义产品、国家/地区、法规、标准、认证、技术要求、检测项目、版本和依据之间的业务关系。四类知识库共享公共对象，GMA知识库通过关联已有正式知识组织市场准入路径。</p>
+    <div class="filters"><input id="region" placeholder="国家/地区代码，可选"><input id="productClass" placeholder="产品分类，可选"><button onclick="loadAll()">刷新</button></div>
+  </div>
+  <div class="metrics">
+    <div class="metric"><span>正式知识</span><strong id="mRecords">0</strong></div>
+    <div class="metric"><span>知识完整度</span><strong id="mComplete">0%</strong></div>
+    <div class="metric"><span>依据覆盖率</span><strong id="mEvidence">0%</strong></div>
+    <div class="metric"><span>覆盖国家/地区</span><strong id="mRegions">0</strong></div>
+    <div class="metric"><span>待校核本体映射</span><strong id="mPending">0</strong></div>
+  </div>
+
+  <div class="card">
+    <h2>四类知识库</h2>
+    <div id="domains" class="domains"></div>
+  </div>
+
+  <div class="grid section">
+    <div class="card">
+      <h2>市场准入知识主线</h2>
+      <div id="path" class="path"></div>
+      <div class="note" style="margin-top:13px">GMA知识库不重复保存法规、标准和认证事实，而是基于产品分类、国家/地区和已经确认的知识关系组织准入路径，便于后续准入查询、法规问答、地图展示和变化影响分析。</div>
+    </div>
+    <div class="card">
+      <h2>当前建设状态</h2>
+      <table class="table"><tbody id="coverageTable"></tbody></table>
+    </div>
+  </div>
+
+  <div class="grid section">
+    <div class="card">
+      <h2 id="domainTitle">知识库内容</h2>
+      <div id="domainRecords" class="list"><div class="muted">点击上方知识库查看正式知识映射情况。</div></div>
+    </div>
+    <div class="card">
+      <h2>待补充项</h2>
+      <div id="missing" class="list"><div class="muted">暂无数据。</div></div>
+    </div>
+  </div>
+
+  <div class="card section">
+    <h2>本体对象</h2>
+    <div id="objects" class="objects"></div>
+  </div>
+
+  <div class="card section">
+    <h2>本体关系</h2>
+    <div id="relations" class="list"></div>
+  </div>
+
+  <div class="card section">
+    <h2>待校核内容的本体映射</h2>
+    <p class="muted">资料解析后形成的候选知识先按本体规则检查对象类型、核心字段和依据情况，业务人员确认后才进入正式知识目录。</p>
+    <div id="candidates" class="list"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let blueprint=null,activeDomain='';
+async function api(url){const r=await fetch(url);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
+const pct=v=>Math.round((Number(v)||0)*100)+'%';
+const labels={product_class:'产品分类',region:'国家/地区',regulation:'法规',standard:'标准',certification:'认证',requirement:'技术要求',test_item:'检测项目',evidence:'依据'};
+async function loadAll(){
+  const q=new URLSearchParams();if($('region').value.trim())q.set('region',$('region').value.trim());if($('productClass').value.trim())q.set('product_class',$('productClass').value.trim());
+  try{
+    const [b,c,cands]=await Promise.all([api('/api/ontology/blueprint'),api('/api/ontology/coverage?'+q),api('/api/ontology/candidates?limit=100')]);
+    blueprint=b;renderBlueprint(b);renderCoverage(c);renderCandidates(cands);if(activeDomain)loadDomain(activeDomain);
+  }catch(e){alert(e.message)}
+}
+function renderBlueprint(b){
+  $('path').innerHTML=b.market_access_path.map((x,i)=>'<span>'+esc(labels[x]||x)+'</span>'+(i<b.market_access_path.length-1?'<i>→</i>':'')).join('');
+  $('domains').innerHTML=b.domains.map(d=>'<div class="domain '+(activeDomain===d.key?'active':'')+'" onclick="loadDomain(\''+d.key+'\')"><b>'+esc(d.label)+'</b><p>'+esc(d.purpose)+'</p><div class="count" id="domain-count-'+d.key+'">0</div></div>').join('');
+  api('/api/ontology').then(s=>{
+    $('objects').innerHTML=(s.node_types||[]).map(n=>'<div class="object"><b>'+esc(n.label)+'</b><div>'+esc(n.description||'')+'</div><div>核心字段：'+esc((n.required_properties||[]).join('、')||'-')+'</div></div>').join('');
+    $('relations').innerHTML=(s.relations||[]).map(r=>'<div class="row"><b>'+esc(r.label)+'</b><p>'+esc(r.description||'')+'</p></div>').join('');
+  });
+}
+function renderCoverage(c){
+  $('mRecords').textContent=c.summary.records;$('mComplete').textContent=pct(c.summary.average_completeness);$('mEvidence').textContent=pct(c.summary.evidence_coverage);$('mRegions').textContent=c.summary.regions;
+  (c.domains||[]).forEach(d=>{const el=$('domain-count-'+d.key);if(el)el.textContent=d.record_count});
+  $('coverageTable').innerHTML='<tr><th>指标</th><th>当前值</th></tr>'+
+    '<tr><td>本体校验通过</td><td>'+c.summary.valid_records+' / '+c.summary.records+'</td></tr>'+
+    '<tr><td>产品分类</td><td>'+c.summary.product_classes+'</td></tr>'+
+    '<tr><td>有原始依据</td><td>'+c.summary.evidence_backed+'</td></tr>';
+  $('missing').innerHTML=(c.top_missing_fields||[]).length?(c.top_missing_fields||[]).map(x=>'<div class="row"><b>'+esc(x.field)+'</b><p>待补充 '+x.count+' 条</p></div>').join(''):'<div class="muted">当前没有明显缺失项。</div>';
+}
+async function loadDomain(key){
+  activeDomain=key;
+  document.querySelectorAll('.domain').forEach(x=>x.classList.remove('active'));
+  const chosen=(blueprint?.domains||[]).find(x=>x.key===key);$('domainTitle').textContent=(chosen?.label||'知识库')+' · 正式知识';
+  const q=new URLSearchParams({domain:key});if($('region').value.trim())q.set('region',$('region').value.trim());if($('productClass').value.trim())q.set('product_class',$('productClass').value.trim());
+  try{const d=await api('/api/ontology/domain?'+q);$('domainRecords').innerHTML=d.records.length?d.records.slice(0,100).map(r=>'<div class="row"><b>'+esc(r.name||r.code)+'</b><p>'+esc([r.code,r.version,r.region_name||r.region_code,r.product_class].filter(Boolean).join(' · '))+'</p><span class="tag '+(r.ontology.valid?'ok':'bad')+'">'+(r.ontology.valid?'本体校验通过':'需补充')+'</span><span class="tag">'+esc(r.record_type)+'</span></div>').join(''):'<div class="muted">当前筛选条件下暂无正式知识。</div>'}catch(e){$('domainRecords').innerHTML='<div class="muted">'+esc(e.message)+'</div>'}
+  renderBlueprint(blueprint);
+}
+function renderCandidates(d){
+  $('mPending').textContent=d.summary.pending;
+  $('candidates').innerHTML=d.items.length?d.items.slice(0,80).map(x=>'<div class="row"><b>'+esc(x.name||x.code)+'</b><p>'+esc([x.document_title,x.region_code,x.product_class].filter(Boolean).join(' · '))+'</p><span class="tag '+(x.validation.valid?'ok':'bad')+'">'+(x.validation.valid?'对象完整':'缺少必填')+'</span>'+(x.validation.missing_recommended.length?'<span class="tag warn">建议补充 '+x.validation.missing_recommended.length+' 项</span>':'')+'</div>').join(''):'<div class="muted">当前没有待校核内容。</div>';
+}
+loadAll();
+</script>
+</body>
+</html>
