@@ -205,8 +205,8 @@ class OntologyRegistryService:
                 """
                 INSERT INTO ontology_versions(
                     version_code,status,change_note,schema_json,created_by,created_at
-                ) VALUES(?,'draft',?,?,?,?,?)
-                """.replace("?,?,?,?,?,?", "?,?,?,?,?,?"),
+                ) VALUES(?,?,?,?,?,?)
+                """,
                 (
                     code,
                     "draft",
