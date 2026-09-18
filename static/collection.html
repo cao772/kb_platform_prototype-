@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>采集执行 · 法规认证知识平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.brand{font-size:19px;font-weight:700}.nav{display:flex;gap:8px}.nav a{color:#dce8f5;text-decoration:none;font-size:12px;border:1px solid #6f8daf;border-radius:8px;padding:7px 10px}.wrap{max-width:1460px;margin:18px auto;padding:0 20px}.hero,.card,.metric{background:#fff;border:1px solid #e1e7ef;border-radius:12px}.hero{padding:22px 24px}.hero h1{font-size:25px;margin:0 0 8px;color:#113f72}.hero p{margin:0;color:#66758a;line-height:1.7}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.metric{padding:14px}.metric span{font-size:11px;color:#8190a3}.metric strong{display:block;font-size:22px;color:#123e6e;margin-top:4px}.grid{display:grid;grid-template-columns:1fr .78fr;gap:14px}.card{padding:16px}.card h2{font-size:17px;margin:0 0 12px}.list{display:flex;flex-direction:column;gap:9px}.profile,.run{border:1px solid #dfe6ef;border-radius:10px;padding:12px;background:#fff}.head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.profile b,.run b{font-size:13px;color:#183f68}.meta{font-size:11px;color:#8190a3;margin-top:5px;line-height:1.5}.desc{font-size:12px;color:#5f6e82;line-height:1.6;margin:7px 0}.tags{display:flex;gap:5px;flex-wrap:wrap}.tag{font-size:10px;padding:3px 7px;border-radius:999px;background:#edf3f8;color:#5b6d82}.tag.html{background:#e8f3ff;color:#246599}.tag.xml_api{background:#ece9fb;color:#6550a1}.tag.json_api{background:#e9f7ef;color:#2e7350}.tag.pdf{background:#fff0ef;color:#994944}.actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:9px}.btn{border:0;background:#0d4f91;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font:inherit}.btn.secondary{background:#eef4fb;color:#0d4f91}.btn:disabled{opacity:.55;cursor:not-allowed}.check{display:flex;align-items:center;gap:5px;font-size:11px;color:#617084}.check input{width:auto}.status{font-size:10px;padding:3px 7px;border-radius:999px;background:#edf2f7;color:#617083}.status.completed{background:#e9f8ef;color:#2e7350}.status.failed{background:#fcecec;color:#9e3e3e}.status.running{background:#e8f3ff;color:#246599}.note{background:#f4f8fd;border:1px solid #dce8f6;border-radius:9px;padding:11px;font-size:12px;color:#566e8a;line-height:1.65}.result{margin-top:8px;font-size:11px;color:#617084}.table{width:100%;border-collapse:collapse;font-size:11px}.table td{border-bottom:1px solid #e7ecf2;padding:8px 5px}.empty{padding:25px;text-align:center;color:#8491a2;font-size:12px}.url{word-break:break-all;color:#0d4f91;text-decoration:none}.step{display:grid;grid-template-columns:28px 1fr;gap:9px;margin:9px 0}.step i{width:26px;height:26px;border-radius:50%;background:#e9f3fc;color:#0d4f91;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;font-weight:700}.step b{font-size:12px;display:block}.step span{font-size:11px;color:#718095;line-height:1.5}@media(max-width:980px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}@media(max-width:600px){.top{padding:0 14px}.wrap{padding:0 12px}.metrics{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top"><div class="brand">法规认证知识平台 · 采集执行</div><div class="nav"><a href="/sources">来源台账</a><a href="/admin">资料与模型管理</a><a href="/">返回首页</a></div></div>
+<div class="wrap">
+  <div class="hero"><h1>样板来源采集执行</h1><p>先以欧盟、德国、美国、日本为样板，跑通网页、PDF、JSON API、XML API四类采集方式。采集文件进入统一文档解析链，再按需要执行知识识别和变化检查。</p></div>
+  <div class="metrics">
+    <div class="metric"><span>采集配置</span><strong id="mProfiles">-</strong></div>
+    <div class="metric"><span>已启用</span><strong id="mEnabled">-</strong></div>
+    <div class="metric"><span>适配方式</span><strong id="mAdapters">-</strong></div>
+    <div class="metric"><span>执行成功</span><strong id="mSuccess">-</strong></div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <h2>采集配置</h2>
+      <div id="profiles" class="list"><div class="empty">正在加载…</div></div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>处理链路</h2>
+        <div class="step"><i>1</i><div><b>下载原始数据</b><span>按来源配置获取HTML、PDF、JSON或XML。</span></div></div>
+        <div class="step"><i>2</i><div><b>原文落盘与校验</b><span>保留来源、采集时间、哈希值和原始文件。</span></div></div>
+        <div class="step"><i>3</i><div><b>统一文件解析</b><span>进入现有PDF、HTML、JSON、XML等解析链并形成证据分片。</span></div></div>
+        <div class="step"><i>4</i><div><b>知识识别</b><span>可选执行法规、标准、认证、技术要求候选识别。</span></div></div>
+        <div class="step"><i>5</i><div><b>校核与正式入库</b><span>候选知识进入待校核流程，确认后形成正式知识。</span></div></div>
+        <div class="note" style="margin-top:12px">当前配置以样板跑通为目标。后续300站扩展时复用适配器，只新增来源参数、采集范围和增量规则。</div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h2>最近执行记录</h2>
+        <div id="runs" class="list"><div class="empty">暂无执行记录。</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url,opt){const r=await fetch(url,opt);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
+const adapterLabel=v=>({html:'网页',pdf:'PDF',json_api:'JSON API',xml_api:'XML API'}[v]||v);
+async function loadProfiles(){try{const d=await api('/api/collection/profiles');const s=d.summary||{};$('mProfiles').textContent=s.profiles||0;$('mEnabled').textContent=s.enabled||0;$('mAdapters').textContent=(s.adapters||[]).length;$('profiles').innerHTML=d.items.length?d.items.map(p=>'<div class="profile"><div class="head"><div><b>'+esc(p.profile_key)+'</b><div class="meta">'+esc(p.source_key)+' · '+esc(adapterLabel(p.adapter))+'</div></div><span class="tag '+esc(p.adapter)+'">'+esc(adapterLabel(p.adapter))+'</span></div><div class="desc">'+esc(p.purpose||'')+'</div><div class="meta">'+esc(p.notes||'')+'</div><div class="meta"><a class="url" href="'+esc(p.entry_url)+'" target="_blank">'+esc(p.entry_url)+'</a></div><div class="actions"><label class="check"><input id="ingest-'+p.id+'" type="checkbox" checked>解析入库</label><label class="check"><input id="extract-'+p.id+'" type="checkbox">知识识别</label><label class="check"><input id="model-'+p.id+'" type="checkbox">使用模型</label><button id="run-'+p.id+'" class="btn" onclick="runProfile('+p.id+')">执行采集</button><span id="result-'+p.id+'" class="result"></span></div></div>').join(''):'<div class="empty">暂无采集配置。</div>'}catch(e){$('profiles').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}}
+async function loadRuns(){try{const d=await api('/api/collection/runs?limit=30');$('mSuccess').textContent=d.summary?.success||0;$('runs').innerHTML=d.items.length?d.items.map(x=>'<div class="run"><div class="head"><b>'+esc(x.profile_key)+'</b><span class="status '+esc(x.status)+'">'+esc(x.status==='completed'?'成功':x.status==='failed'?'失败':x.status)+'</span></div><div class="meta">'+esc(x.source_key)+' · '+esc(x.started_at||'')+'</div><div class="meta">HTTP '+esc(x.http_status||'-')+' · '+Number(x.bytes_received||0)+' bytes'+(x.document_id?' · 文档ID '+x.document_id:'')+(x.candidate_count?' · 候选 '+x.candidate_count+' 条':'')+'</div>'+(x.error?'<div class="meta" style="color:#9e3e3e">'+esc(x.error)+'</div>':'')+'</div>').join(''):'<div class="empty">暂无执行记录。</div>'}catch(e){$('runs').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}}
+async function runProfile(id){const btn=$('run-'+id),box=$('result-'+id);btn.disabled=true;box.textContent='执行中…';try{const d=await api('/api/collection/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile_id:id,auto_ingest:$('ingest-'+id).checked,auto_extract:$('extract-'+id).checked,use_model:$('model-'+id).checked})});box.textContent=d.status==='completed'?'完成'+(d.document_id?'，文档ID '+d.document_id:''):'失败：'+(d.error||'未知错误');loadRuns()}catch(e){box.textContent='失败：'+e.message}finally{btn.disabled=false}}
+loadProfiles();loadRuns();
+</script>
+</body>
+</html>
