@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
+from app.business_dashboard import BusinessDashboardService
 from app.change_monitor import ChangeMonitorService
 from app.map_service import RegulationMapService
 from app.store import KnowledgeStore
@@ -94,6 +95,22 @@ def main() -> None:
         assert detail["summary"]["chain_completeness"] == 0.6
         assert detail["summary"]["chain_complete"] is False
         assert detail["changes"][0]["severity"] == "high"
+
+        dashboard = BusinessDashboardService(store, ChangeMonitorService(store)).snapshot(as_of="2026-09-16")
+        assert dashboard["headline"]["target_markets"] == 21
+        assert dashboard["headline"]["formal_knowledge"] == 4
+        assert dashboard["headline"]["open_changes"] == 1
+        assert dashboard["headline"]["open_high"] == 1
+        assert dashboard["market_progress"]["complete"] == 0
+        assert dashboard["market_progress"]["building"] > 0
+        assert dashboard["product_coverage"]["product_classes"] == 1
+        libs = {item["key"]: item for item in dashboard["knowledge_libraries"]}
+        assert libs["regulation"]["count"] == 2
+        assert libs["standard"]["count"] == 1
+        assert libs["certification"]["count"] == 1
+        assert libs["gma"]["count"] == dashboard["headline"]["markets_with_data"]
+        assert "不把候选内容计入正式统计" in dashboard["principle"]
+        assert dashboard["recent_open_changes"][0]["severity"] == "high"
 
         page = Path("static/map.html").read_text(encoding="utf-8")
         assert "法规认证地图" in page
