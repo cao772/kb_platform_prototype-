@@ -16,6 +16,7 @@ from app.demo_graph import build_world_certification_demo_graph
 from app.governance import ALLOWED_STATUSES, analyze_product_access_v2, review_task_with_edits, world_map_v2
 from app.graph_backend import GraphBackendRouter
 from app.graph_governance import GraphGovernanceService
+from app.market_access import MarketAccessService
 from app.ingest import ingest_directory, ingest_file
 from app.model_gateway import build_rag_prompt, current_model_config, test_model_connection
 from app.ontology import ontology_schema
@@ -41,6 +42,7 @@ change_monitor = ChangeMonitorService(store)
 router = QueryRouter()
 retrieval = RetrievalPipeline(store)
 graph_service = GraphGovernanceService(store)
+market_access = MarketAccessService(store, graph_service)
 graph_backend = GraphBackendRouter(graph_service)
 agent = KnowledgeAgent(store, graph_service=graph_service, graph_backend=graph_backend)
 runtime_settings = RuntimeSettingsStore(SETTINGS_PATH)
@@ -502,6 +504,20 @@ class Handler(BaseHTTPRequestHandler):
                     product_class=payload.get("product_class", ""),
                     region_code=payload.get("region_code", ""),
                     include_demo=as_bool(payload.get("include_demo", False)),
+                    as_of=payload.get("as_of") or None,
+                )
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+                return
+            self._send_json(result)
+            return
+        if parsed.path == "/api/gma/access":
+            payload = self._read_json()
+            try:
+                result = market_access.evaluate(
+                    product=payload.get("product", ""),
+                    product_class=payload.get("product_class", ""),
+                    region_code=payload.get("region_code", ""),
                     as_of=payload.get("as_of") or None,
                 )
             except Exception as exc:
