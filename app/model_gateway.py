@@ -226,8 +226,8 @@ def call_translation_model(
     try:
         content, trace = _request_chat(config, messages, temperature=0)
         cleaned = content.strip()
-        if cleaned.startswith("\`\`\`"):
-            cleaned = cleaned.strip("\`").strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.strip("`").strip()
             if cleaned.lower().startswith("json"):
                 cleaned = cleaned[4:].strip()
         parsed = json.loads(cleaned)
