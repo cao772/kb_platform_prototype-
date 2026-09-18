@@ -339,6 +339,7 @@ class Handler(BaseHandler):
                 '<a class="top-link" href="/sources">来源台账</a>'
                 '<a class="top-link" href="/collection">采集执行</a>'
                 '<a class="top-link" href="/ontology">知识本体</a>'
+                '<a class="top-link" href="/gma-path">GMA准入路径</a>'
                 '<a class="top-link" href="/map">法规认证地图</a>'
                 '<a class="top-link" href="/changes">变化待办</a>'
             )
