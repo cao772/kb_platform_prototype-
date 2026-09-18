@@ -13,6 +13,7 @@ from app.source_collection import SourceCollectionService
 from app.source_diff import SourceDifferenceService
 from app.source_impact import SourceImpactService
 from app.document_translation import DocumentTranslationService
+from app.formal_translation import FormalKnowledgeTranslationService
 from app.server import Handler as BaseHandler
 from app.server import ROOT, STATIC_DIR, change_monitor, graph_service, store
 
@@ -24,6 +25,7 @@ source_collection = SourceCollectionService(store, source_registry, ROOT / "data
 source_diff = SourceDifferenceService(store)
 source_impact = SourceImpactService(store, source_diff, graph_service)
 document_translation = DocumentTranslationService(store)
+formal_translation = FormalKnowledgeTranslationService(store)
 
 
 class Handler(BaseHandler):
@@ -157,6 +159,16 @@ class Handler(BaseHandler):
             try:
                 self._send_file(document_translation.raw_path(
                     int(params.get("id", ["0"])[0] or 0)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/formal-translation":
+            try:
+                self._send_json(formal_translation.detail(
+                    int(params.get("id", ["0"])[0] or 0),
+                    target_language=params.get("lang", ["zh-CN"])[0] or "zh-CN",
                 ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
@@ -325,6 +337,33 @@ class Handler(BaseHandler):
                     items=payload.get("items"),
                     target_language=payload.get("target_language", "zh-CN"),
                     force=bool(payload.get("force", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/formal-translation/translate":
+            try:
+                payload = self._read_json()
+                self._send_json(formal_translation.translate(
+                    int(payload.get("record_id") or 0),
+                    target_language=payload.get("target_language", "zh-CN"),
+                    force=bool(payload.get("force", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/formal-translation/review":
+            try:
+                payload = self._read_json()
+                self._send_json(formal_translation.save_review(
+                    int(payload.get("record_id") or 0),
+                    target_language=payload.get("target_language", "zh-CN"),
+                    translations=payload.get("translations") or {},
+                    action=payload.get("action", "save"),
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
                 ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
