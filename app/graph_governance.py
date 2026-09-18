@@ -5,6 +5,7 @@ from datetime import date
 from typing import Any
 
 from app.governance import lifecycle_state
+from app.regions import canonical_region_code, knowledge_scope_codes
 from app.store import KnowledgeStore
 
 GRAPH_SCHEMA = """
@@ -285,13 +286,17 @@ class GraphGovernanceService:
         return {"relation_id": relation_id, "status": status}
 
     def _filtered_records(self, *, region_code: str = "", product_class: str = "", as_of: str | None = None) -> list[dict[str, Any]]:
+        requested_region = canonical_region_code(region_code)
+        scope_codes = set(knowledge_scope_codes(requested_region)) if requested_region else set()
         records = self.store.list_compliance_records(
             review_status="approved",
-            region_code=region_code or None,
-            limit=2000,
+            limit=5000,
         )
         output = []
         for source in records:
+            source_region = canonical_region_code(str(source.get("region_code") or ""))
+            if scope_codes and source_region not in scope_codes:
+                continue
             if product_class and not _matches_product_class(source.get("product_class", ""), product_class):
                 continue
             item = dict(source)
