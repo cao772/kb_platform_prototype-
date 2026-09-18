@@ -15,8 +15,8 @@
   <div class="metrics">
     <div class="metric"><span>采集配置</span><strong id="mProfiles">-</strong></div>
     <div class="metric"><span>已启用</span><strong id="mEnabled">-</strong></div>
-    <div class="metric"><span>适配方式</span><strong id="mAdapters">-</strong></div>
-    <div class="metric"><span>执行成功</span><strong id="mSuccess">-</strong></div>
+    <div class="metric"><span>检测到变化</span><strong id="mChanged">-</strong></div>
+    <div class="metric"><span>内容未变化</span><strong id="mUnchanged">-</strong></div>
   </div>
   <div class="grid">
     <div class="card">
@@ -27,8 +27,8 @@
       <div class="card">
         <h2>处理链路</h2>
         <div class="step"><i>1</i><div><b>下载原始数据</b><span>按来源配置获取HTML、PDF、JSON或XML。</span></div></div>
-        <div class="step"><i>2</i><div><b>原文落盘与校验</b><span>保留来源、采集时间、哈希值和原始文件。</span></div></div>
-        <div class="step"><i>3</i><div><b>统一文件解析</b><span>进入现有PDF、HTML、JSON、XML等解析链并形成证据分片。</span></div></div>
+        <div class="step"><i>2</i><div><b>指纹比对</b><span>计算SHA256并与上次成功快照比对；无变化则不重复解析入库。</span></div></div>
+        <div class="step"><i>3</i><div><b>变化内容入库</b><span>仅对首次出现或发生变化的HTML、PDF、JSON、XML继续解析和证据切分。</span></div></div>
         <div class="step"><i>4</i><div><b>知识识别</b><span>可选执行法规、标准、认证、技术要求候选识别。</span></div></div>
         <div class="step"><i>5</i><div><b>校核与正式入库</b><span>候选知识进入待校核流程，确认后形成正式知识。</span></div></div>
         <div class="note" style="margin-top:12px">当前配置以样板跑通为目标。后续300站扩展时复用适配器，只新增来源参数、采集范围和增量规则。</div>
@@ -37,6 +37,10 @@
         <h2>最近执行记录</h2>
         <div id="runs" class="list"><div class="empty">暂无执行记录。</div></div>
       </div>
+      <div class="card" style="margin-top:14px">
+        <h2>来源变化记录</h2>
+        <div id="updates" class="list"><div class="empty">暂无变化记录。</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -44,10 +48,11 @@
 const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function api(url,opt){const r=await fetch(url,opt);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
 const adapterLabel=v=>({html:'网页',pdf:'PDF',json_api:'JSON API',xml_api:'XML API'}[v]||v);
-async function loadProfiles(){try{const d=await api('/api/collection/profiles');const s=d.summary||{};$('mProfiles').textContent=s.profiles||0;$('mEnabled').textContent=s.enabled||0;$('mAdapters').textContent=(s.adapters||[]).length;$('profiles').innerHTML=d.items.length?d.items.map(p=>'<div class="profile"><div class="head"><div><b>'+esc(p.profile_key)+'</b><div class="meta">'+esc(p.source_key)+' · '+esc(adapterLabel(p.adapter))+'</div></div><span class="tag '+esc(p.adapter)+'">'+esc(adapterLabel(p.adapter))+'</span></div><div class="desc">'+esc(p.purpose||'')+'</div><div class="meta">'+esc(p.notes||'')+'</div><div class="meta"><a class="url" href="'+esc(p.entry_url)+'" target="_blank">'+esc(p.entry_url)+'</a></div><div class="actions"><label class="check"><input id="ingest-'+p.id+'" type="checkbox" checked>解析入库</label><label class="check"><input id="extract-'+p.id+'" type="checkbox">知识识别</label><label class="check"><input id="model-'+p.id+'" type="checkbox">使用模型</label><button id="run-'+p.id+'" class="btn" onclick="runProfile('+p.id+')">执行采集</button><span id="result-'+p.id+'" class="result"></span></div></div>').join(''):'<div class="empty">暂无采集配置。</div>'}catch(e){$('profiles').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}}
-async function loadRuns(){try{const d=await api('/api/collection/runs?limit=30');$('mSuccess').textContent=d.summary?.success||0;$('runs').innerHTML=d.items.length?d.items.map(x=>'<div class="run"><div class="head"><b>'+esc(x.profile_key)+'</b><span class="status '+esc(x.status)+'">'+esc(x.status==='completed'?'成功':x.status==='failed'?'失败':x.status)+'</span></div><div class="meta">'+esc(x.source_key)+' · '+esc(x.started_at||'')+'</div><div class="meta">HTTP '+esc(x.http_status||'-')+' · '+Number(x.bytes_received||0)+' bytes'+(x.document_id?' · 文档ID '+x.document_id:'')+(x.candidate_count?' · 候选 '+x.candidate_count+' 条':'')+'</div>'+(x.error?'<div class="meta" style="color:#9e3e3e">'+esc(x.error)+'</div>':'')+'</div>').join(''):'<div class="empty">暂无执行记录。</div>'}catch(e){$('runs').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}}
-async function runProfile(id){const btn=$('run-'+id),box=$('result-'+id);btn.disabled=true;box.textContent='执行中…';try{const d=await api('/api/collection/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile_id:id,auto_ingest:$('ingest-'+id).checked,auto_extract:$('extract-'+id).checked,use_model:$('model-'+id).checked})});box.textContent=d.status==='completed'?'完成'+(d.document_id?'，文档ID '+d.document_id:''):'失败：'+(d.error||'未知错误');loadRuns()}catch(e){box.textContent='失败：'+e.message}finally{btn.disabled=false}}
-loadProfiles();loadRuns();
+async function loadProfiles(){try{const d=await api('/api/collection/profiles');const s=d.summary||{};$('mProfiles').textContent=s.profiles||0;$('mEnabled').textContent=s.enabled||0;$('profiles').innerHTML=d.items.length?d.items.map(p=>'<div class="profile"><div class="head"><div><b>'+esc(p.profile_key)+'</b><div class="meta">'+esc(p.source_key)+' · '+esc(adapterLabel(p.adapter))+'</div></div><span class="tag '+esc(p.adapter)+'">'+esc(adapterLabel(p.adapter))+'</span></div><div class="desc">'+esc(p.purpose||'')+'</div><div class="meta">'+esc(p.notes||'')+'</div><div class="meta"><a class="url" href="'+esc(p.entry_url)+'" target="_blank">'+esc(p.entry_url)+'</a></div><div class="actions"><label class="check"><input id="ingest-'+p.id+'" type="checkbox" checked>解析入库</label><label class="check"><input id="extract-'+p.id+'" type="checkbox">知识识别</label><label class="check"><input id="model-'+p.id+'" type="checkbox">使用模型</label><button id="run-'+p.id+'" class="btn" onclick="runProfile('+p.id+')">执行采集</button><span id="result-'+p.id+'" class="result"></span></div></div>').join(''):'<div class="empty">暂无采集配置。</div>'}catch(e){$('profiles').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}}
+async function loadRuns(){try{const d=await api('/api/collection/runs?limit=30');$('mChanged').textContent=d.summary?.changed||0;$('mUnchanged').textContent=d.summary?.unchanged||0;const statusText=x=>x.content_status==='changed'?'有变化':x.content_status==='unchanged'?'未变化':x.content_status==='initial'?'首次采集':x.status==='failed'?'失败':'完成';$('runs').innerHTML=d.items.length?d.items.map(x=>'<div class="run"><div class="head"><b>'+esc(x.profile_key)+'</b><span class="status '+esc(x.status)+'">'+esc(statusText(x))+'</span></div><div class="meta">'+esc(x.source_key)+' · '+esc(x.started_at||'')+'</div><div class="meta">HTTP '+esc(x.http_status||'-')+' · '+Number(x.bytes_received||0)+' bytes'+(x.document_id?' · 文档ID '+x.document_id:'')+(x.candidate_count?' · 候选 '+x.candidate_count+' 条':'')+'</div>'+(x.content_status==='unchanged'?'<div class="meta">内容指纹与上次一致，本次未重复解析入库。</div>':'')+(x.error?'<div class="meta" style="color:#9e3e3e">'+esc(x.error)+'</div>':'')+'</div>').join(''):'<div class="empty">暂无执行记录。</div>'}catch(e){$('runs').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}}
+async function loadUpdates(){try{const d=await api('/api/collection/updates?limit=30');$('updates').innerHTML=d.items.length?d.items.map(x=>'<div class="run"><div class="head"><b>'+esc(x.profile_key)+'</b><span class="status">'+esc(x.change_type==='changed'?'内容变化':'首次建立基线')+'</span></div><div class="meta">'+esc(x.source_key)+' · '+esc(x.created_at||'')+'</div><div class="meta">当前指纹 '+esc((x.current_sha256||'').slice(0,16))+(x.previous_sha256?' · 上一指纹 '+esc(x.previous_sha256.slice(0,16)):'')+'</div></div>').join(''):'<div class="empty">暂无变化记录。</div>'}catch(e){$('updates').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}}
+async function runProfile(id){const btn=$('run-'+id),box=$('result-'+id);btn.disabled=true;box.textContent='执行中…';try{const d=await api('/api/collection/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile_id:id,auto_ingest:$('ingest-'+id).checked,auto_extract:$('extract-'+id).checked,use_model:$('model-'+id).checked})});box.textContent=d.status==='completed'?'完成'+(d.document_id?'，文档ID '+d.document_id:''):'失败：'+(d.error||'未知错误');loadRuns();loadUpdates()}catch(e){box.textContent='失败：'+e.message}finally{btn.disabled=false}}
+loadProfiles();loadRuns();loadUpdates();
 </script>
 </body>
 </html>
