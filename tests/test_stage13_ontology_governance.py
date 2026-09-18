@@ -123,7 +123,7 @@ def main() -> None:
     page = Path("static/ontology.html").read_text(encoding="utf-8")
     runtime = Path("app/platform_server.py").read_text(encoding="utf-8")
     assert "四类知识库" in page
-    assert "法规知识库" in page and "标准知识库" not in page  # labels come from API
+    assert "GMA知识库" in page\n    assert "市场准入知识主线" in page
     assert "/api/ontology/coverage" in page
     assert "/api/ontology/candidates" in page
     assert '"/ontology", "/ontology.html"' in runtime
