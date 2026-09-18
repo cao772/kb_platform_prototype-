@@ -284,7 +284,9 @@ class RegulationMapService:
             str(item.get("record_type") or ""), str(item.get("code") or item.get("name") or ""),
         ))
         meta = REGION_META.get(code, {})
-        region_name = next((str(item.get("region_name") or "") for item in records if item.get("region_name")), "") or str(meta.get("name") or code)
+        region_name = str(meta.get("name") or "") or next(
+            (str(item.get("region_name") or "") for item in records if item.get("region_name")), ""
+        ) or code
         return {
             "as_of": effective_date,
             "region_code": code,
