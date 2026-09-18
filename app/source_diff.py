@@ -365,7 +365,7 @@ class SourceDifferenceService:
             "signals": signals,
             "change_items": self._structured_change_items(signals),
             "blocks": blocks,
-            "notice": "差异结果先进入人工复核；复核人员可以修改、补充或取消变化项。确认复核结果后仍不会自动修改正式知识，后续再进入影响分析或正式知识维护。",
+            "notice": "差异结果先进入人工复核；复核人员可以修改、补充或取消变化项。确认复核结果后不自动修改正式知识，后续再进入影响分析或正式知识维护。",
         }
 
         payload = json.dumps(report, ensure_ascii=False)
