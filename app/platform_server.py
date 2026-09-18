@@ -101,6 +101,15 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/collection/diff-review":
+            try:
+                self._send_json(source_diff.review_state(
+                    int(params.get("event_id", ["0"])[0] or 0)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/map/overview":
             try:
                 self._send_json(regulation_map.overview(
@@ -234,6 +243,20 @@ class Handler(BaseHandler):
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path == "/api/collection/diff-review":
+            try:
+                payload = self._read_json()
+                self._send_json(source_diff.save_review(
+                    int(payload.get("event_id") or 0),
+                    items=payload.get("items") or [],
+                    action=payload.get("action", "save"),
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/ontology/version/create":
             try:
                 payload = self._read_json()
