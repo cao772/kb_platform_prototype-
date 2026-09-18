@@ -159,8 +159,47 @@ class SourceCollectionService:
                 );
                 CREATE INDEX IF NOT EXISTS idx_collection_runs_profile
                     ON collection_runs(profile_id,id DESC);
+
+                CREATE TABLE IF NOT EXISTS source_snapshots (
+                    profile_id INTEGER PRIMARY KEY,
+                    profile_key TEXT NOT NULL,
+                    source_key TEXT NOT NULL,
+                    sha256 TEXT NOT NULL,
+                    bytes_received INTEGER DEFAULT 0,
+                    content_type TEXT DEFAULT '',
+                    saved_path TEXT DEFAULT '',
+                    document_id INTEGER,
+                    first_seen_at TEXT NOT NULL,
+                    last_seen_at TEXT NOT NULL,
+                    changed_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS source_update_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    profile_id INTEGER NOT NULL,
+                    profile_key TEXT NOT NULL,
+                    source_key TEXT NOT NULL,
+                    run_id INTEGER NOT NULL,
+                    change_type TEXT NOT NULL,
+                    previous_sha256 TEXT DEFAULT '',
+                    current_sha256 TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'open',
+                    created_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_source_update_events_profile
+                    ON source_update_events(profile_id,id DESC);
+                CREATE INDEX IF NOT EXISTS idx_source_update_events_status
+                    ON source_update_events(status,id DESC);
                 """
             )
+            columns = {
+                row["name"]
+                for row in self.store.conn.execute("PRAGMA table_info(collection_runs)").fetchall()
+            }
+            if "content_status" not in columns:
+                self.store.conn.execute(
+                    "ALTER TABLE collection_runs ADD COLUMN content_status TEXT DEFAULT ''"
+                )
             self.store.conn.commit()
 
     def _seed_profiles(self) -> None:
@@ -234,6 +273,32 @@ class SourceCollectionService:
                 "runs": len(items),
                 "success": sum(1 for item in items if item.get("status") == "completed"),
                 "failed": sum(1 for item in items if item.get("status") == "failed"),
+                "changed": sum(1 for item in items if item.get("content_status") == "changed"),
+                "initial": sum(1 for item in items if item.get("content_status") == "initial"),
+                "unchanged": sum(1 for item in items if item.get("content_status") == "unchanged"),
+            },
+        }
+
+    def list_updates(self, *, status: str = "", limit: int = 100) -> dict[str, Any]:
+        params: list[Any] = []
+        where = ""
+        if status:
+            where = "WHERE status=?"
+            params.append(status)
+        params.append(min(max(int(limit), 1), 500))
+        with self.store.lock:
+            rows = self.store.conn.execute(
+                f"SELECT * FROM source_update_events {where} ORDER BY id DESC LIMIT ?",
+                params,
+            ).fetchall()
+        items = [dict(row) for row in rows]
+        return {
+            "items": items,
+            "summary": {
+                "events": len(items),
+                "open": sum(1 for item in items if item.get("status") == "open"),
+                "initial": sum(1 for item in items if item.get("change_type") == "initial"),
+                "changed": sum(1 for item in items if item.get("change_type") == "changed"),
             },
         }
 
@@ -282,6 +347,41 @@ class SourceCollectionService:
             if http_status >= 400:
                 raise ValueError(f"source returned HTTP {http_status}")
 
+            sha256 = hashlib.sha256(body).hexdigest()
+            with self.store.lock:
+                previous = self.store.conn.execute(
+                    "SELECT * FROM source_snapshots WHERE profile_id=?",
+                    (int(profile["id"]),),
+                ).fetchone()
+
+            if previous and str(previous["sha256"] or "") == sha256:
+                finished_at = _now()
+                with self.store.lock:
+                    self.store.conn.execute(
+                        """
+                        UPDATE collection_runs SET
+                            status='completed',finished_at=?,http_status=?,content_type=?,
+                            bytes_received=?,sha256=?,content_status='unchanged'
+                        WHERE id=?
+                        """,
+                        (finished_at, http_status, content_type, len(body), sha256, run_id),
+                    )
+                    self.store.conn.execute(
+                        "UPDATE source_snapshots SET last_seen_at=? WHERE profile_id=?",
+                        (finished_at, int(profile["id"])),
+                    )
+                    self.store.conn.execute(
+                        """
+                        UPDATE knowledge_sources SET
+                            status='connected',last_checked_at=?,last_success_at=?,updated_at=CURRENT_TIMESTAMP
+                        WHERE id=?
+                        """,
+                        (finished_at, finished_at, source["id"]),
+                    )
+                    self.store.conn.commit()
+                return self.run_detail(run_id)
+
+            content_status = "changed" if previous else "initial"
             stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
             safe_key = "".join(ch if ch.isalnum() or ch in {"-", "_"} else "_" for ch in profile["profile_key"])
             folder = self.download_dir / source["source_key"]
@@ -291,7 +391,6 @@ class SourceCollectionService:
             temp.write_bytes(body)
             temp.replace(target)
 
-            sha256 = hashlib.sha256(body).hexdigest()
             document_id: int | None = None
             candidate_count = 0
             change_watch_count = 0
@@ -352,12 +451,47 @@ class SourceCollectionService:
                     UPDATE collection_runs SET
                         status='completed',finished_at=?,http_status=?,content_type=?,
                         bytes_received=?,sha256=?,saved_path=?,document_id=?,
-                        candidate_count=?,change_watch_count=?
+                        candidate_count=?,change_watch_count=?,content_status=?
                     WHERE id=?
                     """,
                     (
                         finished_at, http_status, content_type, len(body), sha256, str(target.resolve()),
-                        document_id, candidate_count, change_watch_count, run_id,
+                        document_id, candidate_count, change_watch_count, content_status, run_id,
+                    ),
+                )
+                previous_sha = str(previous["sha256"] or "") if previous else ""
+                self.store.conn.execute(
+                    """
+                    INSERT INTO source_snapshots(
+                        profile_id,profile_key,source_key,sha256,bytes_received,content_type,
+                        saved_path,document_id,first_seen_at,last_seen_at,changed_at
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                    ON CONFLICT(profile_id) DO UPDATE SET
+                        sha256=excluded.sha256,
+                        bytes_received=excluded.bytes_received,
+                        content_type=excluded.content_type,
+                        saved_path=excluded.saved_path,
+                        document_id=excluded.document_id,
+                        last_seen_at=excluded.last_seen_at,
+                        changed_at=excluded.changed_at
+                    """,
+                    (
+                        int(profile["id"]), profile["profile_key"], source["source_key"], sha256,
+                        len(body), content_type, str(target.resolve()), document_id,
+                        finished_at if not previous else str(previous["first_seen_at"]),
+                        finished_at, finished_at,
+                    ),
+                )
+                self.store.conn.execute(
+                    """
+                    INSERT INTO source_update_events(
+                        profile_id,profile_key,source_key,run_id,change_type,
+                        previous_sha256,current_sha256,status,created_at
+                    ) VALUES(?,?,?,?,?,?,?,?,?)
+                    """,
+                    (
+                        int(profile["id"]), profile["profile_key"], source["source_key"], run_id,
+                        content_status, previous_sha, sha256, "open", finished_at,
                     ),
                 )
                 self.store.conn.execute(
