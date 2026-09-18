@@ -50,8 +50,11 @@ def main() -> None:
     assert "/api/gma/access" in html
     assert '"/api/gma/access"' in runtime
     assert "不另建一套重复事实数据" in html
+    assert "applyBusinessRoute" in html
+    assert "new URLSearchParams(location.search)" in html
+    assert "tab==='access'" in html
 
-    print("OK: business navigation, dashboard and GMA market-access workflow are wired")
+    print("OK: business navigation, dashboard, GMA workflow and map drilldown are wired")
 
 
 if __name__ == "__main__":
