@@ -14,6 +14,7 @@ from app.source_diff import SourceDifferenceService
 from app.source_impact import SourceImpactService
 from app.document_translation import DocumentTranslationService
 from app.formal_translation import FormalKnowledgeTranslationService
+from app.candidate_normalization import CandidateNormalizationService
 from app.server import Handler as BaseHandler
 from app.server import ROOT, STATIC_DIR, change_monitor, graph_service, store
 
@@ -26,6 +27,7 @@ source_diff = SourceDifferenceService(store)
 source_impact = SourceImpactService(store, source_diff, graph_service)
 document_translation = DocumentTranslationService(store)
 formal_translation = FormalKnowledgeTranslationService(store)
+candidate_normalization = CandidateNormalizationService(store, ontology_registry)
 
 
 class Handler(BaseHandler):
@@ -174,6 +176,24 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/candidate-normalization":
+            try:
+                self._send_json(candidate_normalization.suggestions(
+                    int(params.get("task_id", ["0"])[0] or 0)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/candidate-normalization/pending":
+            try:
+                self._send_json(candidate_normalization.list_pending(
+                    limit=min(int(params.get("limit", ["100"])[0] or 100), 500)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/map/overview":
             try:
                 self._send_json(regulation_map.overview(
@@ -261,6 +281,10 @@ class Handler(BaseHandler):
             self._send_file(STATIC_DIR / "ontology_governance.html")
             return
 
+        if parsed.path in {"/candidate-normalization", "/candidate-normalization.html"}:
+            self._send_file(STATIC_DIR / "candidate_normalization.html")
+            return
+
         if parsed.path in {"/source-document", "/source-document.html"}:
             self._send_file(STATIC_DIR / "source_document.html")
             return
@@ -337,6 +361,19 @@ class Handler(BaseHandler):
                     items=payload.get("items"),
                     target_language=payload.get("target_language", "zh-CN"),
                     force=bool(payload.get("force", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/candidate-normalization/apply":
+            try:
+                payload = self._read_json()
+                self._send_json(candidate_normalization.apply(
+                    int(payload.get("task_id") or 0),
+                    changes=payload.get("changes") or {},
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
                 ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
