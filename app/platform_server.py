@@ -15,6 +15,7 @@ from app.source_impact import SourceImpactService
 from app.document_translation import DocumentTranslationService
 from app.formal_translation import FormalKnowledgeTranslationService
 from app.candidate_normalization import CandidateNormalizationService
+from app.gma_bilingual import GmaBilingualService
 from app.server import Handler as BaseHandler
 from app.server import ROOT, STATIC_DIR, change_monitor, graph_service, store
 
@@ -28,6 +29,7 @@ source_impact = SourceImpactService(store, source_diff, graph_service)
 document_translation = DocumentTranslationService(store)
 formal_translation = FormalKnowledgeTranslationService(store)
 candidate_normalization = CandidateNormalizationService(store, ontology_registry)
+gma_bilingual = GmaBilingualService(store, graph_service, formal_translation)
 
 
 class Handler(BaseHandler):
@@ -194,6 +196,17 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/gma/path":
+            try:
+                self._send_json(gma_bilingual.path(
+                    region_code=params.get("region", [""])[0],
+                    product_class=params.get("product_class", [""])[0],
+                    as_of=params.get("as_of", [None])[0] or None,
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/map/overview":
             try:
                 self._send_json(regulation_map.overview(
@@ -281,6 +294,10 @@ class Handler(BaseHandler):
             self._send_file(STATIC_DIR / "ontology_governance.html")
             return
 
+        if parsed.path in {"/gma-path", "/gma-path.html"}:
+            self._send_file(STATIC_DIR / "gma_path.html")
+            return
+
         if parsed.path in {"/candidate-normalization", "/candidate-normalization.html"}:
             self._send_file(STATIC_DIR / "candidate_normalization.html")
             return
@@ -361,6 +378,20 @@ class Handler(BaseHandler):
                     items=payload.get("items"),
                     target_language=payload.get("target_language", "zh-CN"),
                     force=bool(payload.get("force", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/gma/path/translate":
+            try:
+                payload = self._read_json()
+                self._send_json(gma_bilingual.translate_path(
+                    region_code=payload.get("region_code", ""),
+                    product_class=payload.get("product_class", ""),
+                    as_of=payload.get("as_of") or None,
+                    force=bool(payload.get("force", False)),
+                    max_records=int(payload.get("max_records") or 100),
                 ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
