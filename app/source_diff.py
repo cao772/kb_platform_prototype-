@@ -7,6 +7,7 @@ from collections import Counter
 from datetime import datetime, timezone
 from typing import Any
 
+from app.model_gateway import call_translation_model
 from app.store import KnowledgeStore
 
 
@@ -415,6 +416,70 @@ class SourceDifferenceService:
         item["items"] = json.loads(item.pop("reviewed_items_json") or "[]")
         return item
 
+    def translate_review_items(
+        self,
+        event_id: int,
+        *,
+        items: list[dict[str, Any]] | None = None,
+        target_language: str = "zh-CN",
+        force: bool = False,
+        translator=None,
+    ) -> dict[str, Any]:
+        """Add bilingual display fields without replacing source-language text."""
+        state = self.review_state(event_id)
+        source_items = [dict(item) for item in (items if items is not None else state.get("items", []))]
+        requests: list[tuple[int, str, str]] = []
+        texts: list[str] = []
+        for index, item in enumerate(source_items):
+            for side in ("before", "after"):
+                original = str(item.get(side) or "").strip()
+                translated_key = f"{side}_zh"
+                if not original:
+                    item[translated_key] = ""
+                    continue
+                if not force and str(item.get(translated_key) or "").strip():
+                    continue
+                # Chinese-origin content remains unchanged in the Chinese display,
+                # while the source-language field is still retained separately.
+                chinese_count = len(re.findall(r"[\u4e00-\u9fff]", original))
+                visible_count = max(1, len(re.sub(r"\s+", "", original)))
+                if chinese_count >= 2 and chinese_count / visible_count >= 0.15:
+                    item[translated_key] = original
+                    item["translation_status"] = "source_is_chinese"
+                    continue
+                requests.append((index, side, translated_key))
+                texts.append(original)
+
+        trace: dict[str, Any] = {"mode": "translation_not_needed", "target_language": target_language}
+        if texts:
+            if translator is not None:
+                translated = translator(texts, target_language)
+                trace = {"mode": "translation_test_adapter", "target_language": target_language}
+            else:
+                translated, trace = call_translation_model(texts, target_language=target_language)
+            if translated is None:
+                return {
+                    "update_event_id": int(event_id),
+                    "items": source_items,
+                    "translation": trace,
+                    "source_preserved": True,
+                    "target_language": target_language,
+                }
+            if len(translated) != len(requests):
+                raise ValueError("translation result count mismatch")
+            for (index, _side, translated_key), value in zip(requests, translated):
+                source_items[index][translated_key] = str(value or "").strip()
+                source_items[index]["translation_status"] = "translated"
+
+        return {
+            "update_event_id": int(event_id),
+            "items": source_items,
+            "translation": trace,
+            "source_preserved": True,
+            "target_language": target_language,
+            "note": "原始文件、原始解析文本和原文变化项保持不变；翻译仅作为派生展示字段，可由人工修改。",
+        }
+
     def save_review(
         self,
         event_id: int,
@@ -446,6 +511,9 @@ class SourceDifferenceService:
                 "before": str(raw.get("before") if raw.get("before") is not None else base.get("before") or "").strip(),
                 "after": str(raw.get("after") if raw.get("after") is not None else base.get("after") or "").strip(),
                 "impact_note": str(raw.get("impact_note") or "").strip(),
+                "before_zh": str(raw.get("before_zh") or "").strip(),
+                "after_zh": str(raw.get("after_zh") or "").strip(),
+                "translation_status": str(raw.get("translation_status") or "").strip(),
                 "selected": bool(raw.get("selected", True)),
             })
 
