@@ -73,3 +73,7 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage25_ontology_constraints.py
       - name: Stage26 candidate normalization tests
         run: PYTHONPATH=. python tests/test_stage26_candidate_normalization.py
+      - name: Stage27 GMA bilingual path tests
+        run: PYTHONPATH=. python tests/test_stage27_gma_bilingual.py
+      - name: Stage28 pipeline readiness tests
+        run: PYTHONPATH=. python tests/test_stage28_pipeline_readiness.py
