@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>来源台账 · 法规认证知识平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.brand{font-size:19px;font-weight:700}.top a{color:#dce8f5;text-decoration:none;font-size:13px}.wrap{max-width:1500px;margin:18px auto;padding:0 20px}.hero{background:#fff;border:1px solid #e1e7ef;border-radius:14px;padding:22px 24px}.hero h1{font-size:25px;margin:0 0 8px;color:#113f72}.hero p{margin:0;color:#66758a;line-height:1.7}.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0}.metric,.card{background:#fff;border:1px solid #e1e7ef;border-radius:12px}.metric{padding:13px 14px}.metric span{font-size:11px;color:#8190a3}.metric strong{display:block;font-size:22px;color:#123e6e;margin-top:4px}.filters{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr auto;gap:8px}.card{padding:16px}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:1100px;font-size:12px}.table th,.table td{border-bottom:1px solid #e5ebf1;padding:9px 8px;text-align:left;vertical-align:top}.table th{background:#f7f9fc;color:#657489;position:sticky;top:0}.table tr:hover{background:#f8fbfe}.tag{display:inline-block;padding:3px 7px;border-radius:999px;background:#edf3f8;color:#5f6f82;font-size:10px}.tag.A{background:#e9f7ef;color:#2e7350}.tag.B{background:#fff4dd;color:#8b641c}.status.connected{background:#e9f7ef;color:#2e7350}.status.validated{background:#e8f3ff;color:#246599}.status.research{background:#fff4dd;color:#8b641c}.status.paused{background:#fbeaea;color:#963d3d}.layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(340px,.4fr);gap:14px;margin-top:14px}.muted{font-size:12px;color:#748297;line-height:1.65}.edit label{display:block;font-size:11px;color:#718095;margin:8px 0 4px}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px 10px;background:#fff}textarea{min-height:90px;resize:vertical}.btn{border:0;background:#0d4f91;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer}.url{color:#0d4f91;text-decoration:none}.progress{height:9px;background:#edf2f7;border-radius:999px;overflow:hidden;margin-top:8px}.progress i{display:block;height:100%;background:#1971b8}.section{margin-top:14px}.source-name{font-weight:700;color:#173f68}.source-scope{color:#68778b;font-size:11px;line-height:1.45}.empty{padding:25px;text-align:center;color:#8190a3;font-size:13px}@media(max-width:1120px){.metrics{grid-template-columns:repeat(3,1fr)}.filters,.layout{grid-template-columns:1fr}}@media(max-width:680px){.metrics{grid-template-columns:1fr 1fr}.top{padding:0 14px}.wrap{padding:0 12px}}
+</style>
+</head>
+<body>
+<div class="top"><div class="brand">法规认证知识平台 · 来源台账</div><a href="/">返回业务平台</a></div>
+<div class="wrap">
+  <div class="hero"><h1>21个目标国家/地区的数据来源台账</h1><p>统一管理法规、标准、认证和GMA相关来源，逐步形成约300个权威网站的数据采集清单。每个来源记录所属市场、来源类别、主管机构、接入方式、更新频率和采集范围。</p></div>
+  <div class="metrics">
+    <div class="metric"><span>目标来源规模</span><strong id="mTarget">300</strong></div>
+    <div class="metric"><span>已登记来源</span><strong id="mRegistered">-</strong></div>
+    <div class="metric"><span>覆盖目标市场</span><strong id="mRegions">-</strong></div>
+    <div class="metric"><span>法规来源</span><strong id="mRegulation">-</strong></div>
+    <div class="metric"><span>标准来源</span><strong id="mStandard">-</strong></div>
+    <div class="metric"><span>待继续调研</span><strong id="mRemain">-</strong></div>
+  </div>
+  <div class="card">
+    <div class="filters">
+      <select id="region"><option value="">全部国家/地区</option></select>
+      <select id="type"><option value="">全部来源类别</option><option value="regulation">法规</option><option value="standard">标准</option><option value="certification">认证</option><option value="gma">GMA/市场准入</option></select>
+      <select id="status"><option value="">全部状态</option><option value="research">调研中</option><option value="validated">已确认</option><option value="connected">已接入</option><option value="paused">暂停</option></select>
+      <input id="q" placeholder="来源名称、机构、网址、采集范围">
+      <button class="btn" onclick="loadSources()">查询</button>
+    </div>
+    <div class="progress"><i id="progressBar" style="width:0"></i></div><div class="muted" id="progressText" style="margin-top:6px">正在加载来源台账…</div>
+  </div>
+  <div class="layout">
+    <div class="card"><div class="table-wrap"><table class="table"><thead><tr><th>国家/地区</th><th>来源</th><th>类别</th><th>主管机构</th><th>接入方式</th><th>优先级</th><th>状态</th><th>更新</th><th>网址</th></tr></thead><tbody id="rows"><tr><td colspan="9" class="empty">正在加载…</td></tr></tbody></table></div></div>
+    <div class="card edit">
+      <h3 id="detailTitle">来源详情</h3><div id="detailEmpty" class="muted">点击左侧来源后可查看采集范围并维护接入状态。</div>
+      <div id="detailForm" style="display:none">
+        <label>来源名称</label><input id="eName"><label>主管机构</label><input id="eAuthority"><label>来源地址</label><input id="eUrl">
+        <label>接入方式</label><select id="eAccess"><option value="html">网页</option><option value="pdf">PDF</option><option value="xml">XML</option><option value="api">API</option><option value="rss">RSS</option><option value="mixed">混合</option><option value="metadata_only">仅元数据</option></select>
+        <label>优先级</label><select id="ePriority"><option>A</option><option>B</option><option>C</option></select>
+        <label>接入状态</label><select id="eStatus"><option value="research">调研中</option><option value="validated">已确认</option><option value="connected">已接入</option><option value="paused">暂停</option></select>
+        <label>更新频率</label><select id="eRefresh"><option value="daily">每日</option><option value="weekly">每周</option><option value="monthly">每月</option><option value="event">按事件</option><option value="manual">人工</option></select>
+        <label>采集范围</label><textarea id="eScope"></textarea><label>备注</label><textarea id="eNotes"></textarea><label>项目维护说明</label><textarea id="eOwner"></textarea>
+        <button class="btn" style="margin-top:10px" onclick="saveSource()">保存</button><div id="saveResult" class="muted" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card section"><h3>当前来源建设口径</h3><div class="muted">欧盟成员市场同时复用欧盟层公共来源；国家本地来源只保存本国特有法规、标准和认证信息。标准全文受版权或许可限制时，以标准编号、名称、版本、适用范围和引用关系等元数据为主，已授权文件再进入全文知识库。后续继续补充各国监管机构、产品安全、能效、无线电、电气安全、化学合规、认证机构及GMA市场准入来源。</div></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let current=null;
+const typeLabel=v=>({regulation:'法规',standard:'标准',certification:'认证',gma:'GMA/市场准入'}[v]||v);const accessLabel=v=>({html:'网页',pdf:'PDF',xml:'XML',api:'API',rss:'RSS',mixed:'混合',metadata_only:'仅元数据'}[v]||v);const statusLabel=v=>({research:'调研中',validated:'已确认',connected:'已接入',paused:'暂停'}[v]||v);
+async function api(url,opt){const r=await fetch(url,opt);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
+async function loadRegions(){const d=await api('/api/regions');let html='<option value="">全部国家/地区</option><option value="EU">欧盟公共来源 EU</option>';Object.entries(d.groups||{}).forEach(([g,items])=>{html+='<optgroup label="'+esc(g)+'">';items.forEach(x=>{html+='<option value="'+esc(x.code)+'">'+esc(x.name)+' '+esc(x.code)+'</option>'});html+='</optgroup>'});$('region').innerHTML=html}
+async function loadSources(){const p=new URLSearchParams();if($('region').value)p.set('region',$('region').value);if($('type').value)p.set('type',$('type').value);if($('status').value)p.set('status',$('status').value);if($('q').value.trim())p.set('q',$('q').value.trim());try{const d=await api('/api/sources?'+p.toString());const s=d.summary||{};$('mTarget').textContent=s.target_sources||300;$('mRegistered').textContent=s.registered_sources||0;$('mRegions').textContent=(s.target_markets_with_sources||0)+' / '+(s.target_markets||21);$('mRegulation').textContent=(s.by_type||{}).regulation||0;$('mStandard').textContent=(s.by_type||{}).standard||0;$('mRemain').textContent=s.remaining_to_target||0;const ratio=Math.min(100,Math.round((Number(s.registered_sources||0)/Number(s.target_sources||300))*100));$('progressBar').style.width=ratio+'%';$('progressText').textContent='已登记 '+(s.registered_sources||0)+' / '+(s.target_sources||300)+' 个来源，当前覆盖 '+(s.target_markets_with_sources||0)+' 个目标市场。';let rows='';d.items.forEach(x=>{rows+='<tr onclick="showSource('+x.id+')"><td>'+esc(x.region_code)+'</td><td><div class="source-name">'+esc(x.source_name)+'</div><div class="source-scope">'+esc(x.crawl_scope||'')+'</div></td><td>'+esc(typeLabel(x.source_type))+'</td><td>'+esc(x.authority||'')+'</td><td>'+esc(accessLabel(x.access_method))+'</td><td><span class="tag '+esc(x.priority)+'">'+esc(x.priority)+'</span></td><td><span class="tag status '+esc(x.status)+'">'+esc(statusLabel(x.status))+'</span></td><td>'+esc(x.refresh_policy||'')+'</td><td><a class="url" href="'+esc(x.base_url)+'" target="_blank" onclick="event.stopPropagation()">打开</a></td></tr>'});$('rows').innerHTML=rows||'<tr><td colspan="9" class="empty">当前筛选条件下没有来源。</td></tr>'}catch(e){$('rows').innerHTML='<tr><td colspan="9" class="empty">'+esc(e.message)+'</td></tr>'}}
+async function showSource(id){try{current=await api('/api/sources/detail?id='+id);$('detailEmpty').style.display='none';$('detailForm').style.display='block';$('detailTitle').textContent=current.source_name+' · '+current.region_code;$('eName').value=current.source_name||'';$('eAuthority').value=current.authority||'';$('eUrl').value=current.base_url||'';$('eAccess').value=current.access_method||'html';$('ePriority').value=current.priority||'B';$('eStatus').value=current.status||'research';$('eRefresh').value=current.refresh_policy||'weekly';$('eScope').value=current.crawl_scope||'';$('eNotes').value=current.notes||'';$('eOwner').value=current.owner_note||'';$('saveResult').textContent=(current.languages||[]).length?'语言：'+current.languages.join('、')+'；文件：'+(current.file_types||[]).join('、'):''}catch(e){alert(e.message)}}
+async function saveSource(){if(!current)return;const body={id:current.id,source_name:$('eName').value,authority:$('eAuthority').value,base_url:$('eUrl').value,access_method:$('eAccess').value,priority:$('ePriority').value,status:$('eStatus').value,refresh_policy:$('eRefresh').value,crawl_scope:$('eScope').value,notes:$('eNotes').value,owner_note:$('eOwner').value};try{current=await api('/api/sources/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});$('saveResult').textContent='已保存。';loadSources()}catch(e){$('saveResult').textContent='保存失败：'+e.message}}
+loadRegions().then(loadSources);
+</script>
+</body>
+</html>
