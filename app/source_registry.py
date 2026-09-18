@@ -171,9 +171,9 @@ class SourceRegistryService:
             clauses.append("status=?")
             params.append(status)
         if q:
-            clauses.append("(lower(source_name) LIKE ? OR lower(authority) LIKE ? OR lower(base_url) LIKE ? OR lower(crawl_scope) LIKE ?)")
+            clauses.append("(lower(source_key) LIKE ? OR lower(source_name) LIKE ? OR lower(authority) LIKE ? OR lower(base_url) LIKE ? OR lower(crawl_scope) LIKE ?)")
             term = f"%{q.lower()}%"
-            params.extend([term, term, term, term])
+            params.extend([term, term, term, term, term])
         where = "WHERE " + " AND ".join(clauses) if clauses else ""
         params.append(min(max(int(limit), 1), 3000))
         with self.store.lock:
@@ -203,6 +203,18 @@ class SourceRegistryService:
             "by_status": dict(by_status),
             "shared_sources": sum(1 for item in items if item.get("shared_scope")),
         }
+
+    def by_key(self, source_key: str) -> dict[str, Any]:
+        key = str(source_key or "").strip()
+        if not key:
+            raise ValueError("source_key is required")
+        with self.store.lock:
+            row = self.store.conn.execute(
+                "SELECT * FROM knowledge_sources WHERE source_key=?", (key,)
+            ).fetchone()
+        if not row:
+            raise ValueError(f"source not found: {key}")
+        return self._row(row)
 
     def detail(self, source_id: int) -> dict[str, Any]:
         with self.store.lock:
