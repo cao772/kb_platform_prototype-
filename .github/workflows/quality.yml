@@ -65,3 +65,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage21_source_impact_review.py
       - name: Stage22 bilingual source review tests
         run: PYTHONPATH=. python tests/test_stage22_bilingual_source_review.py
+      - name: Stage23 bilingual document review tests
+        run: PYTHONPATH=. python tests/test_stage23_bilingual_document_review.py
