@@ -12,6 +12,7 @@ from app.source_registry import SourceRegistryService
 from app.source_collection import SourceCollectionService
 from app.source_diff import SourceDifferenceService
 from app.source_impact import SourceImpactService
+from app.document_translation import DocumentTranslationService
 from app.server import Handler as BaseHandler
 from app.server import ROOT, STATIC_DIR, change_monitor, graph_service, store
 
@@ -22,6 +23,7 @@ source_registry = SourceRegistryService(store)
 source_collection = SourceCollectionService(store, source_registry, ROOT / "data" / "source_downloads", change_monitor=change_monitor)
 source_diff = SourceDifferenceService(store)
 source_impact = SourceImpactService(store, source_diff, graph_service)
+document_translation = DocumentTranslationService(store)
 
 
 class Handler(BaseHandler):
@@ -141,6 +143,25 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/source-document":
+            try:
+                self._send_json(document_translation.detail(
+                    int(params.get("id", ["0"])[0] or 0),
+                    target_language=params.get("lang", ["zh-CN"])[0] or "zh-CN",
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/source-document/raw":
+            try:
+                self._send_file(document_translation.raw_path(
+                    int(params.get("id", ["0"])[0] or 0)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/map/overview":
             try:
                 self._send_json(regulation_map.overview(
@@ -228,6 +249,10 @@ class Handler(BaseHandler):
             self._send_file(STATIC_DIR / "ontology_governance.html")
             return
 
+        if parsed.path in {"/source-document", "/source-document.html"}:
+            self._send_file(STATIC_DIR / "source_document.html")
+            return
+
         if parsed.path in {"/source-impact", "/source-impact.html"}:
             self._send_file(STATIC_DIR / "source_impact.html")
             return
@@ -300,6 +325,34 @@ class Handler(BaseHandler):
                     items=payload.get("items"),
                     target_language=payload.get("target_language", "zh-CN"),
                     force=bool(payload.get("force", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/source-document/translate":
+            try:
+                payload = self._read_json()
+                self._send_json(document_translation.translate(
+                    int(payload.get("document_id") or 0),
+                    target_language=payload.get("target_language", "zh-CN"),
+                    force=bool(payload.get("force", False)),
+                    max_segments=int(payload.get("max_segments") or 500),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/source-document/review":
+            try:
+                payload = self._read_json()
+                self._send_json(document_translation.save_review(
+                    int(payload.get("document_id") or 0),
+                    target_language=payload.get("target_language", "zh-CN"),
+                    segments=payload.get("segments") or [],
+                    action=payload.get("action", "save"),
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
                 ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
