@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from typing import Any
 
 from app.governance import lifecycle_state
+from app.regions import REGION_META, TARGET_MARKETS, canonical_region_code, knowledge_scope_codes
 from app.store import KnowledgeStore
 
 TYPE_LABELS = {
@@ -14,45 +15,6 @@ TYPE_LABELS = {
     "certification": "认证",
     "requirement": "技术要求",
     "test_item": "检测项目",
-}
-
-# Common market coordinates. EU is represented by Brussels because the platform
-# treats EU-wide requirements as a first-class market scope rather than a country.
-REGION_META: dict[str, dict[str, Any]] = {
-    "EU": {"name": "欧盟", "lat": 50.85, "lon": 4.35},
-    "US": {"name": "美国", "lat": 38.0, "lon": -97.0},
-    "CN": {"name": "中国", "lat": 35.0, "lon": 103.0},
-    "UK": {"name": "英国", "lat": 54.5, "lon": -3.0},
-    "JP": {"name": "日本", "lat": 36.2, "lon": 138.2},
-    "KR": {"name": "韩国", "lat": 36.3, "lon": 127.8},
-    "CA": {"name": "加拿大", "lat": 56.1, "lon": -106.3},
-    "AU": {"name": "澳大利亚", "lat": -25.3, "lon": 133.8},
-    "IN": {"name": "印度", "lat": 22.6, "lon": 79.0},
-    "SG": {"name": "新加坡", "lat": 1.35, "lon": 103.82},
-    "MY": {"name": "马来西亚", "lat": 4.2, "lon": 102.0},
-    "TH": {"name": "泰国", "lat": 15.8, "lon": 101.0},
-    "VN": {"name": "越南", "lat": 16.0, "lon": 108.0},
-    "ID": {"name": "印度尼西亚", "lat": -2.5, "lon": 118.0},
-    "PH": {"name": "菲律宾", "lat": 12.9, "lon": 121.8},
-    "MX": {"name": "墨西哥", "lat": 23.6, "lon": -102.5},
-    "BR": {"name": "巴西", "lat": -10.0, "lon": -55.0},
-    "AR": {"name": "阿根廷", "lat": -34.0, "lon": -64.0},
-    "CL": {"name": "智利", "lat": -30.0, "lon": -71.0},
-    "ZA": {"name": "南非", "lat": -30.6, "lon": 22.9},
-    "AE": {"name": "阿联酋", "lat": 24.3, "lon": 54.4},
-    "SA": {"name": "沙特阿拉伯", "lat": 24.0, "lon": 45.0},
-    "TR": {"name": "土耳其", "lat": 39.0, "lon": 35.2},
-    "RU": {"name": "俄罗斯", "lat": 61.5, "lon": 105.3},
-    "DE": {"name": "德国", "lat": 51.1, "lon": 10.4},
-    "FR": {"name": "法国", "lat": 46.2, "lon": 2.2},
-    "IT": {"name": "意大利", "lat": 42.8, "lon": 12.5},
-    "ES": {"name": "西班牙", "lat": 40.4, "lon": -3.7},
-    "NL": {"name": "荷兰", "lat": 52.1, "lon": 5.3},
-    "BE": {"name": "比利时", "lat": 50.8, "lon": 4.7},
-    "CH": {"name": "瑞士", "lat": 46.8, "lon": 8.2},
-    "NO": {"name": "挪威", "lat": 61.0, "lon": 8.0},
-    "SE": {"name": "瑞典", "lat": 62.0, "lon": 15.0},
-    "PL": {"name": "波兰", "lat": 52.1, "lon": 19.1},
 }
 
 
@@ -136,7 +98,7 @@ class RegulationMapService:
 
         by_region: dict[str, dict[str, Any]] = {}
         for record in records:
-            code = str(record.get("region_code") or "").strip().upper()
+            code = canonical_region_code(str(record.get("region_code") or ""))
             if not code:
                 continue
             meta = REGION_META.get(code, {})
@@ -168,7 +130,7 @@ class RegulationMapService:
                 region["product_classes"][pc] += 1
 
         for change in changes:
-            code = str(change.get("region_code") or "").strip().upper()
+            code = canonical_region_code(str(change.get("region_code") or ""))
             if not code:
                 continue
             meta = REGION_META.get(code, {})
@@ -216,6 +178,63 @@ class RegulationMapService:
             })
         regions.sort(key=lambda item: (-int(item["pending_changes"]), -int(item["knowledge_count"]), item["region_code"]))
 
+        target_markets = []
+        for market in TARGET_MARKETS:
+            scope_codes = set(knowledge_scope_codes(market.code))
+            scoped_records = [
+                item for item in records
+                if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
+            ]
+            scoped_changes = [
+                item for item in changes
+                if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
+            ]
+            if only_changed and not scoped_changes:
+                continue
+            scoped_types = Counter(item.get("record_type") or "unknown" for item in scoped_records)
+            scoped_lifecycle = Counter(item.get("lifecycle_state") or "unknown" for item in scoped_records)
+            x, y = _point(market.lat, market.lon)
+            high_changes = sum(1 for item in scoped_changes if item.get("severity") == "high")
+            upcoming_effective = 0
+            expiring_soon = 0
+            evidence_missing_market = 0
+            for item in scoped_records:
+                if not (item.get("source_document_id") and item.get("source_chunk_id")):
+                    evidence_missing_market += 1
+                start_date, end_date = _date(item.get("effective_from")), _date(item.get("effective_to"))
+                if start_date and as_of_date < start_date <= window_end:
+                    upcoming_effective += 1
+                if end_date and as_of_date <= end_date <= window_end:
+                    expiring_soon += 1
+            if high_changes:
+                attention = "high"
+            elif scoped_changes or upcoming_effective or expiring_soon or evidence_missing_market:
+                attention = "attention"
+            elif scoped_records:
+                attention = "stable"
+            else:
+                attention = "not_started"
+            target_markets.append({
+                "region_code": market.code,
+                "region_name": market.name,
+                "area": market.area,
+                "shared_scopes": list(market.shared_scopes),
+                "knowledge_scope_codes": list(knowledge_scope_codes(market.code)),
+                "knowledge_count": len(scoped_records),
+                "type_counts": dict(scoped_types),
+                "lifecycle_counts": dict(scoped_lifecycle),
+                "pending_changes": len(scoped_changes),
+                "high_changes": high_changes,
+                "evidence_missing": evidence_missing_market,
+                "upcoming_effective": upcoming_effective,
+                "expiring_soon": expiring_soon,
+                "x": x,
+                "y": y,
+                "mappable": True,
+                "attention": attention,
+                "has_data": bool(scoped_records or scoped_changes),
+            })
+
         type_counts = Counter(record.get("record_type") or "unknown" for record in records)
         lifecycle_counts = Counter(record.get("lifecycle_state") or "unknown" for record in records)
         evidence_missing = sum(1 for record in records if not (record.get("source_document_id") and record.get("source_chunk_id")))
@@ -226,6 +245,8 @@ class RegulationMapService:
             "filters": {"product_class": product_class, "record_type": record_type, "only_changed": bool(only_changed)},
             "summary": {
                 "regions": len(regions),
+                "target_markets": len(TARGET_MARKETS),
+                "target_markets_with_data": sum(1 for item in target_markets if item["has_data"]),
                 "knowledge": len(records),
                 "active": lifecycle_counts.get("active", 0),
                 "transition": lifecycle_counts.get("transition", 0),
@@ -237,16 +258,24 @@ class RegulationMapService:
                 "type_counts": dict(type_counts),
             },
             "regions": regions,
+            "target_markets": target_markets,
         }
 
     def detail(self, region_code: str, *, product_class: str = "", as_of: str | None = None) -> dict[str, Any]:
-        code = str(region_code or "").strip().upper()
+        code = canonical_region_code(region_code)
         if not code:
             raise ValueError("region is required")
         effective_date = as_of or date.today().isoformat()
         all_records = self._records(product_class=product_class, as_of=effective_date)
-        records = [item for item in all_records if str(item.get("region_code") or "").strip().upper() == code]
-        changes = [item for item in self._open_changes(product_class=product_class) if str(item.get("region_code") or "").strip().upper() == code]
+        scope_codes = set(knowledge_scope_codes(code))
+        records = [
+            item for item in all_records
+            if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
+        ]
+        changes = [
+            item for item in self._open_changes(product_class=product_class)
+            if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
+        ]
         type_counts = Counter(item.get("record_type") or "unknown" for item in records)
         lifecycle_counts = Counter(item.get("lifecycle_state") or "unknown" for item in records)
         product_classes = Counter(str(item.get("product_class") or "").strip() for item in records if str(item.get("product_class") or "").strip() not in {"", "*"})
@@ -260,6 +289,7 @@ class RegulationMapService:
             "as_of": effective_date,
             "region_code": code,
             "region_name": region_name,
+            "knowledge_scope_codes": sorted(scope_codes),
             "summary": {
                 "knowledge": len(records),
                 "pending_changes": len(changes),
