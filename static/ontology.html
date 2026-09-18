@@ -17,7 +17,7 @@
   <div class="hero">
     <h1>知识本体建设与应用</h1>
     <p>统一定义产品、国家/地区、法规、标准、认证、技术要求、检测项目、版本和依据之间的业务关系。四类知识库共享公共对象，GMA知识库通过关联已有正式知识组织市场准入路径。</p>
-    <div class="filters"><input id="region" placeholder="国家/地区代码，可选"><input id="productClass" placeholder="产品分类，可选"><button onclick="loadAll()">刷新</button></div>
+    <div class="filters"><select id="region"><option value="">全部目标国家/地区</option></select><input id="productClass" placeholder="产品分类，可选"><button onclick="loadAll()">刷新</button></div>
   </div>
   <div class="metrics">
     <div class="metric"><span>正式知识</span><strong id="mRecords">0</strong></div>
@@ -78,6 +78,13 @@ let blueprint=null,activeDomain='';
 async function api(url){const r=await fetch(url);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
 const pct=v=>Math.round((Number(v)||0)*100)+'%';
 const labels={product_class:'产品分类',region:'国家/地区',regulation:'法规',standard:'标准',certification:'认证',requirement:'技术要求',test_item:'检测项目',evidence:'依据'};
+async function loadRegions(){
+  try{
+    const d=await api('/api/regions');
+    const groups=d.groups||{};
+    $('region').innerHTML='<option value="">全部目标国家/地区</option>'+Object.entries(groups).map(([area,items])=>'<optgroup label="'+esc(area)+'">'+items.map(x=>'<option value="'+esc(x.code)+'">'+esc(x.name)+' '+esc(x.code)+'</option>').join('')+'</optgroup>').join('');
+  }catch(e){}
+}
 async function loadAll(){
   const q=new URLSearchParams();if($('region').value.trim())q.set('region',$('region').value.trim());if($('productClass').value.trim())q.set('product_class',$('productClass').value.trim());
   try{
@@ -114,7 +121,7 @@ function renderCandidates(d){
   $('mPending').textContent=d.summary.pending;
   $('candidates').innerHTML=d.items.length?d.items.slice(0,80).map(x=>'<div class="row"><b>'+esc(x.name||x.code)+'</b><p>'+esc([x.document_title,x.region_code,x.product_class].filter(Boolean).join(' · '))+'</p><span class="tag '+(x.validation.valid?'ok':'bad')+'">'+(x.validation.valid?'对象完整':'缺少必填')+'</span>'+(x.validation.missing_recommended.length?'<span class="tag warn">建议补充 '+x.validation.missing_recommended.length+' 项</span>':'')+'</div>').join(''):'<div class="muted">当前没有待校核内容。</div>';
 }
-loadAll();
+loadRegions().then(loadAll);
 </script>
 </body>
 </html>
