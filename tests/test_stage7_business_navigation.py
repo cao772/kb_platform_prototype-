@@ -65,7 +65,15 @@ def main() -> None:
     assert '<pre id="trackRaw"' not in html
     assert "pathCount=Number(v.graph_path_count??((gr.paths||[]).length)||0)" not in html
 
-    print("OK: business navigation, dashboard, GMA, map drilldown and business QA trace are wired")
+    # Stage22 management dashboard uses one governed aggregate endpoint.
+    for label in ("四类知识库建设概览", "21国市场建设进度", "近30天变化趋势", "产品覆盖情况"):
+        assert label in html
+    assert "/api/business/dashboard" in html
+    assert '"/api/business/dashboard"' in runtime
+    assert "准入链完整市场" in html
+    assert "GMA知识库" not in html or "GMA 市场准入" in html
+
+    print("OK: business navigation through Stage22 management dashboard is wired")
 
 
 if __name__ == "__main__":
