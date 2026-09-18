@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>本体维护 · 法规认证知识平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top a{color:#dce8f5;text-decoration:none}.wrap{max-width:1420px;margin:18px auto;padding:0 20px}.hero,.card,.metric{background:#fff;border:1px solid #e1e7ef;border-radius:12px}.hero{padding:20px 22px}.hero h1{margin:0 0 8px;font-size:24px;color:#113f72}.hero p{margin:0;color:#66758a;line-height:1.7}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.metric{padding:13px}.metric span{font-size:11px;color:#8190a3}.metric strong{display:block;font-size:21px;color:#123e6e;margin-top:4px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card{padding:16px}.card h2{font-size:16px;margin:0 0 11px}.row{border:1px solid #e1e7ef;border-radius:9px;padding:10px;margin:7px 0;background:#fafcfe}.row b{font-size:13px}.meta{font-size:11px;color:#788699;line-height:1.55;margin-top:4px}.tag{display:inline-block;font-size:10px;padding:3px 7px;border-radius:999px;background:#edf3f8;color:#5f6f82;margin:2px}.tag.active{background:#e9f8ef;color:#2e7350}.tag.draft{background:#fff4dd;color:#8b641c}.tag.retired{background:#f0f1f3;color:#707a85}.form{display:grid;grid-template-columns:1fr 1fr;gap:8px}.form .full{grid-column:1/-1}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;border:1px solid #ccd6e2;border-radius:8px;padding:9px 10px;background:#fff}textarea{min-height:75px;resize:vertical}.btn{border:0;background:#0d4f91;color:#fff;border-radius:8px;padding:9px 13px;cursor:pointer}.btn.secondary{background:#eef4fb;color:#0d4f91}.actions{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}.list{max-height:520px;overflow:auto}.note{background:#f4f8fd;border:1px solid #dce8f6;border-radius:9px;padding:10px;font-size:12px;color:#566e8a;line-height:1.65}.search{display:grid;grid-template-columns:1fr 150px auto;gap:8px;margin-bottom:8px}@media(max-width:900px){.grid,.metrics,.form,.search{grid-template-columns:1fr}.form .full{grid-column:auto}}@media(max-width:600px){.top{padding:0 14px}.wrap{padding:0 12px}}
+</style>
+</head>
+<body>
+<div class="top"><div style="font-size:19px;font-weight:700">法规认证知识平台 · 本体维护</div><div><a href="/candidate-normalization" style="margin-right:14px">候选术语归一</a><a href="/ontology">返回知识本体</a></div></div>
+<div class="wrap">
+  <div class="hero"><h1>本体版本与术语治理</h1><p>本体定义自身也要受控管理。这里维护本体版本、规范术语和同义词，避免不同国家资料、模型抽取和业务人员使用不同名称后形成重复知识。</p></div>
+  <div class="metrics">
+    <div class="metric"><span>当前启用版本</span><strong id="mActive">-</strong></div>
+    <div class="metric"><span>本体版本数</span><strong id="mVersions">-</strong></div>
+    <div class="metric"><span>草案版本</span><strong id="mDrafts">-</strong></div>
+    <div class="metric"><span>有效术语</span><strong id="mTerms">-</strong></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>本体版本</h2>
+      <div id="versions" class="list"></div>
+      <div class="note" style="margin-top:10px">新版本先作为草案保存，确认后再启用。启用新版本只改变本体治理基线，不会自动修改已有正式知识。</div>
+    </div>
+    <div class="card">
+      <h2>新建本体版本</h2>
+      <div class="form">
+        <input id="vCode" placeholder="版本号，例如 2026.10-business-ontology-v4">
+        <input id="vBy" placeholder="创建人">
+        <textarea id="vNote" class="full" placeholder="本次调整说明"></textarea>
+      </div>
+      <div class="actions"><button class="btn" onclick="createVersion()">创建草案</button><span id="vResult" class="meta"></span></div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:14px">
+    <div class="card">
+      <h2>术语与同义词</h2>
+      <div class="search"><input id="q" placeholder="搜索规范词、代码或别名"><select id="termType"><option value="">全部类型</option><option value="record_type">知识类型</option><option value="node_type">本体对象</option><option value="relation">本体关系</option><option value="domain">知识域</option><option value="product_class">产品分类</option><option value="authority">主管机构</option><option value="custom">自定义</option></select><button class="btn secondary" onclick="loadTerms()">查询</button></div>
+      <div id="terms" class="list"></div>
+    </div>
+    <div class="card">
+      <h2>新增 / 更新术语</h2>
+      <div class="form">
+        <select id="tType"><option value="record_type">知识类型</option><option value="node_type">本体对象</option><option value="relation">本体关系</option><option value="domain">知识域</option><option value="product_class">产品分类</option><option value="authority">主管机构</option><option value="custom">自定义</option></select>
+        <input id="tName" placeholder="规范名称">
+        <input id="tCode" placeholder="代码，可选">
+        <input id="tLang" value="zh-CN" placeholder="语言">
+        <textarea id="tAliases" class="full" placeholder="同义词/别名，用逗号、分号或换行分隔"></textarea>
+        <textarea id="tNote" class="full" placeholder="来源或维护说明"></textarea>
+      </div>
+      <div class="actions"><button class="btn" onclick="saveTerm()">保存术语</button><span id="tResult" class="meta"></span></div>
+      <div class="note" style="margin-top:12px">示例：外部资料中的简称、英文名称或历史名称可以映射到一个规范词。术语映射用于归一候选知识，不会直接改变正式知识内容。</div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url,opt){const r=await fetch(url,opt);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
+async function loadVersions(){try{const d=await api('/api/ontology/versions');const s=d.summary||{};$('mActive').textContent=s.active_version||'-';$('mVersions').textContent=s.versions||0;$('mDrafts').textContent=s.drafts||0;$('versions').innerHTML=d.items.map(x=>'<div class="row"><div><b>'+esc(x.version_code)+'</b> <span class="tag '+esc(x.status)+'">'+esc(x.status==='active'?'启用':x.status==='draft'?'草案':'历史')+'</span></div><div class="meta">'+esc(x.change_note||'')+'</div><div class="meta">创建：'+esc(x.created_at||'')+(x.activated_at?' · 启用：'+esc(x.activated_at):'')+'</div>'+(x.status==='draft'?'<div class="actions"><button class="btn secondary" onclick="activateVersion('+x.id+')">启用此版本</button></div>':'')+'</div>').join('')||'<div class="meta">暂无版本。</div>'}catch(e){$('versions').innerHTML='<div class="meta">'+esc(e.message)+'</div>'}}
+async function loadTerms(){try{const p=new URLSearchParams();if($('q').value.trim())p.set('q',$('q').value.trim());if($('termType').value)p.set('type',$('termType').value);const d=await api('/api/ontology/terms?'+p);$('mTerms').textContent=d.summary?.active||0;$('terms').innerHTML=d.items.map(x=>'<div class="row"><b>'+esc(x.canonical_name)+'</b> <span class="tag">'+esc(x.term_type)+'</span><div class="meta">'+esc(x.code||'')+(x.aliases?.length?' · 别名：'+esc(x.aliases.join('、')):'')+'</div></div>').join('')||'<div class="meta">暂无术语。</div>'}catch(e){$('terms').innerHTML='<div class="meta">'+esc(e.message)+'</div>'}}
+async function createVersion(){try{const d=await api('/api/ontology/version/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version_code:$('vCode').value.trim(),created_by:$('vBy').value.trim(),change_note:$('vNote').value.trim()})});$('vResult').textContent='已创建草案 '+d.version_code;loadVersions()}catch(e){$('vResult').textContent='失败：'+e.message}}
+async function activateVersion(id){const operator=prompt('请输入启用人，可留空')||'';try{await api('/api/ontology/version/activate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,operator})});loadVersions()}catch(e){alert(e.message)}}
+async function saveTerm(){try{const d=await api('/api/ontology/terms/upsert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({term_type:$('tType').value,canonical_name:$('tName').value.trim(),code:$('tCode').value.trim(),language:$('tLang').value.trim()||'zh-CN',aliases:$('tAliases').value,source_note:$('tNote').value.trim()})});$('tResult').textContent='已保存 '+d.canonical_name;loadTerms()}catch(e){$('tResult').textContent='失败：'+e.message}}
+loadVersions();loadTerms();
+</script>
+</body>
+</html>

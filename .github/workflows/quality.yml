@@ -55,3 +55,25 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage16_source_collection.py
       - name: Stage17 incremental collection tests
         run: PYTHONPATH=. python tests/test_stage17_incremental_collection.py
+      - name: Stage18 source diff tests
+        run: PYTHONPATH=. python tests/test_stage18_source_diff.py
+      - name: Stage19 ontology registry tests
+        run: PYTHONPATH=. python tests/test_stage19_ontology_registry.py
+      - name: Stage20 source diff human review tests
+        run: PYTHONPATH=. python tests/test_stage20_source_diff_human_review.py
+      - name: Stage21 source impact review tests
+        run: PYTHONPATH=. python tests/test_stage21_source_impact_review.py
+      - name: Stage22 bilingual source review tests
+        run: PYTHONPATH=. python tests/test_stage22_bilingual_source_review.py
+      - name: Stage23 bilingual document review tests
+        run: PYTHONPATH=. python tests/test_stage23_bilingual_document_review.py
+      - name: Stage24 bilingual formal knowledge tests
+        run: PYTHONPATH=. python tests/test_stage24_bilingual_formal_knowledge.py
+      - name: Stage25 ontology constraints tests
+        run: PYTHONPATH=. python tests/test_stage25_ontology_constraints.py
+      - name: Stage26 candidate normalization tests
+        run: PYTHONPATH=. python tests/test_stage26_candidate_normalization.py
+      - name: Stage27 GMA bilingual path tests
+        run: PYTHONPATH=. python tests/test_stage27_gma_bilingual.py
+      - name: Stage28 pipeline readiness tests
+        run: PYTHONPATH=. python tests/test_stage28_pipeline_readiness.py

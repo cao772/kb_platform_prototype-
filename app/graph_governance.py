@@ -5,6 +5,8 @@ from datetime import date
 from typing import Any
 
 from app.governance import lifecycle_state
+from app.ontology_constraints import OntologyConstraintService
+from app.regions import canonical_region_code, knowledge_scope_codes
 from app.store import KnowledgeStore
 
 GRAPH_SCHEMA = """
@@ -79,6 +81,7 @@ class GraphGovernanceService:
 
     def __init__(self, store: KnowledgeStore):
         self.store = store
+        self.constraints = OntologyConstraintService()
         with self.store.lock:
             self.store.conn.executescript(GRAPH_SCHEMA)
             self.store.conn.commit()
@@ -107,6 +110,19 @@ class GraphGovernanceService:
         evidence_chunk_id: int | None,
     ) -> bool:
         with self.store.lock:
+            pair = self.store.conn.execute(
+                """SELECT s.record_type source_type,t.record_type target_type
+                   FROM compliance_records s, compliance_records t
+                   WHERE s.id=? AND t.id=?""",
+                (int(source_id), int(target_id)),
+            ).fetchone()
+            if not pair:
+                return False
+            validation = self.constraints.validate_relation(
+                relation_type, pair["source_type"], pair["target_type"]
+            )
+            if not validation["valid"]:
+                return False
             existing = self.store.conn.execute(
                 "SELECT id FROM graph_relations WHERE source_record_id=? AND relation_type=? AND target_record_id=?",
                 (source_id, relation_type, target_id),
@@ -142,21 +158,33 @@ class GraphGovernanceService:
                 "SELECT relation_type,COUNT(*) count FROM graph_relations WHERE status='approved' GROUP BY relation_type"
             ).fetchall()
         counts = {row["status"]: row["count"] for row in rows}
+        approved_items = self.list_relations(status="approved", limit=10000) if counts.get("approved", 0) else []
+        invalid_approved = sum(
+            1 for item in approved_items
+            if not bool((item.get("ontology_validation") or {}).get("valid"))
+        )
         return {
             "relations": sum(counts.values()),
             "pending": counts.get("pending", 0),
             "approved": counts.get("approved", 0),
             "rejected": counts.get("rejected", 0),
+            "invalid_approved": invalid_approved,
             "approved_types": {row["relation_type"]: row["count"] for row in types},
-            "principle": "节点来自已审核正式知识；关系候选必须人工审核后才进入正式图谱。",
+            "principle": "节点来自已审核正式知识；关系候选必须人工审核且符合当前本体关系约束后才进入正式图谱。",
         }
 
     def suggest_relations(self, *, region_code: str = "", product_class: str = "") -> dict[str, Any]:
         records = self.store.list_compliance_records(
             review_status="approved",
-            region_code=region_code or None,
-            limit=2000,
+            limit=5000,
         )
+        requested_region = canonical_region_code(region_code)
+        scope_codes = set(knowledge_scope_codes(requested_region)) if requested_region else set()
+        if scope_codes:
+            records = [
+                item for item in records
+                if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
+            ]
         if product_class:
             records = [r for r in records if _matches_product_class(r.get("product_class", ""), product_class)]
 
@@ -203,7 +231,12 @@ class GraphGovernanceService:
                 relation_type = ALLOWED_RELATION_PAIRS.get((source.get("record_type"), target.get("record_type")))
                 if not relation_type:
                     continue
-                if source.get("region_code") and target.get("region_code") and source.get("region_code") != target.get("region_code"):
+                source_region = canonical_region_code(str(source.get("region_code") or ""))
+                target_region = canonical_region_code(str(target.get("region_code") or ""))
+                if scope_codes:
+                    if source_region not in scope_codes or target_region not in scope_codes:
+                        continue
+                elif source_region and target_region and source_region != target_region:
                     continue
                 if not _matches_product_class(source.get("product_class", ""), target.get("product_class", "")):
                     continue
@@ -264,6 +297,9 @@ class GraphGovernanceService:
         for row in rows:
             item = dict(row)
             item["relation_label"] = RELATION_LABELS.get(item["relation_type"], item["relation_type"])
+            item["ontology_validation"] = self.constraints.validate_relation(
+                item["relation_type"], item["source_type"], item["target_type"]
+            )
             output.append(item)
         return output
 
@@ -276,6 +312,20 @@ class GraphGovernanceService:
                 raise ValueError("graph relation not found")
             if row["status"] != "pending":
                 raise ValueError(f"graph relation already {row['status']}")
+            if action == "approve":
+                pair = self.store.conn.execute(
+                    """SELECT s.record_type source_type,t.record_type target_type
+                       FROM compliance_records s, compliance_records t
+                       WHERE s.id=? AND t.id=?""",
+                    (int(row["source_record_id"]), int(row["target_record_id"])),
+                ).fetchone()
+                if not pair:
+                    raise ValueError("relation endpoint record not found")
+                validation = self.constraints.validate_relation(
+                    row["relation_type"], pair["source_type"], pair["target_type"]
+                )
+                if not validation["valid"]:
+                    raise ValueError(f"ontology relation constraint failed: {validation['reason']}")
             status = "approved" if action == "approve" else "rejected"
             self.store.conn.execute(
                 "UPDATE graph_relations SET status=?,reviewer_note=?,reviewed_at=CURRENT_TIMESTAMP WHERE id=?",
@@ -287,9 +337,15 @@ class GraphGovernanceService:
     def _filtered_records(self, *, region_code: str = "", product_class: str = "", as_of: str | None = None) -> list[dict[str, Any]]:
         records = self.store.list_compliance_records(
             review_status="approved",
-            region_code=region_code or None,
-            limit=2000,
+            limit=5000,
         )
+        requested_region = canonical_region_code(region_code)
+        scope_codes = set(knowledge_scope_codes(requested_region)) if requested_region else set()
+        if scope_codes:
+            records = [
+                item for item in records
+                if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
+            ]
         output = []
         for source in records:
             if product_class and not _matches_product_class(source.get("product_class", ""), product_class):
@@ -306,7 +362,9 @@ class GraphGovernanceService:
         node_ids = {int(item["id"]) for item in records}
         relations = [
             item for item in self.list_relations(status="approved", limit=5000)
-            if int(item["source_record_id"]) in node_ids and int(item["target_record_id"]) in node_ids
+            if int(item["source_record_id"]) in node_ids
+            and int(item["target_record_id"]) in node_ids
+            and bool((item.get("ontology_validation") or {}).get("valid"))
         ]
         connected = {int(x["source_record_id"]) for x in relations} | {int(x["target_record_id"]) for x in relations}
         nodes = []

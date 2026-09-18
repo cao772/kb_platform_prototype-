@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>变化影响复核 · 法规认证知识平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top a{color:#dce8f5;text-decoration:none}.wrap{max-width:1520px;margin:18px auto;padding:0 20px}.card,.metric{background:#fff;border:1px solid #e1e7ef;border-radius:12px}.hero{padding:20px 22px}.hero h1{margin:0 0 8px;font-size:24px;color:#113f72}.hero p{margin:0;color:#66758a;line-height:1.7}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}.step{padding:10px 12px;border:1px solid #dbe5ef;border-radius:9px;background:#f8fbfe}.step b{display:block;font-size:12px;color:#174d7e}.step span{font-size:11px;color:#718095}.step.active{border-color:#4e86bd;background:#eef6fd}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.metric{padding:13px}.metric span{font-size:11px;color:#8190a3}.metric strong{display:block;font-size:21px;color:#123e6e;margin-top:4px}.grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:14px}.card{padding:16px}.card h2{font-size:16px;margin:0 0 11px}.meta{font-size:12px;color:#758397;line-height:1.65}.candidate{border:1px solid #e1e7ef;border-radius:9px;padding:10px;margin:8px 0;cursor:pointer}.candidate:hover{border-color:#86a9ca;background:#f8fbfe}.candidate.selected{border-color:#0d5b9f;background:#eef6fd}.candidate b{font-size:13px}.score{font-size:10px;background:#e9f8ef;color:#2e7350;border-radius:999px;padding:3px 7px}.tag{display:inline-block;font-size:10px;padding:3px 7px;border-radius:999px;background:#edf3f8;color:#5d6e82;margin:2px}.notice{background:#f4f8fd;border:1px solid #dce8f6;border-radius:9px;padding:11px;font-size:12px;color:#566e8a;line-height:1.65}.table-wrap{overflow:auto}.impact-table{width:100%;border-collapse:collapse;min-width:1250px;font-size:12px}.impact-table th,.impact-table td{border-bottom:1px solid #e5ebf1;padding:8px;vertical-align:top;text-align:left}.impact-table th{background:#f7f9fc;color:#66758a;font-weight:600}.impact-table input,.impact-table select,.impact-table textarea,.review-meta input,.review-meta textarea{width:100%;border:1px solid #cbd6e2;border-radius:7px;padding:7px 8px;font:inherit;background:#fff}.impact-table textarea{min-height:62px;resize:vertical}.review-meta{display:grid;grid-template-columns:220px 1fr;gap:8px;margin-top:10px}.review-meta textarea{min-height:65px}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}.btn{border:0;background:#0d4f91;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer;font:inherit}.btn.secondary{background:#eef4fb;color:#0d4f91}.btn.muted{background:#eef0f3;color:#5f6975}.btn.danger{background:#f7e9e9;color:#8f3c3c}.review-status{font-size:11px;padding:4px 8px;border-radius:999px;background:#fff4dd;color:#8b641c}.review-status.confirmed{background:#e9f8ef;color:#2e7350}.review-status.dismissed{background:#f0f1f3;color:#69737e}.empty{padding:24px;text-align:center;color:#8592a3}.path{font-size:10px;color:#6d7b8d;margin-top:4px;line-height:1.45}@media(max-width:980px){.grid,.metrics,.steps,.review-meta{grid-template-columns:1fr}.top{padding:0 14px}.wrap{padding:0 12px}}
+</style>
+</head>
+<body>
+<div class="top"><div style="font-size:19px;font-weight:700">法规认证知识平台 · 变化影响复核</div><div><a id="backDiff" href="/collection">返回差异复核</a></div></div>
+<div class="wrap">
+  <div class="card hero">
+    <h1>正式知识匹配与影响复核</h1>
+    <p>已确认的法规来源变化先匹配到正式知识对象，再沿已确认知识关系生成影响候选。匹配和影响都需要人工复核，可修改、取消或补充，不直接改正式知识或知识图谱。</p>
+    <div class="steps">
+      <div class="step"><b>1. 来源变化</b><span>采集并识别旧版/新版变化。</span></div>
+      <div class="step"><b>2. 差异人工确认</b><span>人工修改并确认真实变化项。</span></div>
+      <div class="step active"><b>3. 正式知识与影响复核</b><span>选择正式知识，复核受影响对象和后续动作。</span></div>
+      <div class="step"><b>4. 正式维护</b><span>确认后再进入知识版本维护、关系维护和GMA路径复核。</span></div>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><span>正式知识匹配候选</span><strong id="mMatches">-</strong></div>
+    <div class="metric"><span>高匹配候选</span><strong id="mHigh">-</strong></div>
+    <div class="metric"><span>影响候选</span><strong id="mImpacts">-</strong></div>
+    <div class="metric"><span>复核状态</span><strong id="mStatus" style="font-size:15px">未开始</strong></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>1. 选择对应的正式知识</h2>
+      <div class="notice">系统根据来源文件、法规/标准编号、名称、国家地区和来源网站生成匹配候选。请由业务人员确认实际对应的正式知识。</div>
+      <div id="matches" style="margin-top:10px"><div class="empty">正在加载匹配候选…</div></div>
+      <div class="actions"><button class="btn" id="buildBtn" onclick="buildImpact()" disabled>按所选知识生成影响候选</button><span id="buildResult" class="meta"></span></div>
+    </div>
+    <div class="card">
+      <h2>当前匹配结果</h2>
+      <div id="matchDetail" class="meta">尚未选择正式知识。</div>
+      <div class="notice" style="margin-top:12px">正式知识匹配只是影响分析的入口。系统只沿已人工确认的知识关系生成影响候选；未审核关系不会参与。</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <h2 style="margin:0">2. 人工复核影响候选</h2>
+      <span id="reviewStatus" class="review-status">未开始</span>
+    </div>
+    <div class="notice" style="margin-top:10px">影响候选可以修改。可取消不受影响的对象、修改影响等级和处理建议，也可人工新增系统未识别到的影响项。</div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="impact-table">
+        <thead><tr><th style="width:60px">采用</th><th style="width:120px">影响类型</th><th style="width:105px">影响层级</th><th style="width:130px">知识类型</th><th style="width:220px">知识对象</th><th>影响原因</th><th>建议动作</th><th>人工说明</th><th style="width:70px">操作</th></tr></thead>
+        <tbody id="impactRows"><tr><td colspan="9" class="empty">选择正式知识并生成影响候选后开始复核。</td></tr></tbody>
+      </table>
+    </div>
+    <div class="actions"><button class="btn secondary" onclick="addImpactRow()">+ 人工新增影响项</button></div>
+    <div class="review-meta">
+      <input id="operator" placeholder="复核人">
+      <textarea id="reviewNote" placeholder="影响复核说明，例如：已核对法规版本变化，对认证A和检测项目B需要重新确认适用性。"></textarea>
+    </div>
+    <div class="actions">
+      <button class="btn secondary" onclick="saveImpact('save')">保存草稿</button>
+      <button class="btn" onclick="saveImpact('confirm')">确认影响复核</button>
+      <button class="btn muted" onclick="saveImpact('dismiss')">标记无业务影响</button>
+      <span id="saveResult" class="meta"></span>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url,opt){const r=await fetch(url,opt);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
+const params=new URLSearchParams(location.search);const eventId=params.get('event_id');let selectedRecordId=0;let impactItems=[];let currentCase=null;
+const typeLabel=v=>({regulation:'法规',standard:'标准',certification:'认证',requirement:'技术要求',test_item:'检测项目'}[v]||v);
+function setStatus(status){const map={not_started:'未开始',draft:'待复核',confirmed:'已确认',dismissed:'无业务影响'};const text=map[status]||status||'未开始';$('mStatus').textContent=text;$('reviewStatus').textContent=text;$('reviewStatus').className='review-status '+(status||'not_started')}
+function renderMatches(data){$('mMatches').textContent=data.summary?.candidates||0;$('mHigh').textContent=data.summary?.high_confidence||0;const items=data.items||[];$('matches').innerHTML=items.length?items.map(x=>'<div class="candidate '+(Number(x.record_id)===Number(selectedRecordId)?'selected':'')+'" onclick="selectMatch('+x.record_id+')"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+esc(typeLabel(x.record_type))+' · '+esc(x.code||'')+' '+esc(x.name||'')+'</b><span class="score">'+Math.round(Number(x.score||0)*100)+'%</span></div><div class="meta">版本 '+esc(x.version||'未标注')+' · '+esc(x.region_name||x.region_code||'未标注地区')+' · '+esc(x.product_class||'未标注产品分类')+'</div><div class="path">'+esc((x.reasons||[]).join('；'))+'</div></div>').join(''):'<div class="empty">没有自动匹配到正式知识，可先在正式知识目录补充/确认对应知识后再分析。</div>'}
+function selectMatch(id){selectedRecordId=Number(id);$('buildBtn').disabled=false;loadMatches()}
+function renderMatchDetail(c){if(!c?.exists){$('matchDetail').textContent='尚未建立影响分析案例。';return}const m=c.match?.selected||{};$('matchDetail').innerHTML='<div><b>'+esc(typeLabel(m.record_type))+' · '+esc(m.code||'')+' '+esc(m.name||'')+'</b></div><div style="margin-top:6px">匹配度：'+Math.round(Number(m.score||0)*100)+'%</div><div style="margin-top:6px">依据：'+esc((m.reasons||[]).join('；')||'人工指定正式知识')+'</div><div style="margin-top:6px">来源：'+esc(c.match?.source_key||'-')+'</div>'}
+function renderImpactRows(){if(!impactItems.length){$('impactRows').innerHTML='<tr><td colspan="9" class="empty">当前没有影响候选，可人工新增。</td></tr>';return}$('impactRows').innerHTML=impactItems.map((x,i)=>'<tr><td><input type="checkbox" '+(x.selected!==false?'checked':'')+' onchange="impactItems['+i+'].selected=this.checked"></td><td><select onchange="impactItems['+i+'].impact_kind=this.value"><option value="formal_record_review" '+(x.impact_kind==='formal_record_review'?'selected':'')+'>正式知识复核</option><option value="related_knowledge_review" '+(x.impact_kind==='related_knowledge_review'?'selected':'')+'>关联知识复核</option><option value="gma_path_review" '+(x.impact_kind==='gma_path_review'?'selected':'')+'>GMA路径复核</option><option value="manual_review" '+(x.impact_kind==='manual_review'?'selected':'')+'>人工补充</option></select></td><td><select onchange="impactItems['+i+'].impact_level=this.value"><option value="direct" '+(x.impact_level==='direct'?'selected':'')+'>直接</option><option value="indirect" '+(x.impact_level==='indirect'?'selected':'')+'>间接</option><option value="uncertain" '+(x.impact_level==='uncertain'?'selected':'')+'>待判断</option></select></td><td><input value="'+esc(x.record_type||'')+'" oninput="impactItems['+i+'].record_type=this.value"></td><td><input value="'+esc(x.label||'')+'" oninput="impactItems['+i+'].label=this.value"><div class="path">'+esc((x.code||'')+(x.graph_depth?' · 关系深度 '+x.graph_depth:''))+'</div></td><td><textarea oninput="impactItems['+i+'].reason=this.value">'+esc(x.reason||'')+'</textarea></td><td><textarea oninput="impactItems['+i+'].action=this.value">'+esc(x.action||'')+'</textarea></td><td><textarea oninput="impactItems['+i+'].note=this.value">'+esc(x.note||'')+'</textarea></td><td><button class="btn danger" onclick="removeImpactRow('+i+')">删除</button></td></tr>').join('');$('mImpacts').textContent=impactItems.length}
+function addImpactRow(){impactItems.push({impact_id:'manual-impact-'+Date.now(),selected:true,impact_kind:'manual_review',impact_level:'uncertain',record_id:0,record_type:'',code:'',name:'',label:'人工补充影响项',reason:'',action:'',note:'',graph_depth:0,relation_path:[]});renderImpactRows()}
+function removeImpactRow(i){impactItems.splice(i,1);renderImpactRows()}
+async function loadMatches(){try{const d=await api('/api/collection/impact-matches?event_id='+encodeURIComponent(eventId));renderMatches(d)}catch(e){$('matches').innerHTML='<div class="empty">'+esc(e.message)+'</div>';setStatus('not_started')}}
+async function loadCase(){try{const d=await api('/api/collection/impact-case?event_id='+encodeURIComponent(eventId));currentCase=d;setStatus(d.review_status||'not_started');if(d.exists){selectedRecordId=Number(d.source_record_id||0);impactItems=(d.impact_items||[]).map(x=>({...x}));$('operator').value=d.operator||'';$('reviewNote').value=d.note||'';$('buildBtn').disabled=!selectedRecordId;renderImpactRows();renderMatchDetail(d)}else{$('mImpacts').textContent='0'}}catch(e){$('matchDetail').textContent=e.message}}
+async function buildImpact(){if(!selectedRecordId)return;try{$('buildResult').textContent='正在生成影响候选…';const d=await api('/api/collection/impact-build',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event_id:Number(eventId),record_id:selectedRecordId,refresh:true})});currentCase=d;impactItems=(d.impact_items||[]).map(x=>({...x}));setStatus(d.review_status);renderImpactRows();renderMatchDetail(d);$('buildResult').textContent='已生成，可人工修改后确认。';loadMatches()}catch(e){$('buildResult').textContent='生成失败：'+e.message}}
+async function saveImpact(action){if(!currentCase?.exists){$('saveResult').textContent='请先生成影响候选。';return}try{const d=await api('/api/collection/impact-review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event_id:Number(eventId),action,items:impactItems,operator:$('operator').value.trim(),note:$('reviewNote').value.trim()})});currentCase=d;impactItems=(d.impact_items||[]).map(x=>({...x}));setStatus(d.review_status);renderImpactRows();$('saveResult').textContent=action==='confirm'?'影响复核已确认。':action==='dismiss'?'已标记无业务影响。':'草稿已保存。'}catch(e){$('saveResult').textContent='保存失败：'+e.message}}
+async function init(){if(!eventId){$('matches').innerHTML='<div class="empty">缺少 event_id。</div>';return}$('backDiff').href='/source-diff?event_id='+encodeURIComponent(eventId);await loadCase();await loadMatches()}
+init();
+</script>
+</body>
+</html>
