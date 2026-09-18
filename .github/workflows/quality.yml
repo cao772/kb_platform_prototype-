@@ -53,3 +53,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage15_source_registry.py
       - name: Stage16 source collection tests
         run: PYTHONPATH=. python tests/test_stage16_source_collection.py
+      - name: Stage17 incremental collection tests
+        run: PYTHONPATH=. python tests/test_stage17_incremental_collection.py
