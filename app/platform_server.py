@@ -7,11 +7,13 @@ from urllib.parse import parse_qs, urlparse
 from app.map_service import RegulationMapService
 from app.ontology_governance import OntologyGovernanceService
 from app.regions import target_market_catalog
+from app.source_registry import SourceRegistryService
 from app.server import Handler as BaseHandler
 from app.server import STATIC_DIR, store
 
 regulation_map = RegulationMapService(store)
 ontology_governance = OntologyGovernanceService(store)
+source_registry = SourceRegistryService(store)
 
 
 class Handler(BaseHandler):
@@ -23,6 +25,26 @@ class Handler(BaseHandler):
 
         if parsed.path == "/api/regions":
             self._send_json(target_market_catalog())
+            return
+
+        if parsed.path == "/api/sources":
+            try:
+                self._send_json(source_registry.list_sources(
+                    region_code=params.get("region", [""])[0],
+                    source_type=params.get("type", [""])[0],
+                    status=params.get("status", [""])[0],
+                    q=params.get("q", [""])[0],
+                    limit=min(int(params.get("limit", ["1000"])[0] or 1000), 3000),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/sources/detail":
+            try:
+                self._send_json(source_registry.detail(int(params.get("id", ["0"])[0] or 0)))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
         if parsed.path == "/api/map/overview":
@@ -82,6 +104,10 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path in {"/sources", "/sources.html"}:
+            self._send_file(STATIC_DIR / "sources.html")
+            return
+
         if parsed.path in {"/map", "/map.html"}:
             self._send_file(STATIC_DIR / "map.html")
             return
@@ -96,6 +122,7 @@ class Handler(BaseHandler):
             text = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
             anchor = '<div class="top-actions">'
             links = (
+                '<a class="top-link" href="/sources">来源台账</a>'
                 '<a class="top-link" href="/ontology">知识本体</a>'
                 '<a class="top-link" href="/map">法规认证地图</a>'
                 '<a class="top-link" href="/changes">变化待办</a>'
@@ -114,6 +141,15 @@ class Handler(BaseHandler):
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path == "/api/sources/update":
+            try:
+                payload = self._read_json()
+                source_id = int(payload.pop("id", 0) or 0)
+                self._send_json(source_registry.update(source_id, payload))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/ontology/validate":
             try:
                 payload = self._read_json()
@@ -128,6 +164,7 @@ class Handler(BaseHandler):
 def main() -> None:
     server = ThreadingHTTPServer(("127.0.0.1", 8765), Handler)
     print("Knowledge platform running at http://127.0.0.1:8765")
+    print("Source registry: http://127.0.0.1:8765/sources")
     print("Knowledge ontology: http://127.0.0.1:8765/ontology")
     print("Regulation certification map: http://127.0.0.1:8765/map")
     print("Formal knowledge catalog: http://127.0.0.1:8765/catalog")
