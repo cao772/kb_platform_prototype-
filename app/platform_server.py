@@ -6,6 +6,7 @@ from urllib.parse import parse_qs, urlparse
 
 from app.map_service import RegulationMapService
 from app.ontology_governance import OntologyGovernanceService
+from app.regions import target_market_catalog
 from app.server import Handler as BaseHandler
 from app.server import STATIC_DIR, store
 
@@ -19,6 +20,10 @@ class Handler(BaseHandler):
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
         params = parse_qs(parsed.query)
+
+        if parsed.path == "/api/regions":
+            self._send_json(target_market_catalog())
+            return
 
         if parsed.path == "/api/map/overview":
             try:
