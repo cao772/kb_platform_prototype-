@@ -16,6 +16,7 @@ from app.document_translation import DocumentTranslationService
 from app.formal_translation import FormalKnowledgeTranslationService
 from app.candidate_normalization import CandidateNormalizationService
 from app.gma_bilingual import GmaBilingualService
+from app.pipeline_readiness import PipelineReadinessService
 from app.server import Handler as BaseHandler
 from app.server import ROOT, STATIC_DIR, change_monitor, graph_service, store
 
@@ -30,6 +31,7 @@ document_translation = DocumentTranslationService(store)
 formal_translation = FormalKnowledgeTranslationService(store)
 candidate_normalization = CandidateNormalizationService(store, ontology_registry)
 gma_bilingual = GmaBilingualService(store, graph_service, formal_translation)
+pipeline_readiness = PipelineReadinessService(store, ontology_registry, source_registry, source_collection, graph_service)
 
 
 class Handler(BaseHandler):
@@ -196,6 +198,13 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/ontology-source/readiness":
+            try:
+                self._send_json(pipeline_readiness.summary())
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/gma/path":
             try:
                 self._send_json(gma_bilingual.path(
@@ -292,6 +301,10 @@ class Handler(BaseHandler):
 
         if parsed.path in {"/ontology-governance", "/ontology-governance.html"}:
             self._send_file(STATIC_DIR / "ontology_governance.html")
+            return
+
+        if parsed.path in {"/pipeline-readiness", "/pipeline-readiness.html"}:
+            self._send_file(STATIC_DIR / "pipeline_readiness.html")
             return
 
         if parsed.path in {"/gma-path", "/gma-path.html"}:
