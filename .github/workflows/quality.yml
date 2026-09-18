@@ -49,3 +49,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage13_ontology_governance.py
       - name: Stage14 target market tests
         run: PYTHONPATH=. python tests/test_stage14_target_markets.py
+      - name: Stage15 source registry tests
+        run: PYTHONPATH=. python tests/test_stage15_source_registry.py
