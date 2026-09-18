@@ -6,6 +6,7 @@ from urllib.parse import parse_qs, urlparse
 
 from app.map_service import RegulationMapService
 from app.ontology_governance import OntologyGovernanceService
+from app.ontology_registry import OntologyRegistryService
 from app.regions import target_market_catalog
 from app.source_registry import SourceRegistryService
 from app.source_collection import SourceCollectionService
@@ -15,6 +16,7 @@ from app.server import ROOT, STATIC_DIR, change_monitor, store
 
 regulation_map = RegulationMapService(store)
 ontology_governance = OntologyGovernanceService(store)
+ontology_registry = OntologyRegistryService(store)
 source_registry = SourceRegistryService(store)
 source_collection = SourceCollectionService(store, source_registry, ROOT / "data" / "source_downloads", change_monitor=change_monitor)
 source_diff = SourceDifferenceService(store)
@@ -122,6 +124,32 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/ontology/versions":
+            self._send_json(ontology_registry.list_versions())
+            return
+
+        if parsed.path == "/api/ontology/terms":
+            try:
+                self._send_json(ontology_registry.list_terms(
+                    term_type=params.get("type", [""])[0],
+                    status=params.get("status", [""])[0],
+                    q=params.get("q", [""])[0],
+                    limit=min(int(params.get("limit", ["500"])[0] or 500), 2000),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/ontology/normalize":
+            try:
+                self._send_json(ontology_registry.normalize(
+                    params.get("q", [""])[0],
+                    term_type=params.get("type", [""])[0],
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/ontology/blueprint":
             self._send_json(ontology_governance.blueprint())
             return
@@ -154,6 +182,10 @@ class Handler(BaseHandler):
                 ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path in {"/ontology-governance", "/ontology-governance.html"}:
+            self._send_file(STATIC_DIR / "ontology_governance.html")
             return
 
         if parsed.path in {"/source-diff", "/source-diff.html"}:
@@ -202,6 +234,37 @@ class Handler(BaseHandler):
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path == "/api/ontology/version/create":
+            try:
+                payload = self._read_json()
+                self._send_json(ontology_registry.create_version(
+                    version_code=payload.get("version_code", ""),
+                    change_note=payload.get("change_note", ""),
+                    created_by=payload.get("created_by", ""),
+                    source_version_id=int(payload.get("source_version_id") or 0) or None,
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/ontology/version/activate":
+            try:
+                payload = self._read_json()
+                self._send_json(ontology_registry.activate_version(
+                    int(payload.get("id") or 0),
+                    operator=payload.get("operator", ""),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/ontology/terms/upsert":
+            try:
+                self._send_json(ontology_registry.upsert_term(self._read_json()))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/collection/run":
             try:
                 payload = self._read_json()
