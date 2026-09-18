@@ -5,22 +5,11 @@ from datetime import date
 from typing import Any
 
 from app.compliance import DEMO_RECORDS
+from app.regions import REGION_META, canonical_region_code, knowledge_scope_codes
 from app.store import KnowledgeStore
 
 ALLOWED_RECORD_TYPES = {"regulation", "standard", "certification", "requirement", "test_item"}
 ALLOWED_STATUSES = {"unknown", "draft", "active", "transition", "repealed", "withdrawn", "superseded"}
-REGION_COORDINATES = {
-    "EU": {"lat": 50.8, "lon": 10.5},
-    "US": {"lat": 38.0, "lon": -97.0},
-    "CN": {"lat": 35.9, "lon": 104.2},
-    "UK": {"lat": 55.4, "lon": -3.4},
-    "JP": {"lat": 36.2, "lon": 138.3},
-    "KR": {"lat": 36.5, "lon": 127.9},
-    "CA": {"lat": 56.1, "lon": -106.3},
-    "AU": {"lat": -25.3, "lon": 133.8},
-    "IN": {"lat": 20.6, "lon": 79.0},
-}
-
 
 def _iso_date(value: str) -> str:
     text = str(value or "").strip()
@@ -156,7 +145,7 @@ def world_map_v2(store: KnowledgeStore, *, include_demo: bool = False, as_of: st
         states = Counter(item["lifecycle_state"] for item in items)
         types = Counter(item["record_type"] for item in items)
         evidence = sum(1 for item in items if item.get("source_document_id") and item.get("source_chunk_id"))
-        coord = REGION_COORDINATES.get(code, {})
+        coord = REGION_META.get(canonical_region_code(code), {})
         regions.append({
             "region_code": code,
             "region_name": name,
@@ -196,12 +185,19 @@ def analyze_product_access_v2(
     include_demo: bool = False,
     as_of: str | None = None,
 ) -> dict[str, Any]:
-    records = store.list_compliance_records(review_status="approved", region_code=region_code or None)
+    requested_region = canonical_region_code(region_code)
+    scope_codes = set(knowledge_scope_codes(requested_region)) if requested_region else set()
+    records = store.list_compliance_records(review_status="approved", limit=5000)
+    if scope_codes:
+        records = [
+            item for item in records
+            if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
+        ]
     demo_data = False
     if include_demo and not records:
         records = [
             dict(item) for item in DEMO_RECORDS
-            if not region_code or item.get("region_code") == region_code
+            if not scope_codes or canonical_region_code(str(item.get("region_code") or "")) in scope_codes
         ]
         demo_data = True
 
@@ -238,7 +234,8 @@ def analyze_product_access_v2(
     return {
         "product": product,
         "product_class": product_class,
-        "region_code": region_code,
+        "region_code": requested_region or region_code,
+        "knowledge_scope_codes": sorted(scope_codes),
         "as_of": as_of or date.today().isoformat(),
         "status": status,
         "demo_data": demo_data,
