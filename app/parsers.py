@@ -81,6 +81,8 @@ def parse_file(path: str | Path) -> StandardDocument:
         return parse_text_standard(file_path)
     if suffix == ".json":
         return parse_json_standard(file_path)
+    if suffix == ".xml":
+        return parse_xml_standard(file_path)
     if suffix in {".html", ".htm"}:
         return parse_html_standard(file_path)
     if suffix in {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp"}:
@@ -232,6 +234,37 @@ def parse_json_standard(path: Path) -> StandardDocument:
     return StandardDocument(
         str(path.resolve()), path.name, path.stem, "application/json", "json",
         [StandardBlock("json", text)],
+    )
+
+
+def parse_xml_standard(path: Path) -> StandardDocument:
+    import xml.etree.ElementTree as ET
+
+    raw = path.read_text(encoding="utf-8", errors="ignore")
+    try:
+        root = ET.fromstring(raw)
+    except ET.ParseError:
+        return StandardDocument(
+            str(path.resolve()), path.name, path.stem, "application/xml", "xml-raw",
+            [StandardBlock("xml_text", raw)],
+            {"well_formed": False},
+        )
+
+    lines: list[str] = []
+    for elem in root.iter():
+        text = " ".join("".join(elem.itertext()).split())
+        if not text:
+            continue
+        tag = str(elem.tag).split("}")[-1]
+        if text not in lines[-20:]:
+            lines.append(f"{tag}: {text}" if tag else text)
+        if len(lines) >= 5000:
+            lines.append("[XML内容过长，已截断]")
+            break
+    return StandardDocument(
+        str(path.resolve()), path.name, path.stem, "application/xml", "xml-etree",
+        [StandardBlock("xml_text", "\n".join(lines))],
+        {"root_tag": str(root.tag).split("}")[-1], "well_formed": True, "element_count": sum(1 for _ in root.iter())},
     )
 
 
