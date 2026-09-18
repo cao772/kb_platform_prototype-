@@ -292,6 +292,19 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/collection/diff-translate":
+            try:
+                payload = self._read_json()
+                self._send_json(source_diff.translate_review_items(
+                    int(payload.get("event_id") or 0),
+                    items=payload.get("items"),
+                    target_language=payload.get("target_language", "zh-CN"),
+                    force=bool(payload.get("force", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/collection/impact-build":
             try:
                 payload = self._read_json()
