@@ -124,6 +124,20 @@ class SourceDifferenceService:
                 );
                 CREATE INDEX IF NOT EXISTS idx_source_diff_profile
                     ON source_diff_reports(profile_id,id DESC);
+
+                CREATE TABLE IF NOT EXISTS source_diff_reviews (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    update_event_id INTEGER NOT NULL UNIQUE,
+                    review_status TEXT NOT NULL DEFAULT 'draft',
+                    reviewed_items_json TEXT NOT NULL DEFAULT '[]',
+                    operator TEXT DEFAULT '',
+                    note TEXT DEFAULT '',
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    confirmed_at TEXT DEFAULT ''
+                );
+                CREATE INDEX IF NOT EXISTS idx_source_diff_reviews_status
+                    ON source_diff_reviews(review_status,id DESC);
                 """
             )
             self.store.conn.commit()
@@ -206,6 +220,59 @@ class SourceDifferenceService:
                 })
                 break
         return blocks
+
+    def _structured_change_items(self, signals: dict[str, dict[str, list[str]]]) -> list[dict[str, Any]]:
+        field_map = {
+            "dates": ("effective_date", "生效/日期"),
+            "versions": ("version", "版本"),
+            "identifiers": ("identifier", "法规/标准编号"),
+            "requirement_lines": ("requirement", "技术/准入要求"),
+            "status_lines": ("status", "状态/效力"),
+        }
+        items: list[dict[str, Any]] = []
+        seq = 1
+        for key, (field, label) in field_map.items():
+            group = signals.get(key) or {"removed": [], "added": []}
+            removed = list(group.get("removed") or [])
+            added = list(group.get("added") or [])
+            if len(removed) == 1 and len(added) == 1 and key in {"dates", "versions"}:
+                items.append({
+                    "item_id": f"chg-{seq}",
+                    "change_type": "modified",
+                    "field": field,
+                    "label": label,
+                    "before": removed[0],
+                    "after": added[0],
+                    "impact_note": "",
+                    "selected": True,
+                })
+                seq += 1
+                continue
+            for value in removed:
+                items.append({
+                    "item_id": f"chg-{seq}",
+                    "change_type": "removed",
+                    "field": field,
+                    "label": label,
+                    "before": value,
+                    "after": "",
+                    "impact_note": "",
+                    "selected": True,
+                })
+                seq += 1
+            for value in added:
+                items.append({
+                    "item_id": f"chg-{seq}",
+                    "change_type": "added",
+                    "field": field,
+                    "label": label,
+                    "before": "",
+                    "after": value,
+                    "impact_note": "",
+                    "selected": True,
+                })
+                seq += 1
+        return items
 
     def analyze(self, event_id: int, *, refresh: bool = False) -> dict[str, Any]:
         event = self._event(event_id)
@@ -296,8 +363,9 @@ class SourceDifferenceService:
                 "signal_changes": signal_count,
             },
             "signals": signals,
+            "change_items": self._structured_change_items(signals),
             "blocks": blocks,
-            "notice": "差异结果用于业务复核，不自动修改正式知识、版本状态或准入结论。",
+            "notice": "差异结果先进入人工复核；复核人员可以修改、补充或取消变化项。确认复核结果后仍不会自动修改正式知识，后续再进入影响分析或正式知识维护。",
         }
 
         payload = json.dumps(report, ensure_ascii=False)
@@ -326,6 +394,87 @@ class SourceDifferenceService:
             )
             self.store.conn.commit()
         return report
+
+    def review_state(self, event_id: int) -> dict[str, Any]:
+        report = self.analyze(event_id)
+        with self.store.lock:
+            row = self.store.conn.execute(
+                "SELECT * FROM source_diff_reviews WHERE update_event_id=?",
+                (int(event_id),),
+            ).fetchone()
+        if not row:
+            return {
+                "update_event_id": int(event_id),
+                "review_status": "draft",
+                "operator": "",
+                "note": "",
+                "confirmed_at": "",
+                "items": report.get("change_items", []),
+            }
+        item = dict(row)
+        item["items"] = json.loads(item.pop("reviewed_items_json") or "[]")
+        return item
+
+    def save_review(
+        self,
+        event_id: int,
+        *,
+        items: list[dict[str, Any]],
+        action: str = "save",
+        operator: str = "",
+        note: str = "",
+    ) -> dict[str, Any]:
+        if action not in {"save", "confirm", "dismiss"}:
+            raise ValueError("action must be save, confirm or dismiss")
+        report = self.analyze(event_id)
+        source_items = {str(item.get("item_id")): item for item in report.get("change_items", [])}
+        reviewed: list[dict[str, Any]] = []
+        for index, raw in enumerate(items or [], start=1):
+            item_id = str(raw.get("item_id") or f"manual-{index}")
+            base = dict(source_items.get(item_id) or {})
+            change_type = str(raw.get("change_type") or base.get("change_type") or "modified").strip()
+            if change_type not in {"added", "removed", "modified"}:
+                raise ValueError(f"unsupported change_type: {change_type}")
+            label = str(raw.get("label") or base.get("label") or "其他变化").strip()
+            if not label:
+                raise ValueError("change item label is required")
+            reviewed.append({
+                "item_id": item_id,
+                "change_type": change_type,
+                "field": str(raw.get("field") or base.get("field") or "custom").strip(),
+                "label": label,
+                "before": str(raw.get("before") if raw.get("before") is not None else base.get("before") or "").strip(),
+                "after": str(raw.get("after") if raw.get("after") is not None else base.get("after") or "").strip(),
+                "impact_note": str(raw.get("impact_note") or "").strip(),
+                "selected": bool(raw.get("selected", True)),
+            })
+
+        now = _now()
+        status = {"save": "draft", "confirm": "confirmed", "dismiss": "dismissed"}[action]
+        confirmed_at = now if action in {"confirm", "dismiss"} else ""
+        with self.store.lock:
+            self.store.conn.execute(
+                """
+                INSERT INTO source_diff_reviews(
+                    update_event_id,review_status,reviewed_items_json,operator,note,
+                    created_at,updated_at,confirmed_at
+                ) VALUES(?,?,?,?,?,?,?,?)
+                ON CONFLICT(update_event_id) DO UPDATE SET
+                    review_status=excluded.review_status,
+                    reviewed_items_json=excluded.reviewed_items_json,
+                    operator=excluded.operator,
+                    note=excluded.note,
+                    updated_at=excluded.updated_at,
+                    confirmed_at=excluded.confirmed_at
+                """,
+                (
+                    int(event_id), status, json.dumps(reviewed, ensure_ascii=False),
+                    str(operator or "").strip(), str(note or "").strip(),
+                    now, now, confirmed_at,
+                ),
+            )
+            self.store.conn.commit()
+        return self.review_state(event_id)
 
     def list_reports(self, *, limit: int = 100) -> dict[str, Any]:
         with self.store.lock:
