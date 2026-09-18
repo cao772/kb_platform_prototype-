@@ -8,12 +8,14 @@ from app.map_service import RegulationMapService
 from app.ontology_governance import OntologyGovernanceService
 from app.regions import target_market_catalog
 from app.source_registry import SourceRegistryService
+from app.source_collection import SourceCollectionService
 from app.server import Handler as BaseHandler
-from app.server import STATIC_DIR, store
+from app.server import ROOT, STATIC_DIR, change_monitor, store
 
 regulation_map = RegulationMapService(store)
 ontology_governance = OntologyGovernanceService(store)
 source_registry = SourceRegistryService(store)
+source_collection = SourceCollectionService(store, source_registry, ROOT / "data" / "source_downloads", change_monitor=change_monitor)
 
 
 class Handler(BaseHandler):
@@ -43,6 +45,25 @@ class Handler(BaseHandler):
         if parsed.path == "/api/sources/detail":
             try:
                 self._send_json(source_registry.detail(int(params.get("id", ["0"])[0] or 0)))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/profiles":
+            try:
+                self._send_json(source_collection.list_profiles(
+                    source_key=params.get("source_key", [""])[0],
+                    enabled_only=str(params.get("enabled", [""])[0]).lower() in {"1","true","yes","on"},
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/runs":
+            try:
+                self._send_json(source_collection.list_runs(
+                    limit=min(int(params.get("limit", ["100"])[0] or 100), 500)
+                ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
@@ -104,6 +125,10 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path in {"/collection", "/collection.html"}:
+            self._send_file(STATIC_DIR / "collection.html")
+            return
+
         if parsed.path in {"/sources", "/sources.html"}:
             self._send_file(STATIC_DIR / "sources.html")
             return
@@ -123,6 +148,7 @@ class Handler(BaseHandler):
             anchor = '<div class="top-actions">'
             links = (
                 '<a class="top-link" href="/sources">来源台账</a>'
+                '<a class="top-link" href="/collection">采集执行</a>'
                 '<a class="top-link" href="/ontology">知识本体</a>'
                 '<a class="top-link" href="/map">法规认证地图</a>'
                 '<a class="top-link" href="/changes">变化待办</a>'
@@ -141,6 +167,20 @@ class Handler(BaseHandler):
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path == "/api/collection/run":
+            try:
+                payload = self._read_json()
+                result = source_collection.run(
+                    int(payload.get("profile_id") or 0),
+                    auto_ingest=bool(payload.get("auto_ingest", True)),
+                    auto_extract=bool(payload.get("auto_extract", False)),
+                    use_model=bool(payload.get("use_model", False)),
+                )
+                self._send_json(result)
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/sources/update":
             try:
                 payload = self._read_json()
@@ -165,6 +205,7 @@ def main() -> None:
     server = ThreadingHTTPServer(("127.0.0.1", 8765), Handler)
     print("Knowledge platform running at http://127.0.0.1:8765")
     print("Source registry: http://127.0.0.1:8765/sources")
+    print("Source collection: http://127.0.0.1:8765/collection")
     print("Knowledge ontology: http://127.0.0.1:8765/ontology")
     print("Regulation certification map: http://127.0.0.1:8765/map")
     print("Formal knowledge catalog: http://127.0.0.1:8765/catalog")
