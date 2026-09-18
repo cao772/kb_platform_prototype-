@@ -54,7 +54,18 @@ def main() -> None:
     assert "new URLSearchParams(location.search)" in html
     assert "tab==='access'" in html
 
-    print("OK: business navigation, dashboard, GMA workflow and map drilldown are wired")
+    # Stage21 regulation Q&A exposes business traceability, not raw execution JSON.
+    for label in ("查询范围", "采用依据", "关系核对", "结论形成", "依据不足项"):
+        assert label in html
+    assert 'id="qaSummary"' in html
+    assert 'id="queryScope"' in html
+    assert 'id="evidenceGaps"' in html
+    assert "查看详细记录" not in html
+    assert "trackRaw" not in html
+    assert '<pre id="trackRaw"' not in html
+    assert "pathCount=Number(v.graph_path_count??((gr.paths||[]).length)||0)" not in html
+
+    print("OK: business navigation, dashboard, GMA, map drilldown and business QA trace are wired")
 
 
 if __name__ == "__main__":
