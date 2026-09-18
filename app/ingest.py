@@ -7,8 +7,8 @@ from app.store import KnowledgeStore
 from app.text_processing import chunk_blocks, infer_knowledge_type, infer_tags
 
 SUPPORTED_SUFFIXES = {
-    ".docx", ".pdf", ".txt", ".md", ".csv", ".xlsx", ".pptx", ".json", ".html", ".htm",
-    ".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff",
+    ".docx", ".pdf", ".txt", ".md", ".csv", ".xlsx", ".pptx", ".json", ".xml", ".html", ".htm",
+    ".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp",
 }
 
 
