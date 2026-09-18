@@ -39,8 +39,7 @@ def main() -> None:
     assert 'href="/changes"' in html
     assert 'href="/map"' in html
     assert "loadBusinessDashboard" in html
-    assert "/api/map/overview" in html
-    assert "/api/change-watch/tasks" in html
+    assert "/api/business/dashboard" in html
 
     # Stage19 GMA is a business organization layer over governed knowledge.
     assert "GMA 市场准入" in html
