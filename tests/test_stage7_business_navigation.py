@@ -5,6 +5,7 @@ from pathlib import Path
 
 def main() -> None:
     html = Path("static/index.html").read_text(encoding="utf-8")
+    runtime = Path("app/server.py").read_text(encoding="utf-8")
 
     assert "知识本体" in html
     assert "知识图谱" in html
@@ -41,7 +42,16 @@ def main() -> None:
     assert "/api/map/overview" in html
     assert "/api/change-watch/tasks" in html
 
-    print("OK: business navigation and Stage18 dashboard expose governed business workflows")
+    # Stage19 GMA is a business organization layer over governed knowledge.
+    assert "GMA 市场准入" in html
+    assert "市场准入业务链路" in html
+    assert "已确认准入路径" in html
+    assert "需要复核的内容" in html
+    assert "/api/gma/access" in html
+    assert '"/api/gma/access"' in runtime
+    assert "不另建一套重复事实数据" in html
+
+    print("OK: business navigation, dashboard and GMA market-access workflow are wired")
 
 
 if __name__ == "__main__":
