@@ -386,7 +386,7 @@ class SourceCollectionService:
             safe_key = "".join(ch if ch.isalnum() or ch in {"-", "_"} else "_" for ch in profile["profile_key"])
             folder = self.download_dir / source["source_key"]
             folder.mkdir(parents=True, exist_ok=True)
-            target = folder / f"{stamp}_{safe_key}{profile['output_suffix']}"
+            target = folder / f"{stamp}_{safe_key}_{sha256[:12]}{profile['output_suffix']}"
             temp = target.with_suffix(target.suffix + ".downloading")
             temp.write_bytes(body)
             temp.replace(target)
