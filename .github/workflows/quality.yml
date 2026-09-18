@@ -59,3 +59,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage18_source_diff.py
       - name: Stage19 ontology registry tests
         run: PYTHONPATH=. python tests/test_stage19_ontology_registry.py
+      - name: Stage20 source diff human review tests
+        run: PYTHONPATH=. python tests/test_stage20_source_diff_human_review.py
