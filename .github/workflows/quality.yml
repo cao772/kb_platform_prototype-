@@ -51,3 +51,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage14_target_markets.py
       - name: Stage15 source registry tests
         run: PYTHONPATH=. python tests/test_stage15_source_registry.py
+      - name: Stage16 source collection tests
+        run: PYTHONPATH=. python tests/test_stage16_source_collection.py
