@@ -238,11 +238,7 @@ class SourceCollectionService:
         }
 
     def _source_for_profile(self, profile: dict[str, Any]) -> dict[str, Any]:
-        listing = self.source_registry.list_sources(q=profile["source_key"], limit=1000)
-        for item in listing["items"]:
-            if item.get("source_key") == profile["source_key"]:
-                return item
-        raise ValueError(f"source not found for profile: {profile['source_key']}")
+        return self.source_registry.by_key(profile["source_key"])
 
     def run(
         self,
