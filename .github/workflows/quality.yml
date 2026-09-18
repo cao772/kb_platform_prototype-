@@ -45,3 +45,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage11_change_monitor.py
       - name: Stage12 business regulation map tests
         run: PYTHONPATH=. python tests/test_stage12_business_map.py
+      - name: Stage13 ontology governance tests
+        run: PYTHONPATH=. python tests/test_stage13_ontology_governance.py
