@@ -101,6 +101,7 @@ class SourceImpactService:
         )
         review_text_norm = _norm(review_text)
         source_key = str(report.get("source_key") or current_meta.get("source_key") or "")
+        source_type = str(current_meta.get("source_type") or "").strip()
         region_code = str(current_meta.get("region_code") or "").upper()
         previous_document_id = report.get("previous", {}).get("document_id")
         current_document_id = report.get("current", {}).get("document_id")
@@ -112,30 +113,33 @@ class SourceImpactService:
             reasons: list[str] = []
             source_doc_id = record.get("source_document_id")
             if source_doc_id and int(source_doc_id) == int(previous_document_id or -1):
-                score += 0.58
+                score += 0.45
                 reasons.append("正式知识来源为上一版本文档")
             if source_doc_id and int(source_doc_id) == int(current_document_id or -1):
-                score += 0.58
+                score += 0.45
                 reasons.append("正式知识来源为当前版本文档")
 
             code = _norm(record.get("code"))
             name = _norm(record.get("name"))
             if code and len(code) >= 3 and code in review_text_norm:
-                score += 0.35
+                score += 0.25
                 reasons.append("变化内容命中知识编号")
             if name and len(name) >= 4 and name in review_text_norm:
-                score += 0.24
+                score += 0.15
                 reasons.append("变化内容命中知识名称")
 
             record_region = str(record.get("region_code") or "").upper()
             if region_code and record_region == region_code:
-                score += 0.08
+                score += 0.05
                 reasons.append("国家/地区一致")
 
             source_meta = self._document_metadata(source_doc_id)
             if source_key and str(source_meta.get("source_key") or "") == source_key:
-                score += 0.20
+                score += 0.10
                 reasons.append("来源网站一致")
+            if source_type and str(record.get("record_type") or "") == source_type:
+                score += 0.30
+                reasons.append("来源类别与正式知识类型一致")
 
             if not reasons:
                 continue
