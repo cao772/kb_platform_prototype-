@@ -128,6 +128,7 @@ class BusinessDashboardService:
                 ],
             },
             "priority_markets": priorities,
+            "recent_open_changes": self.change_monitor.list_tasks(status="open", limit=6),
             "change_summary": changes,
             "change_trend_30d": self._change_trend(days=30),
             "principle": "驾驶舱仅汇总人工确认后的正式知识、市场准入组织结果和变化待办，不把候选内容计入正式统计。",
