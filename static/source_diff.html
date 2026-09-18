@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>来源差异 · 法规认证知识平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top a{color:#dce8f5;text-decoration:none}.wrap{max-width:1460px;margin:18px auto;padding:0 20px}.card,.metric{background:#fff;border:1px solid #e1e7ef;border-radius:12px}.hero{padding:20px 22px}.hero h1{margin:0 0 8px;font-size:24px;color:#113f72}.hero p{margin:0;color:#66758a;line-height:1.7}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}.metric{padding:13px}.metric span{font-size:11px;color:#8190a3}.metric strong{display:block;font-size:21px;color:#123e6e;margin-top:4px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card{padding:16px}.card h2{font-size:16px;margin:0 0 11px}.meta{font-size:12px;color:#758397;line-height:1.65}.tag{display:inline-block;font-size:10px;padding:3px 7px;border-radius:999px;background:#edf3f8;color:#5d6e82;margin:2px}.tag.add{background:#e9f8ef;color:#2e7350}.tag.remove{background:#fcecec;color:#9e3e3e}.block{border:1px solid #e1e7ef;border-radius:10px;margin:10px 0;overflow:hidden}.block-head{padding:8px 10px;background:#f7f9fc;font-size:11px;color:#617083}.cols{display:grid;grid-template-columns:1fr 1fr}.side{padding:10px;min-height:70px}.side.old{background:#fff9f9;border-right:1px solid #e8edf2}.side.new{background:#f8fcf9}.side b{font-size:11px;color:#617083}.line{font-size:12px;line-height:1.55;margin:5px 0;white-space:pre-wrap;word-break:break-word}.signals{display:grid;grid-template-columns:1fr 1fr;gap:10px}.signal{border:1px solid #e1e7ef;border-radius:9px;padding:10px}.signal h3{font-size:13px;margin:0 0 6px}.empty{padding:24px;text-align:center;color:#8592a3}.notice{background:#f4f8fd;border:1px solid #dce8f6;border-radius:9px;padding:11px;font-size:12px;color:#566e8a;line-height:1.65}.url{color:#0d4f91;text-decoration:none;word-break:break-all}@media(max-width:1000px){.metrics{grid-template-columns:1fr 1fr}.grid,.cols,.signals{grid-template-columns:1fr}.side.old{border-right:0;border-bottom:1px solid #e8edf2}}@media(max-width:600px){.top{padding:0 14px}.wrap{padding:0 12px}.metrics{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top"><div style="font-size:19px;font-weight:700">法规认证知识平台 · 来源差异</div><div><a href="/collection">返回采集执行</a></div></div>
+<div class="wrap">
+  <div class="card hero"><h1 id="title">来源版本差异</h1><p id="subtitle">正在加载旧版与新版内容差异…</p></div>
+  <div class="metrics">
+    <div class="metric"><span>差异块</span><strong id="mBlocks">-</strong></div>
+    <div class="metric"><span>修改</span><strong id="mModified">-</strong></div>
+    <div class="metric"><span>新增</span><strong id="mAdded">-</strong></div>
+    <div class="metric"><span>删除</span><strong id="mRemoved">-</strong></div>
+    <div class="metric"><span>关键信号变化</span><strong id="mSignals">-</strong></div>
+  </div>
+  <div class="grid">
+    <div class="card"><h2>上一版本</h2><div id="previous" class="meta"></div></div>
+    <div class="card"><h2>当前版本</h2><div id="current" class="meta"></div></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h2>关键信息变化</h2>
+    <div id="signals" class="signals"></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h2>内容差异</h2>
+    <div id="blocks"><div class="empty">正在加载…</div></div>
+  </div>
+  <div class="notice" id="notice" style="margin-top:14px"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url){const r=await fetch(url);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
+const params=new URLSearchParams(location.search);const eventId=params.get('event_id');
+const labels={dates:'日期',versions:'版本',identifiers:'法规/标准编号',requirement_lines:'要求条款',status_lines:'状态条款'};
+function renderSide(id,d){$(id).innerHTML='<div>文档：'+esc(d.filename||'-')+'</div><div>采集时间：'+esc(d.collected_at||'-')+'</div><div>SHA256：'+esc((d.sha256||'').slice(0,24))+'…</div>'+(d.source_url?'<div>来源：<a class="url" href="'+esc(d.source_url)+'" target="_blank">'+esc(d.source_url)+'</a></div>':'')}
+function renderSignals(signals){$('signals').innerHTML=Object.entries(signals||{}).map(([k,v])=>'<div class="signal"><h3>'+esc(labels[k]||k)+'</h3><div>'+(v.added||[]).map(x=>'<span class="tag add">新增 '+esc(x)+'</span>').join('')+(v.removed||[]).map(x=>'<span class="tag remove">删除 '+esc(x)+'</span>').join('')+(!(v.added||[]).length&&!(v.removed||[]).length?'<div class="meta">未发现明显变化</div>':'')+'</div></div>').join('')}
+function renderBlocks(blocks){$('blocks').innerHTML=blocks?.length?blocks.map((b,i)=>'<div class="block"><div class="block-head">第 '+(i+1)+' 处 · '+esc(b.change_type)+(b.similarity!==undefined?' · 相似度 '+Math.round(Number(b.similarity)*100)+'%':'')+'</div><div class="cols"><div class="side old"><b>上一版本</b>'+(b.before||[]).map(x=>'<div class="line">'+esc(x)+'</div>').join('')+'</div><div class="side new"><b>当前版本</b>'+(b.after||[]).map(x=>'<div class="line">'+esc(x)+'</div>').join('')+'</div></div></div>').join(''):'<div class="empty">未识别到可展示的正文差异。</div>'}
+async function load(){if(!eventId){$('blocks').innerHTML='<div class="empty">缺少 event_id。</div>';return}try{const d=await api('/api/collection/diff?event_id='+encodeURIComponent(eventId));$('title').textContent=(d.profile_key||'来源')+' · 版本差异';$('subtitle').textContent='来源 '+(d.source_key||'-')+' 的旧版/新版内容差异，供业务人员复核。';const s=d.summary||{};$('mBlocks').textContent=s.change_blocks||0;$('mModified').textContent=s.modified_blocks||0;$('mAdded').textContent=s.added_blocks||0;$('mRemoved').textContent=s.removed_blocks||0;$('mSignals').textContent=s.signal_changes||0;renderSide('previous',d.previous||{});renderSide('current',d.current||{});renderSignals(d.signals||{});renderBlocks(d.blocks||[]);$('notice').textContent=d.notice||''}catch(e){$('blocks').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}}
+load();
+</script>
+</body>
+</html>
