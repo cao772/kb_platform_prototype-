@@ -11,8 +11,9 @@ from app.regions import target_market_catalog
 from app.source_registry import SourceRegistryService
 from app.source_collection import SourceCollectionService
 from app.source_diff import SourceDifferenceService
+from app.source_impact import SourceImpactService
 from app.server import Handler as BaseHandler
-from app.server import ROOT, STATIC_DIR, change_monitor, store
+from app.server import ROOT, STATIC_DIR, change_monitor, graph_service, store
 
 regulation_map = RegulationMapService(store)
 ontology_governance = OntologyGovernanceService(store)
@@ -20,6 +21,7 @@ ontology_registry = OntologyRegistryService(store)
 source_registry = SourceRegistryService(store)
 source_collection = SourceCollectionService(store, source_registry, ROOT / "data" / "source_downloads", change_monitor=change_monitor)
 source_diff = SourceDifferenceService(store)
+source_impact = SourceImpactService(store, source_diff, graph_service)
 
 
 class Handler(BaseHandler):
@@ -105,6 +107,35 @@ class Handler(BaseHandler):
             try:
                 self._send_json(source_diff.review_state(
                     int(params.get("event_id", ["0"])[0] or 0)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/impact-matches":
+            try:
+                self._send_json(source_impact.match_formal_records(
+                    int(params.get("event_id", ["0"])[0] or 0),
+                    limit=min(int(params.get("limit", ["50"])[0] or 50), 200),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/impact-case":
+            try:
+                self._send_json(source_impact.case(
+                    int(params.get("event_id", ["0"])[0] or 0)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/impact-cases":
+            try:
+                self._send_json(source_impact.list_cases(
+                    status=params.get("status", [""])[0],
+                    limit=min(int(params.get("limit", ["100"])[0] or 100), 500),
                 ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
@@ -197,6 +228,10 @@ class Handler(BaseHandler):
             self._send_file(STATIC_DIR / "ontology_governance.html")
             return
 
+        if parsed.path in {"/source-impact", "/source-impact.html"}:
+            self._send_file(STATIC_DIR / "source_impact.html")
+            return
+
         if parsed.path in {"/source-diff", "/source-diff.html"}:
             self._send_file(STATIC_DIR / "source_diff.html")
             return
@@ -247,6 +282,32 @@ class Handler(BaseHandler):
             try:
                 payload = self._read_json()
                 self._send_json(source_diff.save_review(
+                    int(payload.get("event_id") or 0),
+                    items=payload.get("items") or [],
+                    action=payload.get("action", "save"),
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/impact-build":
+            try:
+                payload = self._read_json()
+                self._send_json(source_impact.build_case(
+                    int(payload.get("event_id") or 0),
+                    record_id=int(payload.get("record_id") or 0),
+                    refresh=bool(payload.get("refresh", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/impact-review":
+            try:
+                payload = self._read_json()
+                self._send_json(source_impact.save_case(
                     int(payload.get("event_id") or 0),
                     items=payload.get("items") or [],
                     action=payload.get("action", "save"),
