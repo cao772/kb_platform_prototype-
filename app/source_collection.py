@@ -260,6 +260,55 @@ class SourceCollectionService:
             raise ValueError("collection profile not found")
         return self._profile_row(row)
 
+    def create_profile(self, payload: dict[str, Any]) -> dict[str, Any]:
+        profile_key = str(payload.get("profile_key") or "").strip()
+        source_key = str(payload.get("source_key") or "").strip()
+        adapter = str(payload.get("adapter") or "").strip()
+        entry_url = str(payload.get("entry_url") or "").strip()
+        purpose = str(payload.get("purpose") or "").strip()
+        notes = str(payload.get("notes") or "").strip()
+        if not profile_key:
+            raise ValueError("profile_key is required")
+        if not source_key:
+            raise ValueError("source_key is required")
+        source = self.source_registry.by_key(source_key)
+        if source.get("status") == "archived":
+            raise ValueError("archived source cannot create collection profile")
+        suffix_map = {"html": ".html", "pdf": ".pdf", "json_api": ".json", "xml_api": ".xml"}
+        if adapter not in suffix_map:
+            raise ValueError(f"unsupported adapter: {adapter}")
+        if not entry_url:
+            entry_url = str(source.get("base_url") or "")
+        if not (entry_url.startswith("http://") or entry_url.startswith("https://")):
+            raise ValueError("entry_url must start with http:// or https://")
+        enabled = bool(payload.get("enabled", True))
+        timeout_seconds = max(1, min(int(payload.get("timeout_seconds") or 30), 120))
+        max_bytes = max(1024, min(int(payload.get("max_bytes") or 25 * 1024 * 1024), 100 * 1024 * 1024))
+        headers = payload.get("headers") or {}
+        if not isinstance(headers, dict):
+            raise ValueError("headers must be an object")
+        with self.store.lock:
+            existing = self.store.conn.execute(
+                "SELECT id FROM collection_profiles WHERE profile_key=?",
+                (profile_key,),
+            ).fetchone()
+            if existing:
+                raise ValueError(f"profile_key already exists: {profile_key}")
+            cur = self.store.conn.execute(
+                """INSERT INTO collection_profiles(
+                       profile_key,source_key,adapter,entry_url,output_suffix,purpose,
+                       enabled,timeout_seconds,max_bytes,headers_json,notes
+                   ) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    profile_key, source_key, adapter, entry_url, suffix_map[adapter], purpose,
+                    1 if enabled else 0, timeout_seconds, max_bytes,
+                    json.dumps(headers, ensure_ascii=False), notes,
+                ),
+            )
+            self.store.conn.commit()
+            profile_id = int(cur.lastrowid)
+        return self.profile(profile_id)
+
     def list_runs(self, *, limit: int = 100) -> dict[str, Any]:
         with self.store.lock:
             rows = self.store.conn.execute(

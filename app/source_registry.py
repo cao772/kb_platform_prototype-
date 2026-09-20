@@ -1,17 +1,65 @@
 from __future__ import annotations
 
 import json
+from io import BytesIO
 from collections import Counter
 from dataclasses import dataclass, asdict
 from typing import Any
+
+from openpyxl import Workbook, load_workbook
 
 from app.regions import TARGET_MARKETS, canonical_region_code
 from app.store import KnowledgeStore
 
 TARGET_SOURCE_COUNT = 300
 SOURCE_TYPES = {"regulation", "standard", "certification", "gma"}
-SOURCE_STATUSES = {"research", "validated", "connected", "paused"}
+SOURCE_STATUSES = {"research", "validated", "connected", "paused", "archived"}
+SOURCE_PRIORITIES = {"A", "B", "C"}
 ACCESS_METHODS = {"html", "pdf", "xml", "api", "rss", "mixed", "metadata_only"}
+REFRESH_POLICIES = {"daily", "weekly", "monthly", "event", "manual"}
+
+SOURCE_EXPORT_COLUMNS = (
+    ("来源编码", "source_key"),
+    ("国家/地区", "region_code"),
+    ("来源名称", "source_name"),
+    ("来源类别", "source_type"),
+    ("主管机构", "authority"),
+    ("网址", "base_url"),
+    ("接入方式", "access_method"),
+    ("优先级", "priority"),
+    ("状态", "status"),
+    ("共享范围", "shared_scope"),
+    ("语言", "languages"),
+    ("文件类型", "file_types"),
+    ("更新频率", "refresh_policy"),
+    ("采集范围", "crawl_scope"),
+    ("备注", "notes"),
+    ("项目维护说明", "owner_note"),
+)
+
+SOURCE_HEADER_ALIASES = {
+    "来源编码": "source_key", "source_key": "source_key",
+    "国家/地区": "region_code", "region_code": "region_code",
+    "来源名称": "source_name", "source_name": "source_name",
+    "来源类别": "source_type", "source_type": "source_type",
+    "主管机构": "authority", "authority": "authority",
+    "网址": "base_url", "base_url": "base_url", "url": "base_url",
+    "接入方式": "access_method", "access_method": "access_method",
+    "优先级": "priority", "priority": "priority",
+    "状态": "status", "status": "status",
+    "共享范围": "shared_scope", "shared_scope": "shared_scope",
+    "语言": "languages", "languages": "languages",
+    "文件类型": "file_types", "file_types": "file_types",
+    "更新频率": "refresh_policy", "refresh_policy": "refresh_policy",
+    "采集范围": "crawl_scope", "crawl_scope": "crawl_scope",
+    "备注": "notes", "notes": "notes",
+    "项目维护说明": "owner_note", "owner_note": "owner_note",
+}
+
+SOURCE_TYPE_ALIASES = {"法规": "regulation", "标准": "standard", "认证": "certification", "GMA/市场准入": "gma", "GMA": "gma"}
+SOURCE_STATUS_ALIASES = {"调研中": "research", "已确认": "validated", "已接入": "connected", "暂停": "paused", "已归档": "archived"}
+ACCESS_METHOD_ALIASES = {"网页": "html", "PDF": "pdf", "XML": "xml", "API": "api", "RSS": "rss", "混合": "mixed", "仅元数据": "metadata_only"}
+REFRESH_POLICY_ALIASES = {"每日": "daily", "每周": "weekly", "每月": "monthly", "按事件": "event", "人工": "manual"}
 
 
 @dataclass(frozen=True)
@@ -191,15 +239,18 @@ class SourceRegistryService:
             items = [self._row(row) for row in rows]
         by_type = Counter(item.get("source_type") for item in items)
         by_status = Counter(item.get("status") for item in items)
-        regions = {item.get("region_code") for item in items if item.get("region_code") not in {"", "EU"}}
+        active_items = [item for item in items if item.get("status") != "archived"]
+        active_by_type = Counter(item.get("source_type") for item in active_items)
+        regions = {item.get("region_code") for item in active_items if item.get("region_code") not in {"", "EU"}}
         target_codes = {market.code for market in TARGET_MARKETS}
         return {
             "target_sources": TARGET_SOURCE_COUNT,
-            "registered_sources": len(items),
-            "remaining_to_target": max(0, TARGET_SOURCE_COUNT - len(items)),
+            "registered_sources": len(active_items),
+            "archived_sources": len(items) - len(active_items),
+            "remaining_to_target": max(0, TARGET_SOURCE_COUNT - len(active_items)),
             "target_markets": len(TARGET_MARKETS),
             "target_markets_with_sources": len(regions & target_codes),
-            "by_type": dict(by_type),
+            "by_type": dict(active_by_type),
             "by_status": dict(by_status),
             "shared_sources": sum(1 for item in items if item.get("shared_scope")),
         }
@@ -216,6 +267,109 @@ class SourceRegistryService:
             raise ValueError(f"source not found: {key}")
         return self._row(row)
 
+    @staticmethod
+    def _list_value(value: Any) -> list[str]:
+        if isinstance(value, (list, tuple, set)):
+            return [str(item).strip() for item in value if str(item).strip()]
+        text = str(value or "").strip()
+        if not text:
+            return []
+        for delimiter in ("，", "；", ";", "|", "、"):
+            text = text.replace(delimiter, ",")
+        return [item.strip() for item in text.split(",") if item.strip()]
+
+    @staticmethod
+    def _bool_value(value: Any) -> bool:
+        if isinstance(value, bool):
+            return value
+        return str(value or "").strip().lower() in {"1", "true", "yes", "y", "是", "共享"}
+
+    def _normalize_payload(self, payload: dict[str, Any], *, creating: bool = False) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        target_codes = {market.code for market in TARGET_MARKETS} | {"EU"}
+
+        if creating or "source_key" in payload:
+            source_key = str(payload.get("source_key") or "").strip()
+            if not source_key:
+                raise ValueError("source_key is required")
+            result["source_key"] = source_key
+
+        if creating or "region_code" in payload:
+            region_code = canonical_region_code(str(payload.get("region_code") or "").strip())
+            if not region_code or region_code not in target_codes:
+                raise ValueError(f"unsupported region_code: {region_code or payload.get('region_code')}")
+            result["region_code"] = region_code
+
+        if creating or "source_name" in payload:
+            source_name = str(payload.get("source_name") or "").strip()
+            if not source_name:
+                raise ValueError("source_name is required")
+            result["source_name"] = source_name
+
+        if creating or "source_type" in payload:
+            raw = str(payload.get("source_type") or "").strip()
+            source_type = SOURCE_TYPE_ALIASES.get(raw, raw)
+            if source_type not in SOURCE_TYPES:
+                raise ValueError(f"unsupported source_type: {raw}")
+            result["source_type"] = source_type
+
+        if creating or "base_url" in payload:
+            base_url = str(payload.get("base_url") or "").strip()
+            if not base_url:
+                raise ValueError("base_url is required")
+            if not (base_url.startswith("http://") or base_url.startswith("https://")):
+                raise ValueError("base_url must start with http:// or https://")
+            result["base_url"] = base_url
+
+        text_fields = ("authority", "crawl_scope", "notes", "owner_note")
+        for key in text_fields:
+            if key in payload:
+                result[key] = str(payload.get(key) or "").strip()
+
+        if "access_method" in payload or creating:
+            raw = str(payload.get("access_method") or "html").strip()
+            access_method = ACCESS_METHOD_ALIASES.get(raw, raw)
+            if access_method not in ACCESS_METHODS:
+                raise ValueError(f"unsupported access method: {raw}")
+            result["access_method"] = access_method
+
+        if "priority" in payload or creating:
+            priority = str(payload.get("priority") or "B").strip().upper()
+            if priority not in SOURCE_PRIORITIES:
+                raise ValueError(f"unsupported priority: {priority}")
+            result["priority"] = priority
+
+        if "status" in payload or creating:
+            raw = str(payload.get("status") or "research").strip()
+            status = SOURCE_STATUS_ALIASES.get(raw, raw)
+            if status not in SOURCE_STATUSES:
+                raise ValueError(f"unsupported source status: {raw}")
+            result["status"] = status
+
+        if "refresh_policy" in payload or creating:
+            raw = str(payload.get("refresh_policy") or "weekly").strip()
+            refresh_policy = REFRESH_POLICY_ALIASES.get(raw, raw)
+            if refresh_policy not in REFRESH_POLICIES:
+                raise ValueError(f"unsupported refresh policy: {raw}")
+            result["refresh_policy"] = refresh_policy
+
+        if "shared_scope" in payload:
+            result["shared_scope"] = 1 if self._bool_value(payload.get("shared_scope")) else 0
+        elif creating:
+            result["shared_scope"] = 0
+
+        if "languages" in payload:
+            result["languages_json"] = json.dumps(self._list_value(payload.get("languages")), ensure_ascii=False)
+        elif creating:
+            result["languages_json"] = "[]"
+
+        if "file_types" in payload:
+            result["file_types_json"] = json.dumps(self._list_value(payload.get("file_types")), ensure_ascii=False)
+        elif creating:
+            result["file_types_json"] = "[]"
+
+        return result
+
     def detail(self, source_id: int) -> dict[str, Any]:
         with self.store.lock:
             row = self.store.conn.execute("SELECT * FROM knowledge_sources WHERE id=?", (int(source_id),)).fetchone()
@@ -223,26 +377,36 @@ class SourceRegistryService:
             raise ValueError("source not found")
         return self._row(row)
 
-    def update(self, source_id: int, payload: dict[str, Any]) -> dict[str, Any]:
-        editable = {
-            "source_name", "authority", "base_url", "access_method", "priority", "status",
+    def create(self, payload: dict[str, Any]) -> dict[str, Any]:
+        item = self._normalize_payload(payload, creating=True)
+        columns = [
+            "source_key", "region_code", "source_name", "source_type", "authority", "base_url",
+            "access_method", "priority", "status", "shared_scope", "languages_json", "file_types_json",
             "refresh_policy", "crawl_scope", "notes", "owner_note",
-        }
-        updates: list[str] = []
-        params: list[Any] = []
-        for key in editable:
-            if key not in payload:
-                continue
-            value = str(payload.get(key) or "").strip()
-            if key == "status" and value not in SOURCE_STATUSES:
-                raise ValueError(f"unsupported source status: {value}")
-            if key == "access_method" and value not in ACCESS_METHODS:
-                raise ValueError(f"unsupported access method: {value}")
-            updates.append(f"{key}=?")
-            params.append(value)
-        if not updates:
+        ]
+        values = [item.get(key, "") for key in columns]
+        with self.store.lock:
+            existing = self.store.conn.execute(
+                "SELECT id FROM knowledge_sources WHERE source_key=?",
+                (item["source_key"],),
+            ).fetchone()
+            if existing:
+                raise ValueError(f"source_key already exists: {item['source_key']}")
+            cur = self.store.conn.execute(
+                f"INSERT INTO knowledge_sources({','.join(columns)}) VALUES({','.join('?' for _ in columns)})",
+                values,
+            )
+            self.store.conn.commit()
+            source_id = int(cur.lastrowid)
+        return self.detail(source_id)
+
+    def update(self, source_id: int, payload: dict[str, Any]) -> dict[str, Any]:
+        item = self._normalize_payload(payload, creating=False)
+        item.pop("source_key", None)
+        if not item:
             return self.detail(source_id)
-        params.append(int(source_id))
+        updates = [f"{key}=?" for key in item]
+        params = list(item.values()) + [int(source_id)]
         with self.store.lock:
             cur = self.store.conn.execute(
                 f"UPDATE knowledge_sources SET {','.join(updates)},updated_at=CURRENT_TIMESTAMP WHERE id=?",
@@ -252,3 +416,103 @@ class SourceRegistryService:
                 raise ValueError("source not found")
             self.store.conn.commit()
         return self.detail(source_id)
+
+    def archive(self, source_id: int, *, note: str = "") -> dict[str, Any]:
+        payload: dict[str, Any] = {"status": "archived"}
+        if note:
+            current = self.detail(source_id)
+            owner_note = str(current.get("owner_note") or "").strip()
+            payload["owner_note"] = (owner_note + "\n" + note).strip()
+        return self.update(source_id, payload)
+
+    def batch_update(self, source_ids: list[int], payload: dict[str, Any]) -> dict[str, Any]:
+        ids = sorted({int(source_id) for source_id in source_ids if int(source_id) > 0})
+        if not ids:
+            raise ValueError("source_ids is required")
+        allowed = {key: payload[key] for key in ("status", "priority") if key in payload}
+        if not allowed:
+            raise ValueError("batch update requires status or priority")
+        normalized = self._normalize_payload(allowed, creating=False)
+        updates = [f"{key}=?" for key in normalized]
+        placeholders = ",".join("?" for _ in ids)
+        params = list(normalized.values()) + ids
+        with self.store.lock:
+            cur = self.store.conn.execute(
+                f"UPDATE knowledge_sources SET {','.join(updates)},updated_at=CURRENT_TIMESTAMP WHERE id IN ({placeholders})",
+                params,
+            )
+            self.store.conn.commit()
+        return {"updated": int(cur.rowcount or 0), "source_ids": ids}
+
+    def export_xlsx(self, *, template_only: bool = False) -> bytes:
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = "来源台账"
+        sheet.append([label for label, _ in SOURCE_EXPORT_COLUMNS])
+        if not template_only:
+            items = self.list_sources(limit=3000)["items"]
+            for item in items:
+                row = []
+                for _, key in SOURCE_EXPORT_COLUMNS:
+                    value: Any = item.get(key, "")
+                    if key in {"languages", "file_types"}:
+                        value = "、".join(value or [])
+                    elif key == "shared_scope":
+                        value = "是" if value else "否"
+                    row.append(value)
+                sheet.append(row)
+        widths = [18, 12, 28, 16, 28, 44, 14, 10, 12, 10, 18, 18, 12, 42, 36, 36]
+        for index, width in enumerate(widths, start=1):
+            sheet.column_dimensions[sheet.cell(row=1, column=index).column_letter].width = width
+        sheet.freeze_panes = "A2"
+        buffer = BytesIO()
+        workbook.save(buffer)
+        return buffer.getvalue()
+
+    def import_xlsx(self, content: bytes) -> dict[str, Any]:
+        if not content:
+            raise ValueError("empty workbook")
+        workbook = load_workbook(BytesIO(content), read_only=True, data_only=True)
+        sheet = workbook.active
+        rows = sheet.iter_rows(values_only=True)
+        try:
+            headers = next(rows)
+        except StopIteration:
+            raise ValueError("workbook is empty")
+        mapped = [SOURCE_HEADER_ALIASES.get(str(value or "").strip(), "") for value in headers]
+        if "source_key" not in mapped or "source_name" not in mapped or "base_url" not in mapped:
+            raise ValueError("Excel must include 来源编码、来源名称、网址")
+
+        created = 0
+        updated = 0
+        errors: list[dict[str, Any]] = []
+        for row_number, values in enumerate(rows, start=2):
+            payload = {
+                key: values[index]
+                for index, key in enumerate(mapped)
+                if key and index < len(values) and values[index] not in {None, ""}
+            }
+            if not payload:
+                continue
+            source_key = str(payload.get("source_key") or "").strip()
+            try:
+                if not source_key:
+                    raise ValueError("来源编码不能为空")
+                try:
+                    existing = self.by_key(source_key)
+                except ValueError:
+                    existing = None
+                if existing:
+                    self.update(int(existing["id"]), payload)
+                    updated += 1
+                else:
+                    self.create(payload)
+                    created += 1
+            except Exception as exc:
+                errors.append({"row": row_number, "source_key": source_key, "error": str(exc)})
+        return {
+            "created": created,
+            "updated": updated,
+            "failed": len(errors),
+            "errors": errors[:100],
+        }
