@@ -5,56 +5,231 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>来源台账 · 法规认证知识平台</title>
 <style>
-:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.brand{font-size:19px;font-weight:700}.top a{color:#dce8f5;text-decoration:none;font-size:13px}.wrap{max-width:1500px;margin:18px auto;padding:0 20px}.hero{background:#fff;border:1px solid #e1e7ef;border-radius:14px;padding:22px 24px}.hero h1{font-size:25px;margin:0 0 8px;color:#113f72}.hero p{margin:0;color:#66758a;line-height:1.7}.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0}.metric,.card{background:#fff;border:1px solid #e1e7ef;border-radius:12px}.metric{padding:13px 14px}.metric span{font-size:11px;color:#8190a3}.metric strong{display:block;font-size:22px;color:#123e6e;margin-top:4px}.filters{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr auto;gap:8px}.card{padding:16px}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:1100px;font-size:12px}.table th,.table td{border-bottom:1px solid #e5ebf1;padding:9px 8px;text-align:left;vertical-align:top}.table th{background:#f7f9fc;color:#657489;position:sticky;top:0}.table tr:hover{background:#f8fbfe}.tag{display:inline-block;padding:3px 7px;border-radius:999px;background:#edf3f8;color:#5f6f82;font-size:10px}.tag.A{background:#e9f7ef;color:#2e7350}.tag.B{background:#fff4dd;color:#8b641c}.status.connected{background:#e9f7ef;color:#2e7350}.status.validated{background:#e8f3ff;color:#246599}.status.research{background:#fff4dd;color:#8b641c}.status.paused{background:#fbeaea;color:#963d3d}.layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(340px,.4fr);gap:14px;margin-top:14px}.muted{font-size:12px;color:#748297;line-height:1.65}.edit label{display:block;font-size:11px;color:#718095;margin:8px 0 4px}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px 10px;background:#fff}textarea{min-height:90px;resize:vertical}.btn{border:0;background:#0d4f91;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer}.url{color:#0d4f91;text-decoration:none}.progress{height:9px;background:#edf2f7;border-radius:999px;overflow:hidden;margin-top:8px}.progress i{display:block;height:100%;background:#1971b8}.section{margin-top:14px}.source-name{font-weight:700;color:#173f68}.source-scope{color:#68778b;font-size:11px;line-height:1.45}.empty{padding:25px;text-align:center;color:#8190a3;font-size:13px}@media(max-width:1120px){.metrics{grid-template-columns:repeat(3,1fr)}.filters,.layout{grid-template-columns:1fr}}@media(max-width:680px){.metrics{grid-template-columns:1fr 1fr}.top{padding:0 14px}.wrap{padding:0 12px}}
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.brand{font-size:19px;font-weight:700}.top a{color:#dce8f5;text-decoration:none;font-size:13px}.wrap{max-width:1580px;margin:18px auto;padding:0 20px}.hero,.metric,.card{background:#fff;border:1px solid #e1e7ef;border-radius:12px}.hero{padding:22px 24px}.hero h1{font-size:25px;margin:0 0 8px;color:#113f72}.hero p{margin:0;color:#66758a;line-height:1.7}.metrics{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:14px 0}.metric{padding:13px 14px}.metric span{font-size:11px;color:#8190a3}.metric strong{display:block;font-size:22px;color:#123e6e;margin-top:4px}.card{padding:16px}.filters{display:grid;grid-template-columns:1fr 1fr 1fr 1.3fr auto;gap:8px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}.toolbar .spacer{flex:1}.toolbar select{width:auto;min-width:130px}.btn{border:0;background:#0d4f91;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer}.btn.secondary{background:#edf3f8;color:#294d70}.btn.danger{background:#a64c4c}.btn:disabled{opacity:.5;cursor:not-allowed}.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(390px,.35fr);gap:14px;margin-top:14px}.table-wrap{overflow:auto;max-height:720px}.table{width:100%;border-collapse:collapse;min-width:1220px;font-size:12px}.table th,.table td{border-bottom:1px solid #e5ebf1;padding:9px 8px;text-align:left;vertical-align:top}.table th{background:#f7f9fc;color:#657489;position:sticky;top:0;z-index:2}.table tr:hover{background:#f8fbfe}.table tr.selected{background:#eef6fd}.tag{display:inline-block;padding:3px 7px;border-radius:999px;background:#edf3f8;color:#5f6f82;font-size:10px}.tag.A{background:#e9f7ef;color:#2e7350}.tag.B{background:#fff4dd;color:#8b641c}.tag.C{background:#f1f2f5;color:#6f7580}.status.connected{background:#e9f7ef;color:#2e7350}.status.validated{background:#e8f3ff;color:#246599}.status.research{background:#fff4dd;color:#8b641c}.status.paused{background:#fbeaea;color:#963d3d}.status.archived{background:#eceff3;color:#727b86}.muted{font-size:12px;color:#748297;line-height:1.65}.edit h3{margin:0 0 8px}.edit label{display:block;font-size:11px;color:#718095;margin:8px 0 4px}.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 9px}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px 10px;background:#fff}textarea{min-height:76px;resize:vertical}.url{color:#0d4f91;text-decoration:none}.progress{height:9px;background:#edf2f7;border-radius:999px;overflow:hidden;margin-top:8px}.progress i{display:block;height:100%;background:#1971b8}.section{margin-top:14px}.source-name{font-weight:700;color:#173f68}.source-scope{color:#68778b;font-size:11px;line-height:1.45}.empty{padding:25px;text-align:center;color:#8190a3;font-size:13px}.profiles{margin-top:12px;border-top:1px solid #e3e8ee;padding-top:10px}.profile{padding:8px 0;border-bottom:1px solid #edf1f5}.profile b{font-size:12px}.profile span{display:block;color:#7b8798;font-size:10px;margin-top:3px;line-height:1.5}.notice{margin-top:9px;border-radius:8px;background:#f7f9fc;padding:9px 10px;font-size:11px;color:#64758a;line-height:1.6}.result-ok{color:#2e7350}.result-error{color:#a14545}.check{width:16px;height:16px}.count{font-size:11px;color:#6e7b8d}.hidden{display:none}@media(max-width:1180px){.metrics{grid-template-columns:repeat(4,1fr)}.filters,.layout{grid-template-columns:1fr}}@media(max-width:680px){.metrics{grid-template-columns:1fr 1fr}.top{padding:0 14px}.wrap{padding:0 12px}.edit-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="top"><div class="brand">法规认证知识平台 · 来源台账</div><div><a href="/collection" style="margin-right:12px">采集执行</a><a href="/">工作台</a></div></div>
 <div class="wrap">
-  <div class="hero"><h1>21个目标国家/地区的数据来源台账</h1><p>统一管理法规、标准、认证和GMA相关来源，逐步形成约300个权威网站的数据采集清单。每个来源记录所属市场、来源类别、主管机构、接入方式、更新频率和采集范围。</p></div>
+  <div class="hero">
+    <h1>来源网站管理</h1>
+    <p>统一维护21个目标国家/地区及欧盟共享范围的法规、标准、认证和GMA来源。来源台账负责网站信息和接入状态，采集执行负责具体采集配置和运行记录。</p>
+  </div>
+
   <div class="metrics">
     <div class="metric"><span>目标来源规模</span><strong id="mTarget">300</strong></div>
     <div class="metric"><span>已登记来源</span><strong id="mRegistered">-</strong></div>
     <div class="metric"><span>覆盖目标市场</span><strong id="mRegions">-</strong></div>
     <div class="metric"><span>法规来源</span><strong id="mRegulation">-</strong></div>
     <div class="metric"><span>标准来源</span><strong id="mStandard">-</strong></div>
-    <div class="metric"><span>待继续调研</span><strong id="mRemain">-</strong></div>
+    <div class="metric"><span>已归档</span><strong id="mArchived">-</strong></div>
+    <div class="metric"><span>待继续补充</span><strong id="mRemain">-</strong></div>
   </div>
+
   <div class="card">
     <div class="filters">
       <select id="region"><option value="">全部国家/地区</option></select>
       <select id="type"><option value="">全部来源类别</option><option value="regulation">法规</option><option value="standard">标准</option><option value="certification">认证</option><option value="gma">GMA/市场准入</option></select>
-      <select id="status"><option value="">全部状态</option><option value="research">调研中</option><option value="validated">已确认</option><option value="connected">已接入</option><option value="paused">暂停</option></select>
-      <input id="q" placeholder="来源名称、机构、网址、采集范围">
+      <select id="status"><option value="">全部状态</option><option value="research">调研中</option><option value="validated">已确认</option><option value="connected">已接入</option><option value="paused">暂停</option><option value="archived">已归档</option></select>
+      <input id="q" placeholder="来源编码、名称、机构、网址、采集范围">
       <button class="btn" onclick="loadSources()">查询</button>
     </div>
-    <div class="progress"><i id="progressBar" style="width:0"></i></div><div class="muted" id="progressText" style="margin-top:6px">正在加载来源台账…</div>
+    <div class="toolbar">
+      <button class="btn" onclick="newSource()">新增来源</button>
+      <button class="btn secondary" onclick="$('importFile').click()">Excel导入</button>
+      <button class="btn secondary" onclick="downloadExport(false)">Excel导出</button>
+      <button class="btn secondary" onclick="downloadExport(true)">下载模板</button>
+      <input id="importFile" class="hidden" type="file" accept=".xlsx" onchange="importExcel(this.files[0])">
+      <span class="spacer"></span>
+      <span id="selectedCount" class="count">已选 0 项</span>
+      <select id="bulkStatus"><option value="">批量状态</option><option value="research">调研中</option><option value="validated">已确认</option><option value="connected">已接入</option><option value="paused">暂停</option><option value="archived">已归档</option></select>
+      <button class="btn secondary" onclick="applyBatch('status')">应用状态</button>
+      <select id="bulkPriority"><option value="">批量优先级</option><option>A</option><option>B</option><option>C</option></select>
+      <button class="btn secondary" onclick="applyBatch('priority')">应用优先级</button>
+    </div>
+    <div id="importResult" class="muted" style="margin-top:8px"></div>
+    <div class="progress"><i id="progressBar" style="width:0"></i></div>
+    <div class="muted" id="progressText" style="margin-top:6px">正在加载来源台账…</div>
   </div>
+
   <div class="layout">
-    <div class="card"><div class="table-wrap"><table class="table"><thead><tr><th>国家/地区</th><th>来源</th><th>类别</th><th>主管机构</th><th>接入方式</th><th>优先级</th><th>状态</th><th>更新</th><th>网址</th></tr></thead><tbody id="rows"><tr><td colspan="9" class="empty">正在加载…</td></tr></tbody></table></div></div>
+    <div class="card">
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th><input id="selectAll" class="check" type="checkbox" onchange="toggleAll(this.checked)"></th><th>国家/地区</th><th>来源</th><th>类别</th><th>主管机构</th><th>接入方式</th><th>优先级</th><th>状态</th><th>更新</th><th>网址</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="10" class="empty">正在加载…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="card edit">
-      <h3 id="detailTitle">来源详情</h3><div id="detailEmpty" class="muted">点击左侧来源后可查看采集范围并维护接入状态。</div>
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><h3 id="detailTitle">来源详情</h3><button id="archiveBtn" class="btn danger hidden" onclick="archiveSource()">归档</button></div>
+      <div id="detailEmpty" class="muted">点击左侧来源查看详情，或点击“新增来源”创建网站记录。</div>
       <div id="detailForm" style="display:none">
-        <label>来源名称</label><input id="eName"><label>主管机构</label><input id="eAuthority"><label>来源地址</label><input id="eUrl">
-        <label>接入方式</label><select id="eAccess"><option value="html">网页</option><option value="pdf">PDF</option><option value="xml">XML</option><option value="api">API</option><option value="rss">RSS</option><option value="mixed">混合</option><option value="metadata_only">仅元数据</option></select>
-        <label>优先级</label><select id="ePriority"><option>A</option><option>B</option><option>C</option></select>
-        <label>接入状态</label><select id="eStatus"><option value="research">调研中</option><option value="validated">已确认</option><option value="connected">已接入</option><option value="paused">暂停</option></select>
-        <label>更新频率</label><select id="eRefresh"><option value="daily">每日</option><option value="weekly">每周</option><option value="monthly">每月</option><option value="event">按事件</option><option value="manual">人工</option></select>
-        <label>采集范围</label><textarea id="eScope"></textarea><label>备注</label><textarea id="eNotes"></textarea><label>项目维护说明</label><textarea id="eOwner"></textarea>
-        <button class="btn" style="margin-top:10px" onclick="saveSource()">保存</button><div id="saveResult" class="muted" style="margin-top:8px"></div>
+        <div class="edit-grid">
+          <div><label>来源编码</label><input id="eKey" placeholder="例如 DE-BNETZA"></div>
+          <div><label>国家/地区</label><select id="eRegion"></select></div>
+          <div><label>来源名称</label><input id="eName"></div>
+          <div><label>来源类别</label><select id="eType"><option value="regulation">法规</option><option value="standard">标准</option><option value="certification">认证</option><option value="gma">GMA/市场准入</option></select></div>
+        </div>
+        <label>主管机构</label><input id="eAuthority">
+        <label>来源地址</label><input id="eUrl" placeholder="https://...">
+        <div class="edit-grid">
+          <div><label>接入方式</label><select id="eAccess"><option value="html">网页</option><option value="pdf">PDF</option><option value="xml">XML</option><option value="api">API</option><option value="rss">RSS</option><option value="mixed">混合</option><option value="metadata_only">仅元数据</option></select></div>
+          <div><label>优先级</label><select id="ePriority"><option>A</option><option selected>B</option><option>C</option></select></div>
+          <div><label>接入状态</label><select id="eStatus"><option value="research">调研中</option><option value="validated">已确认</option><option value="connected">已接入</option><option value="paused">暂停</option><option value="archived">已归档</option></select></div>
+          <div><label>更新频率</label><select id="eRefresh"><option value="daily">每日</option><option value="weekly">每周</option><option value="monthly">每月</option><option value="event">按事件</option><option value="manual">人工</option></select></div>
+        </div>
+        <label><input id="eShared" type="checkbox" style="width:auto;margin-right:6px">欧盟/共享范围来源</label>
+        <div class="edit-grid">
+          <div><label>语言</label><input id="eLanguages" placeholder="如 en、de 或 multi，逗号分隔"></div>
+          <div><label>文件类型</label><input id="eFiles" placeholder="如 html、pdf、xml"></div>
+        </div>
+        <label>采集范围</label><textarea id="eScope"></textarea>
+        <label>备注</label><textarea id="eNotes"></textarea>
+        <label>项目维护说明</label><textarea id="eOwner"></textarea>
+        <button class="btn" style="margin-top:10px" onclick="saveSource()">保存来源</button>
+        <div id="saveResult" class="muted" style="margin-top:8px"></div>
+        <div class="profiles">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b>关联采集配置</b><a class="url" href="/collection">进入采集执行</a></div>
+          <div id="profileList" class="muted" style="margin-top:6px">保存来源后可查看采集配置。</div>
+        </div>
       </div>
     </div>
   </div>
-  <div class="card section"><h3>当前来源建设口径</h3><div class="muted">欧盟成员市场同时复用欧盟层公共来源；国家本地来源只保存本国特有法规、标准和认证信息。标准全文受版权或许可限制时，以标准编号、名称、版本、适用范围和引用关系等元数据为主，已授权文件再进入全文知识库。后续继续补充各国监管机构、产品安全、能效、无线电、电气安全、化学合规、认证机构及GMA市场准入来源。</div></div>
+
+  <div class="card section">
+    <h3>来源管理口径</h3>
+    <div class="muted">来源记录不做物理删除，停用网站使用“暂停”，退出维护范围使用“归档”，保留历史采集和变化记录。Excel导入以“来源编码”为唯一键：编码已存在则更新，编码不存在则新增。欧盟成员市场可复用EU共享来源；标准全文存在版权或许可限制时优先维护标准元数据和授权文件。</div>
+  </div>
 </div>
+
 <script>
-const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let current=null;
-const typeLabel=v=>({regulation:'法规',standard:'标准',certification:'认证',gma:'GMA/市场准入'}[v]||v);const accessLabel=v=>({html:'网页',pdf:'PDF',xml:'XML',api:'API',rss:'RSS',mixed:'混合',metadata_only:'仅元数据'}[v]||v);const statusLabel=v=>({research:'调研中',validated:'已确认',connected:'已接入',paused:'暂停'}[v]||v);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let current=null,selected=new Set(),regionOptions='';
+const typeLabel=v=>({regulation:'法规',standard:'标准',certification:'认证',gma:'GMA/市场准入'}[v]||v);
+const accessLabel=v=>({html:'网页',pdf:'PDF',xml:'XML',api:'API',rss:'RSS',mixed:'混合',metadata_only:'仅元数据'}[v]||v);
+const statusLabel=v=>({research:'调研中',validated:'已确认',connected:'已接入',paused:'暂停',archived:'已归档'}[v]||v);
 async function api(url,opt){const r=await fetch(url,opt);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
-async function loadRegions(){const d=await api('/api/regions');let html='<option value="">全部国家/地区</option><option value="EU">欧盟公共来源 EU</option>';Object.entries(d.groups||{}).forEach(([g,items])=>{html+='<optgroup label="'+esc(g)+'">';items.forEach(x=>{html+='<option value="'+esc(x.code)+'">'+esc(x.name)+' '+esc(x.code)+'</option>'});html+='</optgroup>'});$('region').innerHTML=html}
-async function loadSources(){const p=new URLSearchParams();if($('region').value)p.set('region',$('region').value);if($('type').value)p.set('type',$('type').value);if($('status').value)p.set('status',$('status').value);if($('q').value.trim())p.set('q',$('q').value.trim());try{const d=await api('/api/sources?'+p.toString());const s=d.summary||{};$('mTarget').textContent=s.target_sources||300;$('mRegistered').textContent=s.registered_sources||0;$('mRegions').textContent=(s.target_markets_with_sources||0)+' / '+(s.target_markets||21);$('mRegulation').textContent=(s.by_type||{}).regulation||0;$('mStandard').textContent=(s.by_type||{}).standard||0;$('mRemain').textContent=s.remaining_to_target||0;const ratio=Math.min(100,Math.round((Number(s.registered_sources||0)/Number(s.target_sources||300))*100));$('progressBar').style.width=ratio+'%';$('progressText').textContent='已登记 '+(s.registered_sources||0)+' / '+(s.target_sources||300)+' 个来源，当前覆盖 '+(s.target_markets_with_sources||0)+' 个目标市场。';let rows='';d.items.forEach(x=>{rows+='<tr onclick="showSource('+x.id+')"><td>'+esc(x.region_code)+'</td><td><div class="source-name">'+esc(x.source_name)+'</div><div class="source-scope">'+esc(x.crawl_scope||'')+'</div></td><td>'+esc(typeLabel(x.source_type))+'</td><td>'+esc(x.authority||'')+'</td><td>'+esc(accessLabel(x.access_method))+'</td><td><span class="tag '+esc(x.priority)+'">'+esc(x.priority)+'</span></td><td><span class="tag status '+esc(x.status)+'">'+esc(statusLabel(x.status))+'</span></td><td>'+esc(x.refresh_policy||'')+'</td><td><a class="url" href="'+esc(x.base_url)+'" target="_blank" onclick="event.stopPropagation()">打开</a></td></tr>'});$('rows').innerHTML=rows||'<tr><td colspan="9" class="empty">当前筛选条件下没有来源。</td></tr>'}catch(e){$('rows').innerHTML='<tr><td colspan="9" class="empty">'+esc(e.message)+'</td></tr>'}}
-async function showSource(id){try{current=await api('/api/sources/detail?id='+id);$('detailEmpty').style.display='none';$('detailForm').style.display='block';$('detailTitle').textContent=current.source_name+' · '+current.region_code;$('eName').value=current.source_name||'';$('eAuthority').value=current.authority||'';$('eUrl').value=current.base_url||'';$('eAccess').value=current.access_method||'html';$('ePriority').value=current.priority||'B';$('eStatus').value=current.status||'research';$('eRefresh').value=current.refresh_policy||'weekly';$('eScope').value=current.crawl_scope||'';$('eNotes').value=current.notes||'';$('eOwner').value=current.owner_note||'';$('saveResult').textContent=(current.languages||[]).length?'语言：'+current.languages.join('、')+'；文件：'+(current.file_types||[]).join('、'):''}catch(e){alert(e.message)}}
-async function saveSource(){if(!current)return;const body={id:current.id,source_name:$('eName').value,authority:$('eAuthority').value,base_url:$('eUrl').value,access_method:$('eAccess').value,priority:$('ePriority').value,status:$('eStatus').value,refresh_policy:$('eRefresh').value,crawl_scope:$('eScope').value,notes:$('eNotes').value,owner_note:$('eOwner').value};try{current=await api('/api/sources/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});$('saveResult').textContent='已保存。';loadSources()}catch(e){$('saveResult').textContent='保存失败：'+e.message}}
+
+async function loadRegions(){
+  const d=await api('/api/regions');
+  let html='<option value="">全部国家/地区</option><option value="EU">欧盟共享范围 EU</option>';
+  Object.entries(d.groups||{}).forEach(([g,items])=>{html+='<optgroup label="'+esc(g)+'">';items.forEach(x=>{html+='<option value="'+esc(x.code)+'">'+esc(x.name)+' '+esc(x.code)+'</option>'});html+='</optgroup>'});
+  $('region').innerHTML=html;
+  regionOptions=html.replace('<option value="">全部国家/地区</option>','');
+  $('eRegion').innerHTML=regionOptions;
+}
+
+function updateSelectedCount(){$('selectedCount').textContent='已选 '+selected.size+' 项';$('selectAll').checked=false}
+function toggleOne(id,checked){if(checked)selected.add(id);else selected.delete(id);updateSelectedCount()}
+function toggleAll(checked){selected.clear();document.querySelectorAll('input[data-source-id]').forEach(el=>{el.checked=checked;if(checked)selected.add(Number(el.dataset.sourceId))});$('selectedCount').textContent='已选 '+selected.size+' 项'}
+
+async function loadSources(){
+  const p=new URLSearchParams();
+  if($('region').value)p.set('region',$('region').value);
+  if($('type').value)p.set('type',$('type').value);
+  if($('status').value)p.set('status',$('status').value);
+  if($('q').value.trim())p.set('q',$('q').value.trim());
+  try{
+    const d=await api('/api/sources?'+p.toString()),s=d.summary||{};
+    $('mTarget').textContent=s.target_sources||300;
+    $('mRegistered').textContent=s.registered_sources||0;
+    $('mRegions').textContent=(s.target_markets_with_sources||0)+' / '+(s.target_markets||21);
+    $('mRegulation').textContent=(s.by_type||{}).regulation||0;
+    $('mStandard').textContent=(s.by_type||{}).standard||0;
+    $('mArchived').textContent=s.archived_sources||0;
+    $('mRemain').textContent=s.remaining_to_target||0;
+    const ratio=Math.min(100,Math.round((Number(s.registered_sources||0)/Number(s.target_sources||300))*100));
+    $('progressBar').style.width=ratio+'%';
+    $('progressText').textContent='有效来源 '+(s.registered_sources||0)+' / '+(s.target_sources||300)+'，当前覆盖 '+(s.target_markets_with_sources||0)+' 个目标市场。';
+    selected.clear();updateSelectedCount();
+    const rows=(d.items||[]).map(x=>'<tr id="source-row-'+x.id+'"><td onclick="event.stopPropagation()"><input class="check" data-source-id="'+x.id+'" type="checkbox" onchange="toggleOne('+x.id+',this.checked)"></td><td onclick="showSource('+x.id+')">'+esc(x.region_code)+'</td><td onclick="showSource('+x.id+')"><div class="source-name">'+esc(x.source_name)+'</div><div class="source-scope">'+esc(x.source_key)+' · '+esc(x.crawl_scope||'')+'</div></td><td onclick="showSource('+x.id+')">'+esc(typeLabel(x.source_type))+'</td><td onclick="showSource('+x.id+')">'+esc(x.authority||'')+'</td><td onclick="showSource('+x.id+')">'+esc(accessLabel(x.access_method))+'</td><td onclick="showSource('+x.id+')"><span class="tag '+esc(x.priority)+'">'+esc(x.priority)+'</span></td><td onclick="showSource('+x.id+')"><span class="tag status '+esc(x.status)+'">'+esc(statusLabel(x.status))+'</span></td><td onclick="showSource('+x.id+')">'+esc(x.refresh_policy||'')+'</td><td><a class="url" href="'+esc(x.base_url)+'" target="_blank">打开</a></td></tr>').join('');
+    $('rows').innerHTML=rows||'<tr><td colspan="10" class="empty">当前筛选条件下没有来源。</td></tr>';
+  }catch(e){$('rows').innerHTML='<tr><td colspan="10" class="empty">'+esc(e.message)+'</td></tr>'}
+}
+
+function clearForm(){
+  current={id:0,collection_profiles:[]};
+  $('detailEmpty').style.display='none';$('detailForm').style.display='block';$('archiveBtn').classList.add('hidden');
+  $('detailTitle').textContent='新增来源';$('eKey').readOnly=false;
+  $('eKey').value='';$('eRegion').value='DE';$('eName').value='';$('eType').value='regulation';$('eAuthority').value='';$('eUrl').value='';
+  $('eAccess').value='html';$('ePriority').value='B';$('eStatus').value='research';$('eRefresh').value='weekly';$('eShared').checked=false;
+  $('eLanguages').value='';$('eFiles').value='html';$('eScope').value='';$('eNotes').value='';$('eOwner').value='';$('saveResult').textContent='';
+  $('profileList').textContent='保存来源后可查看采集配置。';
+}
+function newSource(){clearForm();window.scrollTo({top:document.querySelector('.layout').offsetTop-80,behavior:'smooth'})}
+
+function renderProfiles(items){
+  $('profileList').innerHTML=items.length?items.map(p=>'<div class="profile"><b>'+esc(p.profile_key)+'</b><span>'+esc(p.adapter)+' · '+(p.enabled?'已启用':'已停用')+'</span><span>'+esc(p.entry_url||'')+'</span></div>').join(''):'<span>当前没有关联采集配置，可到“采集执行”新增或配置。</span>';
+}
+
+async function showSource(id){
+  try{
+    current=await api('/api/sources/detail?id='+id);
+    document.querySelectorAll('.table tr.selected').forEach(x=>x.classList.remove('selected'));const row=$('source-row-'+id);if(row)row.classList.add('selected');
+    $('detailEmpty').style.display='none';$('detailForm').style.display='block';$('archiveBtn').classList.toggle('hidden',current.status==='archived');
+    $('detailTitle').textContent=current.source_name+' · '+current.region_code;$('eKey').readOnly=true;$('eKey').value=current.source_key||'';
+    $('eRegion').value=current.region_code||'DE';$('eName').value=current.source_name||'';$('eType').value=current.source_type||'regulation';$('eAuthority').value=current.authority||'';$('eUrl').value=current.base_url||'';
+    $('eAccess').value=current.access_method||'html';$('ePriority').value=current.priority||'B';$('eStatus').value=current.status||'research';$('eRefresh').value=current.refresh_policy||'weekly';$('eShared').checked=!!current.shared_scope;
+    $('eLanguages').value=(current.languages||[]).join('、');$('eFiles').value=(current.file_types||[]).join('、');$('eScope').value=current.crawl_scope||'';$('eNotes').value=current.notes||'';$('eOwner').value=current.owner_note||'';
+    $('saveResult').textContent='';renderProfiles(current.collection_profiles||[]);
+  }catch(e){alert(e.message)}
+}
+
+function formPayload(){
+  return {source_key:$('eKey').value.trim(),region_code:$('eRegion').value,source_name:$('eName').value.trim(),source_type:$('eType').value,authority:$('eAuthority').value.trim(),base_url:$('eUrl').value.trim(),access_method:$('eAccess').value,priority:$('ePriority').value,status:$('eStatus').value,refresh_policy:$('eRefresh').value,shared_scope:$('eShared').checked,languages:$('eLanguages').value,file_types:$('eFiles').value,crawl_scope:$('eScope').value,notes:$('eNotes').value,owner_note:$('eOwner').value}
+}
+
+async function saveSource(){
+  const body=formPayload();
+  try{
+    if(current&&current.id){
+      body.id=current.id;current=await api('/api/sources/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      $('saveResult').textContent='已保存。';$('saveResult').className='muted result-ok';
+    }else{
+      current=await api('/api/sources/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      $('saveResult').textContent='来源已创建。';$('saveResult').className='muted result-ok';
+    }
+    await loadSources();await showSource(current.id);
+  }catch(e){$('saveResult').textContent='保存失败：'+e.message;$('saveResult').className='muted result-error'}
+}
+
+async function archiveSource(){
+  if(!current||!current.id)return;
+  if(!confirm('归档后不会删除历史数据，确定归档这个来源吗？'))return;
+  try{current=await api('/api/sources/archive',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:current.id,note:'在来源管理页面归档'})});await loadSources();await showSource(current.id)}
+  catch(e){alert(e.message)}
+}
+
+async function applyBatch(kind){
+  if(!selected.size){alert('请先勾选来源。');return}
+  const value=kind==='status'?$('bulkStatus').value:$('bulkPriority').value;if(!value){alert('请选择批量值。');return}
+  const body={source_ids:Array.from(selected)};body[kind]=value;
+  try{const d=await api('/api/sources/batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});$('importResult').textContent='已批量更新 '+(d.updated||0)+' 个来源。';await loadSources()}
+  catch(e){$('importResult').textContent='批量更新失败：'+e.message}
+}
+
+function downloadExport(template){window.location.href='/api/sources/export'+(template?'?template=1':'')}
+
+async function importExcel(file){
+  if(!file)return;
+  if(file.size>10*1024*1024){$('importResult').textContent='导入失败：Excel文件不能超过10MB。';return}
+  const reader=new FileReader();
+  reader.onload=async()=>{
+    try{
+      $('importResult').textContent='正在导入 '+file.name+' …';
+      const d=await api('/api/sources/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:file.name,content_base64:reader.result})});
+      $('importResult').textContent='导入完成：新增 '+d.created+'，更新 '+d.updated+'，失败 '+d.failed+(d.failed?'。请检查失败行。':'。');
+      if(d.errors&&d.errors.length)$('importResult').textContent+=' 首个错误：第 '+d.errors[0].row+' 行 '+d.errors[0].error;
+      await loadSources();
+    }catch(e){$('importResult').textContent='导入失败：'+e.message}
+    $('importFile').value='';
+  };
+  reader.readAsDataURL(file);
+}
+
 loadRegions().then(loadSources);
 </script>
 </body>
