@@ -557,6 +557,13 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/collection/profile-create":
+            try:
+                self._send_json(source_collection.create_profile(self._read_json()), HTTPStatus.CREATED)
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/collection/run":
             try:
                 payload = self._read_json()
