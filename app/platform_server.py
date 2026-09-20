@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from http import HTTPStatus
 from http.server import ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -60,7 +61,27 @@ class Handler(BaseHandler):
 
         if parsed.path == "/api/sources/detail":
             try:
-                self._send_json(source_registry.detail(int(params.get("id", ["0"])[0] or 0)))
+                item = source_registry.detail(int(params.get("id", ["0"])[0] or 0))
+                item["collection_profiles"] = source_collection.list_profiles(
+                    source_key=item.get("source_key", "")
+                ).get("items", [])
+                self._send_json(item)
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/sources/export":
+            try:
+                content = source_registry.export_xlsx(
+                    template_only=str(params.get("template", [""])[0]).lower() in {"1", "true", "yes", "on"}
+                )
+                filename = "source_registry_template.xlsx" if str(params.get("template", [""])[0]).lower() in {"1", "true", "yes", "on"} else "source_registry.xlsx"
+                self.send_response(HTTPStatus.OK)
+                self.send_header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+                self.send_header("Content-Length", str(len(content)))
+                self.end_headers()
+                self.wfile.write(content)
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
@@ -550,11 +571,52 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/sources/create":
+            try:
+                self._send_json(source_registry.create(self._read_json()), HTTPStatus.CREATED)
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/sources/update":
             try:
                 payload = self._read_json()
                 source_id = int(payload.pop("id", 0) or 0)
                 self._send_json(source_registry.update(source_id, payload))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/sources/archive":
+            try:
+                payload = self._read_json()
+                self._send_json(source_registry.archive(
+                    int(payload.get("id") or 0),
+                    note=str(payload.get("note") or "来源已归档"),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/sources/batch":
+            try:
+                payload = self._read_json()
+                self._send_json(source_registry.batch_update(
+                    payload.get("source_ids") or [],
+                    payload,
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/sources/import":
+            try:
+                payload = self._read_json()
+                encoded = str(payload.get("content_base64") or "")
+                if "," in encoded:
+                    encoded = encoded.split(",", 1)[1]
+                content = base64.b64decode(encoded, validate=True)
+                self._send_json(source_registry.import_xlsx(content))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
