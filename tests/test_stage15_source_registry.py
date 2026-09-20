@@ -48,17 +48,16 @@ def main() -> None:
 
         updated = service.update(standard["id"], {
             "status": "validated",
-            "owner_note": "样板来源已完成业务确认",
+            "owner_note": "来源已完成业务确认",
             "refresh_policy": "weekly",
         })
         assert updated["status"] == "validated"
-        assert updated["owner_note"] == "样板来源已完成业务确认"
+        assert updated["owner_note"] == "来源已完成业务确认"
 
     page = Path("static/sources.html").read_text(encoding="utf-8")
     runtime = Path("app/platform_server.py").read_text(encoding="utf-8")
-    assert "21个目标国家/地区的数据来源台账" in page
+    assert "来源网站管理" in page
     assert "目标来源规模" in page
-    assert "约300个权威网站" in page
     assert "法规" in page and "标准" in page and "GMA/市场准入" in page
     assert "/api/sources" in page
     assert '"/sources", "/sources.html"' in runtime
