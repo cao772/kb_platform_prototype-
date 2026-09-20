@@ -79,3 +79,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage28_pipeline_readiness.py
       - name: Stage29 full platform runtime smoke
         run: PYTHONPATH=. python tests/test_stage29_full_platform_runtime.py
+      - name: Stage30 source website management tests
+        run: PYTHONPATH=. python tests/test_stage30_source_management.py
