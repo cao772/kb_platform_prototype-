@@ -6,6 +6,7 @@ from pathlib import Path
 
 from openpyxl import Workbook, load_workbook
 
+from app.source_collection import SourceCollectionService
 from app.source_registry import SourceRegistryService
 from app.store import KnowledgeStore
 
@@ -72,6 +73,20 @@ def main() -> None:
         assert updated["languages"] == ["de", "en", "fr"]
         assert updated["file_types"] == ["html", "pdf"]
 
+        collection = SourceCollectionService(store, service, Path(tmp) / "downloads")
+        profile = collection.create_profile({
+            "profile_key": "DE-MANAGED-TEST-HTML",
+            "source_key": "DE-MANAGED-TEST",
+            "adapter": "html",
+            "entry_url": "https://example.com/de/rules",
+            "purpose": "测试法规正文采集",
+        })
+        assert profile["source_key"] == "DE-MANAGED-TEST"
+        assert profile["adapter"] == "html"
+        linked = collection.list_profiles(source_key="DE-MANAGED-TEST")
+        assert linked["summary"]["profiles"] == 1
+        assert linked["items"][0]["profile_key"] == "DE-MANAGED-TEST-HTML"
+
         batch = service.batch_update([created["id"]], {"status": "connected", "priority": "C"})
         assert batch["updated"] == 1
         after_batch = service.detail(created["id"])
@@ -114,7 +129,7 @@ def main() -> None:
     runtime = Path("app/platform_server.py").read_text(encoding="utf-8")
     workflow = Path(".github/workflows/quality.yml").read_text(encoding="utf-8")
 
-    for label in ("新增来源", "Excel导入", "Excel导出", "下载模板", "批量状态", "批量优先级", "关联采集配置"):
+    for label in ("新增来源", "Excel导入", "Excel导出", "下载模板", "批量状态", "批量优先级", "关联采集配置", "新增采集配置"):
         assert label in page
     for endpoint in (
         "/api/sources/create",
@@ -123,6 +138,7 @@ def main() -> None:
         "/api/sources/batch",
         "/api/sources/import",
         "/api/sources/export",
+        "/api/collection/profile-create",
     ):
         assert endpoint in page or endpoint in runtime
         assert endpoint in runtime
