@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>原始资料双语复核 · 法规认证知识平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top a{color:#dce8f5;text-decoration:none}.wrap{max-width:1500px;margin:18px auto;padding:0 20px}.card,.metric{background:#fff;border:1px solid #e1e7ef;border-radius:12px}.hero{padding:20px 22px}.hero h1{margin:0 0 8px;font-size:24px;color:#113f72}.hero p{margin:0;color:#66758a;line-height:1.7}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.metric{padding:13px}.metric span{font-size:11px;color:#8190a3}.metric strong{display:block;font-size:21px;color:#123e6e;margin-top:4px}.meta{font-size:12px;color:#748297;line-height:1.65}.notice{background:#f4f8fd;border:1px solid #dce8f6;border-radius:9px;padding:11px;font-size:12px;color:#566e8a;line-height:1.65}.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn{border:0;background:#0d4f91;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer;font:inherit;text-decoration:none}.btn.secondary{background:#eef4fb;color:#0d4f91}.btn.muted{background:#eef0f3;color:#5f6975}.segment{border:1px solid #dfe6ef;border-radius:10px;overflow:hidden;margin:12px 0}.segment-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 11px;background:#f7f9fc}.segment-head b{font-size:12px}.cols{display:grid;grid-template-columns:1fr 1fr}.side{padding:12px}.side.original{border-right:1px solid #e1e7ef;background:#fffafb}.side.translation{background:#f8fcf9}.side h3{font-size:12px;margin:0 0 7px;color:#5f6f82}.source-text{white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.65;color:#25344a}.translation textarea{width:100%;min-height:150px;border:1px solid #cbd6e2;border-radius:8px;padding:10px;font:inherit;line-height:1.65;resize:vertical;background:#fff}.review{display:grid;grid-template-columns:220px 1fr;gap:8px;margin-top:10px}.review input,.review textarea{width:100%;border:1px solid #cbd6e2;border-radius:8px;padding:9px;font:inherit}.review textarea{min-height:72px;resize:vertical}.status{font-size:11px;padding:4px 8px;border-radius:999px;background:#fff4dd;color:#8b641c}.status.confirmed{background:#e9f8ef;color:#2e7350}.empty{padding:28px;text-align:center;color:#8190a3}@media(max-width:900px){.metrics,.cols,.review{grid-template-columns:1fr}.side.original{border-right:0;border-bottom:1px solid #e1e7ef}}@media(max-width:600px){.top{padding:0 14px}.wrap{padding:0 12px}}
+</style>
+</head>
+<body>
+<div class="top"><div style="font-size:19px;font-weight:700">法规认证知识平台 · 原始资料双语复核</div><div><a href="/collection">返回采集执行</a></div></div>
+<div class="wrap">
+  <div class="card hero">
+    <h1 id="title">原始资料双语复核</h1>
+    <p>原始文件、原始解析文本和原始分片永久保留；中文翻译独立保存，仅用于辅助阅读和业务复核，可人工修订后再确认。</p>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><span>原文分片</span><strong id="mSegments">-</strong></div>
+    <div class="metric"><span>已有中文</span><strong id="mTranslated">-</strong></div>
+    <div class="metric"><span>待翻译</span><strong id="mPending">-</strong></div>
+    <div class="metric"><span>翻译复核状态</span><strong id="mStatus" style="font-size:15px">待复核</strong></div>
+  </div>
+
+  <div class="card" style="padding:16px">
+    <div class="toolbar">
+      <a id="rawLink" class="btn secondary" href="#" target="_blank">查看原始文件</a>
+      <button class="btn secondary" onclick="translateDocument(false)">生成中文翻译</button>
+      <button class="btn muted" onclick="translateDocument(true)">重新翻译</button>
+      <span id="translationResult" class="meta"></span>
+    </div>
+    <div id="docMeta" class="meta" style="margin-top:10px"></div>
+    <div class="notice" style="margin-top:10px">双语显示遵循“原文为事实依据、中文为派生翻译”的原则。翻译内容不会覆盖原文，也不会直接进入正式知识结论。</div>
+  </div>
+
+  <div id="segments" style="margin-top:14px"><div class="card empty">正在加载…</div></div>
+
+  <div class="card" style="padding:16px;margin-top:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <h2 style="font-size:16px;margin:0">翻译人工复核</h2><span id="reviewStatus" class="status">待复核</span>
+    </div>
+    <div class="review">
+      <input id="operator" placeholder="复核人">
+      <textarea id="reviewNote" placeholder="复核说明，例如：已对照原文校核专业术语、法规编号、日期和版本号。"></textarea>
+    </div>
+    <div class="toolbar" style="margin-top:12px">
+      <button class="btn secondary" onclick="saveReview('save')">保存翻译草稿</button>
+      <button class="btn" onclick="saveReview('confirm')">确认双语内容</button>
+      <span id="saveResult" class="meta"></span>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url,opt){const r=await fetch(url,opt);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
+const params=new URLSearchParams(location.search);const docId=Number(params.get('id')||0);let segments=[];
+function setStatus(status){const text=status==='confirmed'?'已确认':'待复核';$('mStatus').textContent=text;$('reviewStatus').textContent=text;$('reviewStatus').className='status '+(status==='confirmed'?'confirmed':'')}
+function render(d){const doc=d.document||{};segments=(d.segments||[]).map(x=>({...x}));$('title').textContent=(doc.title||doc.filename||'原始资料')+' · 双语复核';$('rawLink').href='/api/source-document/raw?id='+encodeURIComponent(docId);$('docMeta').innerHTML='文件：'+esc(doc.filename||'-')+' · 解析方式：'+esc(doc.parser||'-')+' · 来源：'+esc(doc.metadata?.source_name||doc.metadata?.source_key||'-')+' · 国家/地区：'+esc(doc.metadata?.region_code||'-');$('mSegments').textContent=d.summary?.segments||0;$('mTranslated').textContent=d.summary?.translated||0;$('mPending').textContent=d.summary?.pending||0;setStatus(d.review?.review_status||'draft');$('operator').value=d.review?.operator||'';$('reviewNote').value=d.review?.note||'';$('segments').innerHTML=segments.length?segments.map((x,i)=>'<div class="segment"><div class="segment-head"><b>分片 '+esc(x.chunk_index)+'</b><span class="meta">'+esc(x.translation_mode||'未翻译')+'</span></div><div class="cols"><div class="side original"><h3>原文</h3><div class="source-text">'+esc(x.source_text||'')+'</div></div><div class="side translation"><h3>中文</h3><textarea oninput="segments['+i+'].translated_text=this.value">'+esc(x.translated_text||'')+'</textarea></div></div></div>').join(''):'<div class="card empty">该文档暂无可展示分片。</div>'}
+async function load(){if(!docId){$('segments').innerHTML='<div class="card empty">缺少文档ID。</div>';return}try{render(await api('/api/source-document?id='+docId+'&lang=zh-CN'))}catch(e){$('segments').innerHTML='<div class="card empty">'+esc(e.message)+'</div>'}}
+async function translateDocument(force){try{$('translationResult').textContent='正在翻译…';const d=await api('/api/source-document/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document_id:docId,target_language:'zh-CN',force:!!force,max_segments:500})});render(d);$('translationResult').textContent=d.translation?.mode==='translation_not_configured'?'未配置知识抽取模型，原文已保留。':'中文翻译已生成，可继续人工校对。'}catch(e){$('translationResult').textContent='翻译失败：'+e.message}}
+async function saveReview(action){try{const d=await api('/api/source-document/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document_id:docId,target_language:'zh-CN',segments:segments.map(x=>({chunk_id:x.chunk_id,translated_text:x.translated_text||''})),action,operator:$('operator').value.trim(),note:$('reviewNote').value.trim()})});render(d);$('saveResult').textContent=action==='confirm'?'双语内容已确认。':'翻译草稿已保存。'}catch(e){$('saveResult').textContent='保存失败：'+e.message}}
+load();
+</script>
+</body>
+</html>

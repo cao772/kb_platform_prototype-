@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>本体与来源建设状态 · 法规认证知识平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top a{color:#dce8f5;text-decoration:none}.wrap{max-width:1380px;margin:18px auto;padding:0 20px}.card,.metric{background:#fff;border:1px solid #e1e7ef;border-radius:12px}.hero{padding:20px 22px}.hero h1{margin:0 0 8px;font-size:24px;color:#113f72}.hero p{margin:0;color:#66758a;line-height:1.7}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}.metric{padding:13px}.metric span{font-size:11px;color:#8190a3}.metric strong{display:block;font-size:21px;color:#123e6e;margin-top:4px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card{padding:16px}.card h2{font-size:16px;margin:0 0 10px}.row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #edf1f5;padding:8px 0;font-size:12px}.row:last-child{border-bottom:0}.ok{color:#2e7350}.bad{color:#9e3e3e}.notice{background:#f4f8fd;border:1px solid #dce8f6;border-radius:9px;padding:10px;font-size:12px;color:#566e8a;line-height:1.65;margin-top:8px}.status{font-size:11px;padding:4px 8px;border-radius:999px;background:#e9f8ef;color:#2e7350}.status.warn{background:#fff4dd;color:#8b641c}@media(max-width:900px){.metrics,.grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.metrics,.grid{grid-template-columns:1fr}.top{padding:0 14px}.wrap{padding:0 12px}}
+</style>
+</head>
+<body>
+<div class="top"><div style="font-size:19px;font-weight:700">法规认证知识平台 · 本体与来源建设状态</div><div><a href="/ontology">知识本体</a>　<a href="/sources">来源台账</a>　<a href="/">返回平台</a></div></div>
+<div class="wrap">
+  <div class="card hero"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><h1>本体、来源、采集、变化与双语治理状态</h1><p>用于集成和运维核对当前建设链路是否完整；不替代业务审核结果。</p></div><span id="status" class="status">加载中</span></div></div>
+  <div class="metrics">
+    <div class="metric"><span>目标国家/地区</span><strong id="mMarkets">-</strong></div>
+    <div class="metric"><span>已登记来源</span><strong id="mSources">-</strong></div>
+    <div class="metric"><span>采集配置</span><strong id="mProfiles">-</strong></div>
+    <div class="metric"><span>正式知识</span><strong id="mFormal">-</strong></div>
+    <div class="metric"><span>待人工复核</span><strong id="mPending">-</strong></div>
+  </div>
+  <div class="grid">
+    <div class="card"><h2>核心检查</h2><div id="checks"></div></div>
+    <div class="card"><h2>知识本体与关系</h2><div id="ontology"></div></div>
+    <div class="card"><h2>来源与变化治理</h2><div id="sources"></div></div>
+    <div class="card"><h2>双语治理</h2><div id="bilingual"></div></div>
+  </div>
+  <div class="card" style="margin-top:14px"><h2>稳定业务边界</h2><div id="boundaries"></div></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url){const r=await fetch(url);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
+function row(k,v){return '<div class="row"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div>'}
+async function load(){try{const d=await api('/api/ontology-source/readiness');$('status').textContent=d.status==='ready'?'链路就绪':'需要关注';$('status').className='status '+(d.status==='ready'?'':'warn');$('mMarkets').textContent=d.target_markets||0;$('mSources').textContent=d.sources?.registered||0;$('mProfiles').textContent=d.sources?.enabled_profiles||0;$('mFormal').textContent=d.formal_knowledge||0;$('mPending').textContent=d.pending_human_review||0;$('checks').innerHTML=Object.entries(d.checks||{}).map(([k,v])=>'<div class="row"><span>'+esc(k)+'</span><b class="'+(v?'ok':'bad')+'">'+(v?'通过':'需关注')+'</b></div>').join('');$('ontology').innerHTML=row('当前本体版本',d.ontology?.active_version||'-')+row('本体版本数',d.ontology?.versions||0)+row('有效术语',d.ontology?.active_terms||0)+row('已确认图谱关系',d.governance?.approved_graph_relations||0)+row('不符合本体约束的历史关系',d.governance?.invalid_approved_graph_relations||0);$('sources').innerHTML=row('目标来源规模',d.sources?.target_sources||300)+row('来源变化事件',d.sources?.update_events||0)+row('真实变化事件',d.sources?.changed_events||0)+row('已确认差异复核',d.governance?.confirmed_difference_reviews||0)+row('已确认影响复核',d.governance?.confirmed_impact_reviews||0)+row('术语归一记录',d.governance?.candidate_normalization_logs||0);$('bilingual').innerHTML=row('正式知识翻译记录',d.bilingual?.formal_translation_records||0)+row('已确认正式知识翻译',d.bilingual?.confirmed_formal_translations||0)+row('原始资料翻译分片',d.bilingual?.document_translation_segments||0)+row('已确认资料翻译复核',d.bilingual?.confirmed_document_translation_reviews||0);$('boundaries').innerHTML=(d.boundaries||[]).map(x=>'<div class="notice">'+esc(x)+'</div>').join('')}catch(e){$('status').textContent='加载失败';$('status').className='status warn';$('boundaries').innerHTML='<div class="notice">'+esc(e.message)+'</div>'}}
+load();
+</script>
+</body>
+</html>

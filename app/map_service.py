@@ -94,6 +94,7 @@ class RegulationMapService:
         as_of_date = date.fromisoformat(effective_date)
         window_end = as_of_date + timedelta(days=90)
         records = self._records(product_class=product_class, record_type=record_type, as_of=effective_date)
+        chain_records = self._records(product_class=product_class, as_of=effective_date)
         changes = self._open_changes(product_class=product_class)
 
         by_region: dict[str, dict[str, Any]] = {}
@@ -185,6 +186,10 @@ class RegulationMapService:
                 item for item in records
                 if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
             ]
+            chain_scoped_records = [
+                item for item in chain_records
+                if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
+            ]
             scoped_changes = [
                 item for item in changes
                 if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
@@ -192,6 +197,9 @@ class RegulationMapService:
             if only_changed and not scoped_changes:
                 continue
             scoped_types = Counter(item.get("record_type") or "unknown" for item in scoped_records)
+            chain_types = Counter(item.get("record_type") or "unknown" for item in chain_scoped_records)
+            chain_stage_count = sum(1 for key in TYPE_LABELS if chain_types.get(key, 0) > 0)
+            chain_completeness = round(chain_stage_count / len(TYPE_LABELS), 4)
             scoped_lifecycle = Counter(item.get("lifecycle_state") or "unknown" for item in scoped_records)
             x, y = _point(market.lat, market.lon)
             high_changes = sum(1 for item in scoped_changes if item.get("severity") == "high")
@@ -222,6 +230,10 @@ class RegulationMapService:
                 "knowledge_scope_codes": list(knowledge_scope_codes(market.code)),
                 "knowledge_count": len(scoped_records),
                 "type_counts": dict(scoped_types),
+                "chain_type_counts": dict(chain_types),
+                "chain_stage_count": chain_stage_count,
+                "chain_completeness": chain_completeness,
+                "chain_complete": chain_stage_count == len(TYPE_LABELS),
                 "lifecycle_counts": dict(scoped_lifecycle),
                 "pending_changes": len(scoped_changes),
                 "high_changes": high_changes,
@@ -247,6 +259,11 @@ class RegulationMapService:
                 "regions": len(regions),
                 "target_markets": len(TARGET_MARKETS),
                 "target_markets_with_data": sum(1 for item in target_markets if item["has_data"]),
+                "complete_markets": sum(1 for item in target_markets if item["chain_complete"]),
+                "average_chain_completeness": (
+                    round(sum(float(item["chain_completeness"]) for item in target_markets) / len(target_markets), 4)
+                    if target_markets else 0.0
+                ),
                 "knowledge": len(records),
                 "active": lifecycle_counts.get("active", 0),
                 "transition": lifecycle_counts.get("transition", 0),
@@ -277,6 +294,7 @@ class RegulationMapService:
             if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
         ]
         type_counts = Counter(item.get("record_type") or "unknown" for item in records)
+        chain_stage_count = sum(1 for key in TYPE_LABELS if type_counts.get(key, 0) > 0)
         lifecycle_counts = Counter(item.get("lifecycle_state") or "unknown" for item in records)
         product_classes = Counter(str(item.get("product_class") or "").strip() for item in records if str(item.get("product_class") or "").strip() not in {"", "*"})
         records.sort(key=lambda item: (
@@ -297,6 +315,9 @@ class RegulationMapService:
                 "pending_changes": len(changes),
                 "high_changes": sum(1 for item in changes if item.get("severity") == "high"),
                 "type_counts": dict(type_counts),
+                "chain_stage_count": chain_stage_count,
+                "chain_completeness": round(chain_stage_count / len(TYPE_LABELS), 4),
+                "chain_complete": chain_stage_count == len(TYPE_LABELS),
                 "lifecycle_counts": dict(lifecycle_counts),
                 "product_classes": [{"name": name, "count": count} for name, count in product_classes.most_common(12)],
                 "evidence_missing": sum(1 for item in records if not (item.get("source_document_id") and item.get("source_chunk_id"))),

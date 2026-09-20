@@ -11,11 +11,13 @@ from app.agent import KnowledgeAgent
 from app.architecture import current_architecture
 from app.catalog import catalog_detail, list_catalog
 from app.catalog_maintenance import CatalogMaintenanceService
+from app.business_dashboard import BusinessDashboardService
 from app.change_monitor import ChangeMonitorService
 from app.demo_graph import build_world_certification_demo_graph
 from app.governance import ALLOWED_STATUSES, analyze_product_access_v2, review_task_with_edits, world_map_v2
 from app.graph_backend import GraphBackendRouter
 from app.graph_governance import GraphGovernanceService
+from app.market_access import MarketAccessService
 from app.ingest import ingest_directory, ingest_file
 from app.model_gateway import build_rag_prompt, current_model_config, test_model_connection
 from app.ontology import ontology_schema
@@ -38,9 +40,11 @@ PROCESSING_TASK_PATH = ROOT / "data" / "processing_tasks.json"
 store = KnowledgeStore(DB_PATH)
 catalog_maintenance = CatalogMaintenanceService(store)
 change_monitor = ChangeMonitorService(store)
+business_dashboard = BusinessDashboardService(store, change_monitor)
 router = QueryRouter()
 retrieval = RetrievalPipeline(store)
 graph_service = GraphGovernanceService(store)
+market_access = MarketAccessService(store, graph_service)
 graph_backend = GraphBackendRouter(graph_service)
 agent = KnowledgeAgent(store, graph_service=graph_service, graph_backend=graph_backend)
 runtime_settings = RuntimeSettingsStore(SETTINGS_PATH)
@@ -242,6 +246,12 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 document_id = int(params.get("document_id", ["0"])[0] or 0)
                 self._send_json(catalog_maintenance.evidence_options(document_id=document_id or None))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        if parsed.path == "/api/business/dashboard":
+            try:
+                self._send_json(business_dashboard.snapshot(as_of=params.get("as_of", [None])[0] or None))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
@@ -502,6 +512,20 @@ class Handler(BaseHTTPRequestHandler):
                     product_class=payload.get("product_class", ""),
                     region_code=payload.get("region_code", ""),
                     include_demo=as_bool(payload.get("include_demo", False)),
+                    as_of=payload.get("as_of") or None,
+                )
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+                return
+            self._send_json(result)
+            return
+        if parsed.path == "/api/gma/access":
+            payload = self._read_json()
+            try:
+                result = market_access.evaluate(
+                    product=payload.get("product", ""),
+                    product_class=payload.get("product_class", ""),
+                    region_code=payload.get("region_code", ""),
                     as_of=payload.get("as_of") or None,
                 )
             except Exception as exc:

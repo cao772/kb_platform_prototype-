@@ -74,6 +74,14 @@ def main() -> None:
         assert paths["paths"]
         assert any(any(node["node_type"] == "certification" for node in path["nodes"]) for path in paths["paths"])
 
+        # EU member market projections inherit approved EU shared knowledge.
+        de_projection = graph.project_graph(region_code="DE", product_class="家用电器", as_of="2026-09-15")
+        assert de_projection["summary"]["nodes"] == projection["summary"]["nodes"]
+        assert {node["region_code"] for node in de_projection["nodes"]} == {"EU"}
+        de_paths = graph.certification_paths(region_code="DE", product_class="家用电器", as_of="2026-09-15")
+        assert de_paths["paths"]
+        assert any(any(node["node_type"] == "certification" for node in path["nodes"]) for path in de_paths["paths"])
+
         impact = graph.impact_analysis(record_ids[1])
         assert impact["record"]["code"] == "EU-REG-100"
         assert impact["summary"]["downstream_count"] >= 1

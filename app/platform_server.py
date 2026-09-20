@@ -6,16 +6,32 @@ from urllib.parse import parse_qs, urlparse
 
 from app.map_service import RegulationMapService
 from app.ontology_governance import OntologyGovernanceService
+from app.ontology_registry import OntologyRegistryService
 from app.regions import target_market_catalog
 from app.source_registry import SourceRegistryService
 from app.source_collection import SourceCollectionService
+from app.source_diff import SourceDifferenceService
+from app.source_impact import SourceImpactService
+from app.document_translation import DocumentTranslationService
+from app.formal_translation import FormalKnowledgeTranslationService
+from app.candidate_normalization import CandidateNormalizationService
+from app.gma_bilingual import GmaBilingualService
+from app.pipeline_readiness import PipelineReadinessService
 from app.server import Handler as BaseHandler
-from app.server import ROOT, STATIC_DIR, change_monitor, store
+from app.server import ROOT, STATIC_DIR, change_monitor, graph_service, store
 
 regulation_map = RegulationMapService(store)
 ontology_governance = OntologyGovernanceService(store)
+ontology_registry = OntologyRegistryService(store)
 source_registry = SourceRegistryService(store)
 source_collection = SourceCollectionService(store, source_registry, ROOT / "data" / "source_downloads", change_monitor=change_monitor)
+source_diff = SourceDifferenceService(store)
+source_impact = SourceImpactService(store, source_diff, graph_service)
+document_translation = DocumentTranslationService(store)
+formal_translation = FormalKnowledgeTranslationService(store)
+candidate_normalization = CandidateNormalizationService(store, ontology_registry)
+gma_bilingual = GmaBilingualService(store, graph_service, formal_translation)
+pipeline_readiness = PipelineReadinessService(store, ontology_registry, source_registry, source_collection, graph_service)
 
 
 class Handler(BaseHandler):
@@ -78,6 +94,128 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/collection/diff":
+            try:
+                self._send_json(source_diff.analyze(
+                    int(params.get("event_id", ["0"])[0] or 0),
+                    refresh=str(params.get("refresh", [""])[0]).lower() in {"1","true","yes","on"},
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/diff-reports":
+            try:
+                self._send_json(source_diff.list_reports(
+                    limit=min(int(params.get("limit", ["100"])[0] or 100), 500)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/diff-review":
+            try:
+                self._send_json(source_diff.review_state(
+                    int(params.get("event_id", ["0"])[0] or 0)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/impact-matches":
+            try:
+                self._send_json(source_impact.match_formal_records(
+                    int(params.get("event_id", ["0"])[0] or 0),
+                    limit=min(int(params.get("limit", ["50"])[0] or 50), 200),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/impact-case":
+            try:
+                self._send_json(source_impact.case(
+                    int(params.get("event_id", ["0"])[0] or 0)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/impact-cases":
+            try:
+                self._send_json(source_impact.list_cases(
+                    status=params.get("status", [""])[0],
+                    limit=min(int(params.get("limit", ["100"])[0] or 100), 500),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/source-document":
+            try:
+                self._send_json(document_translation.detail(
+                    int(params.get("id", ["0"])[0] or 0),
+                    target_language=params.get("lang", ["zh-CN"])[0] or "zh-CN",
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/source-document/raw":
+            try:
+                self._send_file(document_translation.raw_path(
+                    int(params.get("id", ["0"])[0] or 0)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/formal-translation":
+            try:
+                self._send_json(formal_translation.detail(
+                    int(params.get("id", ["0"])[0] or 0),
+                    target_language=params.get("lang", ["zh-CN"])[0] or "zh-CN",
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/candidate-normalization":
+            try:
+                self._send_json(candidate_normalization.suggestions(
+                    int(params.get("task_id", ["0"])[0] or 0)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/candidate-normalization/pending":
+            try:
+                self._send_json(candidate_normalization.list_pending(
+                    limit=min(int(params.get("limit", ["100"])[0] or 100), 500)
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/ontology-source/readiness":
+            try:
+                self._send_json(pipeline_readiness.summary())
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/gma/path":
+            try:
+                self._send_json(gma_bilingual.path(
+                    region_code=params.get("region", [""])[0],
+                    product_class=params.get("product_class", [""])[0],
+                    as_of=params.get("as_of", [None])[0] or None,
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/map/overview":
             try:
                 self._send_json(regulation_map.overview(
@@ -96,6 +234,32 @@ class Handler(BaseHandler):
                     params.get("region", [""])[0],
                     product_class=params.get("product_class", [""])[0],
                     as_of=params.get("as_of", [None])[0] or None,
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/ontology/versions":
+            self._send_json(ontology_registry.list_versions())
+            return
+
+        if parsed.path == "/api/ontology/terms":
+            try:
+                self._send_json(ontology_registry.list_terms(
+                    term_type=params.get("type", [""])[0],
+                    status=params.get("status", [""])[0],
+                    q=params.get("q", [""])[0],
+                    limit=min(int(params.get("limit", ["500"])[0] or 500), 2000),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/ontology/normalize":
+            try:
+                self._send_json(ontology_registry.normalize(
+                    params.get("q", [""])[0],
+                    term_type=params.get("type", [""])[0],
                 ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
@@ -135,6 +299,34 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path in {"/ontology-governance", "/ontology-governance.html"}:
+            self._send_file(STATIC_DIR / "ontology_governance.html")
+            return
+
+        if parsed.path in {"/pipeline-readiness", "/pipeline-readiness.html"}:
+            self._send_file(STATIC_DIR / "pipeline_readiness.html")
+            return
+
+        if parsed.path in {"/gma-path", "/gma-path.html"}:
+            self._send_file(STATIC_DIR / "gma_path.html")
+            return
+
+        if parsed.path in {"/candidate-normalization", "/candidate-normalization.html"}:
+            self._send_file(STATIC_DIR / "candidate_normalization.html")
+            return
+
+        if parsed.path in {"/source-document", "/source-document.html"}:
+            self._send_file(STATIC_DIR / "source_document.html")
+            return
+
+        if parsed.path in {"/source-impact", "/source-impact.html"}:
+            self._send_file(STATIC_DIR / "source_impact.html")
+            return
+
+        if parsed.path in {"/source-diff", "/source-diff.html"}:
+            self._send_file(STATIC_DIR / "source_diff.html")
+            return
+
         if parsed.path in {"/collection", "/collection.html"}:
             self._send_file(STATIC_DIR / "collection.html")
             return
@@ -160,6 +352,7 @@ class Handler(BaseHandler):
                 '<a class="top-link" href="/sources">来源台账</a>'
                 '<a class="top-link" href="/collection">采集执行</a>'
                 '<a class="top-link" href="/ontology">知识本体</a>'
+                '<a class="top-link" href="/gma-path">GMA准入路径</a>'
                 '<a class="top-link" href="/map">法规认证地图</a>'
                 '<a class="top-link" href="/changes">变化待办</a>'
             )
@@ -177,6 +370,172 @@ class Handler(BaseHandler):
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path == "/api/collection/diff-review":
+            try:
+                payload = self._read_json()
+                self._send_json(source_diff.save_review(
+                    int(payload.get("event_id") or 0),
+                    items=payload.get("items") or [],
+                    action=payload.get("action", "save"),
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/diff-translate":
+            try:
+                payload = self._read_json()
+                self._send_json(source_diff.translate_review_items(
+                    int(payload.get("event_id") or 0),
+                    items=payload.get("items"),
+                    target_language=payload.get("target_language", "zh-CN"),
+                    force=bool(payload.get("force", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/gma/path/translate":
+            try:
+                payload = self._read_json()
+                self._send_json(gma_bilingual.translate_path(
+                    region_code=payload.get("region_code", ""),
+                    product_class=payload.get("product_class", ""),
+                    as_of=payload.get("as_of") or None,
+                    force=bool(payload.get("force", False)),
+                    max_records=int(payload.get("max_records") or 100),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/candidate-normalization/apply":
+            try:
+                payload = self._read_json()
+                self._send_json(candidate_normalization.apply(
+                    int(payload.get("task_id") or 0),
+                    changes=payload.get("changes") or {},
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/formal-translation/translate":
+            try:
+                payload = self._read_json()
+                self._send_json(formal_translation.translate(
+                    int(payload.get("record_id") or 0),
+                    target_language=payload.get("target_language", "zh-CN"),
+                    force=bool(payload.get("force", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/formal-translation/review":
+            try:
+                payload = self._read_json()
+                self._send_json(formal_translation.save_review(
+                    int(payload.get("record_id") or 0),
+                    target_language=payload.get("target_language", "zh-CN"),
+                    translations=payload.get("translations") or {},
+                    action=payload.get("action", "save"),
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/source-document/translate":
+            try:
+                payload = self._read_json()
+                self._send_json(document_translation.translate(
+                    int(payload.get("document_id") or 0),
+                    target_language=payload.get("target_language", "zh-CN"),
+                    force=bool(payload.get("force", False)),
+                    max_segments=int(payload.get("max_segments") or 500),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/source-document/review":
+            try:
+                payload = self._read_json()
+                self._send_json(document_translation.save_review(
+                    int(payload.get("document_id") or 0),
+                    target_language=payload.get("target_language", "zh-CN"),
+                    segments=payload.get("segments") or [],
+                    action=payload.get("action", "save"),
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/impact-build":
+            try:
+                payload = self._read_json()
+                self._send_json(source_impact.build_case(
+                    int(payload.get("event_id") or 0),
+                    record_id=int(payload.get("record_id") or 0),
+                    refresh=bool(payload.get("refresh", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/impact-review":
+            try:
+                payload = self._read_json()
+                self._send_json(source_impact.save_case(
+                    int(payload.get("event_id") or 0),
+                    items=payload.get("items") or [],
+                    action=payload.get("action", "save"),
+                    operator=payload.get("operator", ""),
+                    note=payload.get("note", ""),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/ontology/version/create":
+            try:
+                payload = self._read_json()
+                self._send_json(ontology_registry.create_version(
+                    version_code=payload.get("version_code", ""),
+                    change_note=payload.get("change_note", ""),
+                    created_by=payload.get("created_by", ""),
+                    source_version_id=int(payload.get("source_version_id") or 0) or None,
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/ontology/version/activate":
+            try:
+                payload = self._read_json()
+                self._send_json(ontology_registry.activate_version(
+                    int(payload.get("id") or 0),
+                    operator=payload.get("operator", ""),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/ontology/terms/upsert":
+            try:
+                self._send_json(ontology_registry.upsert_term(self._read_json()))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/collection/run":
             try:
                 payload = self._read_json()
