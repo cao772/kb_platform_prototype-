@@ -77,3 +77,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage27_gma_bilingual.py
       - name: Stage28 pipeline readiness tests
         run: PYTHONPATH=. python tests/test_stage28_pipeline_readiness.py
+      - name: Stage29 full platform runtime smoke
+        run: PYTHONPATH=. python tests/test_stage29_full_platform_runtime.py
