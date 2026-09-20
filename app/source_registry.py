@@ -274,7 +274,7 @@ class SourceRegistryService:
         text = str(value or "").strip()
         if not text:
             return []
-        for delimiter in ("，", "；", ";", "|"):
+        for delimiter in ("，", "；", ";", "|", "、"):
             text = text.replace(delimiter, ",")
         return [item.strip() for item in text.split(",") if item.strip()]
 
