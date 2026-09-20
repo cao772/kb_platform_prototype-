@@ -4,6 +4,8 @@ import tempfile
 from pathlib import Path
 
 from app.compliance import analyze_product_access, build_world_map, extract_review_candidates
+from app.graph_governance import GraphGovernanceService
+from app.market_access import MarketAccessService
 from app.store import KnowledgeStore
 
 
@@ -50,6 +52,18 @@ def main() -> None:
         assert access["status"] == "evidence_ready"
         assert access["summary"]["regulations"] == 1
         assert access["decision_boundary"]
+
+        market_access = MarketAccessService(store, GraphGovernanceService(store)).evaluate(
+            product="演示电器",
+            product_class="家用电器",
+            region_code="EU",
+        )
+        assert market_access["summary"]["matched_records"] == 1
+        assert market_access["stages"][0]["key"] == "regulation"
+        assert market_access["stages"][0]["count"] == 1
+        assert market_access["source_record_ids"] == [int(approved["compliance_record_id"])]
+        assert "不复制" in market_access["organization_principle"]
+        assert market_access["status"] == "needs_review"
 
         empty_store = KnowledgeStore(Path(tmp) / "empty.db")
         demo_map = build_world_map(empty_store, include_demo=True)

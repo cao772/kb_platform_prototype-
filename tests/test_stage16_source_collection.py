@@ -92,7 +92,8 @@ def main() -> None:
     upload_code = Path("app/upload.py").read_text(encoding="utf-8")
     ingest_code = Path("app/ingest.py").read_text(encoding="utf-8")
 
-    assert "样板来源采集执行" in collection_page
+    assert "来源采集执行" in collection_page
+    assert "样板来源" not in collection_page
     assert "JSON API" in collection_page and "XML API" in collection_page
     assert "/api/collection/run" in collection_page
     assert 'href="/collection"' in sources_page
