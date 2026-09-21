@@ -1,0 +1,469 @@
+{
+  "version": "2026-09",
+  "principle": "产品分类先做统一标准产品树，再映射到各市场监管分类；监管分类只用于组织适用范围，最终法规/标准/认证结论仍来自已审核正式知识。",
+  "product_families": [
+    {
+      "id": "household_refrigeration",
+      "name_zh": "家用制冷器具",
+      "name_en": "Household refrigerating appliances",
+      "parent_path": [
+        "家用电器",
+        "厨房电器",
+        "制冷器具"
+      ],
+      "aliases": [
+        "电冰箱",
+        "冰箱",
+        "家用冰箱",
+        "refrigerator",
+        "fridge",
+        "refrigerating appliance"
+      ],
+      "children": [
+        {
+          "id": "refrigerator",
+          "name_zh": "冷藏箱/冰箱",
+          "aliases": [
+            "冷藏箱",
+            "单门冰箱",
+            "refrigerator"
+          ]
+        },
+        {
+          "id": "refrigerator_freezer",
+          "name_zh": "冷藏冷冻组合式冰箱",
+          "aliases": [
+            "冰箱冷冻柜",
+            "冷藏冷冻组合",
+            "refrigerator-freezer",
+            "fridge-freezer"
+          ]
+        },
+        {
+          "id": "freezer",
+          "name_zh": "家用冷冻柜/冷冻箱",
+          "aliases": [
+            "冷柜",
+            "冷冻柜",
+            "freezer"
+          ]
+        },
+        {
+          "id": "wine_storage",
+          "name_zh": "酒类储藏柜",
+          "aliases": [
+            "酒柜",
+            "wine cooler",
+            "wine storage appliance"
+          ]
+        },
+        {
+          "id": "commercial_refrigeration",
+          "name_zh": "商用制冷设备",
+          "aliases": [
+            "商用冰箱",
+            "商用冷柜",
+            "commercial refrigerator"
+          ]
+        }
+      ],
+      "decision_attributes": [
+        {
+          "key": "use_context",
+          "label": "使用场景",
+          "values": [
+            "household",
+            "commercial"
+          ],
+          "required": true
+        },
+        {
+          "key": "product_form",
+          "label": "产品形态",
+          "values": [
+            "refrigerator",
+            "refrigerator_freezer",
+            "freezer",
+            "wine_storage",
+            "commercial_refrigeration"
+          ],
+          "required": true
+        },
+        {
+          "key": "total_volume_l",
+          "label": "总容积(L)",
+          "type": "number"
+        },
+        {
+          "key": "built_in",
+          "label": "是否嵌入式",
+          "type": "boolean"
+        },
+        {
+          "key": "defrost_type",
+          "label": "除霜方式",
+          "values": [
+            "manual",
+            "partial_automatic",
+            "automatic"
+          ]
+        },
+        {
+          "key": "cooling_type",
+          "label": "冷却方式",
+          "values": [
+            "natural_convection",
+            "forced_circulation"
+          ]
+        },
+        {
+          "key": "freezer_position",
+          "label": "冷冻室位置",
+          "values": [
+            "none",
+            "top",
+            "bottom",
+            "side"
+          ]
+        },
+        {
+          "key": "wireless",
+          "label": "是否带Wi-Fi/蓝牙等无线功能",
+          "type": "boolean"
+        },
+        {
+          "key": "wine_storage",
+          "label": "是否以酒类储藏为主要用途",
+          "type": "boolean"
+        }
+      ],
+      "formal_match_terms": [
+        "家用电器",
+        "制冷器具",
+        "家用制冷器具",
+        "电冰箱",
+        "冰箱",
+        "refrigerator",
+        "refrigerating appliances"
+      ]
+    }
+  ],
+  "market_mappings": {
+    "EU": {
+      "market_category": "Refrigerating appliances / household refrigerating appliances",
+      "classification_basis": "欧盟生态设计、能源标签产品组及CN/HS贸易分类共同使用；准入判断以监管产品范围为主。",
+      "source_keys": [
+        "EU-EURLEX",
+        "EU-EPREL",
+        "EU-HARMONISED-STANDARDS",
+        "EU-ACCESS2MARKETS"
+      ],
+      "important_attributes": [
+        "product_form",
+        "total_volume_l",
+        "built_in",
+        "wine_storage",
+        "wireless"
+      ],
+      "regulatory_dimensions": [
+        "产品安全",
+        "生态设计",
+        "能源标签",
+        "电磁兼容",
+        "有害物质",
+        "废弃物责任",
+        "无线电（如适用）"
+      ],
+      "research_leads": [
+        "Commission Regulation (EU) 2019/2019 — refrigerating appliances ecodesign",
+        "Commission Delegated Regulation (EU) 2019/2016 — refrigerating appliances energy labelling",
+        "Directive 2014/35/EU — electrical safety scope where applicable",
+        "Directive 2014/30/EU — electromagnetic compatibility where applicable",
+        "Directive 2011/65/EU — RoHS where applicable"
+      ],
+      "mapping_status": "official_reference_confirmed"
+    },
+    "US": {
+      "market_category": "Refrigerators, refrigerator-freezers, freezers and miscellaneous refrigeration products",
+      "classification_basis": "DOE appliance product classes + FTC EnergyGuide labeling + federal trade/customs classification.",
+      "source_keys": [
+        "US-ECFR",
+        "US-FEDREG",
+        "US-DOE-EFFICIENCY",
+        "US-CPSC"
+      ],
+      "important_attributes": [
+        "product_form",
+        "total_volume_l",
+        "built_in",
+        "defrost_type",
+        "freezer_position",
+        "wireless"
+      ],
+      "regulatory_dimensions": [
+        "能效最低标准",
+        "DOE测试程序",
+        "认证申报",
+        "EnergyGuide标签",
+        "消费品安全",
+        "无线电（如适用）"
+      ],
+      "research_leads": [
+        "10 CFR Part 430 / Appendix A & B — refrigeration test procedures",
+        "10 CFR Part 429 — certification/compliance",
+        "16 CFR Part 305 — Energy Labeling Rule"
+      ],
+      "mapping_status": "official_reference_confirmed"
+    },
+    "CA": {
+      "market_category": "Refrigerators and refrigerator-freezers / freezers / miscellaneous refrigeration products",
+      "classification_basis": "NRCan Energy Efficiency Regulations产品定义与产品type；同时考虑省级能效要求。",
+      "source_keys": [
+        "CA-LAW",
+        "CA-ISED",
+        "CA-HEALTH-PRODUCT-SAFETY"
+      ],
+      "important_attributes": [
+        "product_form",
+        "total_volume_l",
+        "defrost_type",
+        "built_in",
+        "freezer_position"
+      ],
+      "regulatory_dimensions": [
+        "联邦能效标准",
+        "EnerGuide标签",
+        "能效报告",
+        "测试标准",
+        "省级附加要求"
+      ],
+      "research_leads": [
+        "Canada Energy Efficiency Regulations — refrigerators and refrigerator-freezers",
+        "CAN/CSA-C300 family — energy performance testing"
+      ],
+      "mapping_status": "official_reference_confirmed"
+    },
+    "JP": {
+      "market_category": "電気冷蔵庫 / 電気冷凍庫",
+      "classification_basis": "Top Runner产品范围与区分，按家用/商用、冷却方式、额定内容积等属性细分。",
+      "source_keys": [
+        "JP-LAW",
+        "JP-METI-PRODUCT-SAFETY",
+        "JP-ANRE"
+      ],
+      "important_attributes": [
+        "use_context",
+        "product_form",
+        "total_volume_l",
+        "cooling_type",
+        "wireless"
+      ],
+      "regulatory_dimensions": [
+        "Top Runner能效",
+        "JIS测试方法",
+        "产品安全",
+        "表示要求",
+        "无线电（如适用）"
+      ],
+      "research_leads": [
+        "Top Runner — Electric Refrigerators",
+        "JIS C 9801-3 — household refrigerator energy measurement"
+      ],
+      "mapping_status": "official_reference_confirmed"
+    },
+    "GB": {
+      "market_category": "Household refrigerating appliances",
+      "classification_basis": "GB能源标签/生态设计产品分类；北爱尔兰与GB适用制度需区分。",
+      "source_keys": [
+        "GB-LAW",
+        "GB-OPSS",
+        "GB-DESNZ",
+        "GB-STD"
+      ],
+      "important_attributes": [
+        "product_form",
+        "total_volume_l",
+        "built_in",
+        "wireless"
+      ],
+      "regulatory_dimensions": [
+        "生态设计",
+        "能源标签",
+        "指定标准",
+        "产品安全",
+        "无线电（如适用）"
+      ],
+      "research_leads": [
+        "UK energy information regulations — refrigerating appliances",
+        "UK designated standards — household refrigeration appliances"
+      ],
+      "mapping_status": "official_reference_confirmed"
+    },
+    "CH": {
+      "market_category": "Refrigerators and freezers",
+      "classification_basis": "瑞士能效条例产品分类；冰箱/冷冻柜能效标签要求与欧盟相关法规存在引用关系。",
+      "source_keys": [
+        "CH-LAW",
+        "CH-SFOE",
+        "CH-ENERGY-EFFICIENCY",
+        "CH-STD"
+      ],
+      "important_attributes": [
+        "product_form",
+        "total_volume_l",
+        "built_in"
+      ],
+      "regulatory_dimensions": [
+        "能效最低要求",
+        "能源标签",
+        "测试要求",
+        "产品安全"
+      ],
+      "research_leads": [
+        "Swiss Energy Efficiency Ordinance (EnEV) Annex 1.1",
+        "EU 2019/2019 and 2019/2016 as referenced by Swiss energy guidance"
+      ],
+      "mapping_status": "official_reference_confirmed"
+    },
+    "AU": {
+      "market_category": "Household refrigerating appliances",
+      "classification_basis": "GEMS/E3产品分类，家用冰箱、冷冻柜、冷藏冷冻组合按产品class和能效规则管理。",
+      "source_keys": [
+        "AU-LAW",
+        "AU-ENERGY-RATING",
+        "AU-PRODUCT-SAFETY",
+        "AU-STD"
+      ],
+      "important_attributes": [
+        "product_form",
+        "total_volume_l",
+        "built_in",
+        "wine_storage"
+      ],
+      "regulatory_dimensions": [
+        "GEMS注册",
+        "MEPS",
+        "能源标签",
+        "测试标准",
+        "电气产品安全"
+      ],
+      "research_leads": [
+        "GEMS Household Refrigerating Appliances determination",
+        "AS/NZS 4474 / AS/NZS 62552 family"
+      ],
+      "mapping_status": "research_seed"
+    },
+    "NZ": {
+      "market_category": "Household refrigerating appliances — fridges, freezers and fridge/freezers",
+      "classification_basis": "E3/EECA产品分类；2026年起与澳大利亚GEMS冰箱规则进一步对齐，但标签过渡安排不同。",
+      "source_keys": [
+        "NZ-LAW",
+        "NZ-EECA",
+        "NZ-PRODUCT-SAFETY",
+        "NZ-STANDARDS"
+      ],
+      "important_attributes": [
+        "product_form",
+        "total_volume_l",
+        "wine_storage",
+        "use_context"
+      ],
+      "regulatory_dimensions": [
+        "MEPS",
+        "强制能效标签",
+        "产品注册",
+        "测试标准",
+        "产品安全"
+      ],
+      "research_leads": [
+        "Energy Efficiency (Energy Using Products) Regulations",
+        "AS/NZS 4474:2018 + A1",
+        "AS/NZS 62552.1-.3:2018"
+      ],
+      "mapping_status": "official_reference_confirmed"
+    },
+    "SG": {
+      "market_category": "Refrigerator / refrigerator-freezer / commercial storage refrigerator",
+      "classification_basis": "NEA Mandatory Energy Labelling Scheme产品类型 + Enterprise Singapore消费品安全范围。",
+      "source_keys": [
+        "SG-LAW",
+        "SG-NEA-ENERGY",
+        "SG-CPSO",
+        "SG-STANDARDS"
+      ],
+      "important_attributes": [
+        "product_form",
+        "total_volume_l",
+        "use_context"
+      ],
+      "regulatory_dimensions": [
+        "能效标签",
+        "最低能效要求",
+        "受控商品安全要求（如适用）",
+        "注册/供应商义务"
+      ],
+      "research_leads": [
+        "NEA Energy Label — refrigerator categories"
+      ],
+      "mapping_status": "official_reference_confirmed"
+    },
+    "KR": {
+      "market_category": "전기냉장고 / 전기냉동고（电冰箱/电冷冻柜）",
+      "classification_basis": "韩国KC产品安全分类与能效等级产品分类需要按具体产品形态、容量及功能核对。",
+      "source_keys": [
+        "KR-LAW",
+        "KR-SAFETYKOREA",
+        "KR-KEA",
+        "KR-STANDARD-PORTAL"
+      ],
+      "important_attributes": [
+        "product_form",
+        "total_volume_l",
+        "wireless"
+      ],
+      "regulatory_dimensions": [
+        "KC产品安全",
+        "能效等级",
+        "测试标准",
+        "无线电适合性（如适用）"
+      ],
+      "research_leads": [],
+      "mapping_status": "research_seed"
+    },
+    "NO": {
+      "market_category": "Household refrigerating appliances",
+      "classification_basis": "挪威在EEA框架下组织相关产品要求；具体实施法规、过渡期和国家执行要求需以挪威正式来源复核。",
+      "source_keys": [
+        "NO-LAW",
+        "NO-DSB",
+        "NO-STD"
+      ],
+      "important_attributes": [
+        "product_form",
+        "total_volume_l",
+        "wireless"
+      ],
+      "regulatory_dimensions": [
+        "能效/标签",
+        "产品安全",
+        "市场监管",
+        "无线电（如适用）"
+      ],
+      "research_leads": [],
+      "mapping_status": "research_seed"
+    }
+  },
+  "eu_member_markets": [
+    "DE",
+    "FR",
+    "IT",
+    "ES",
+    "NL",
+    "BE",
+    "SE",
+    "DK",
+    "FI",
+    "AT",
+    "IE"
+  ]
+}
