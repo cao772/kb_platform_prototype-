@@ -472,6 +472,69 @@ class SourceCollectionService:
     def _source_for_profile(self, profile: dict[str, Any]) -> dict[str, Any]:
         return self.source_registry.by_key(profile["source_key"])
 
+    def run_first_wave_batch(
+        self,
+        *,
+        offset: int = 0,
+        limit: int = 5,
+        auto_ingest: bool = True,
+        auto_extract: bool = False,
+        use_model: bool = False,
+    ) -> dict[str, Any]:
+        wave = self.first_wave_profiles()["items"]
+        start = max(0, int(offset))
+        batch_size = max(1, min(int(limit), 10))
+        selected = wave[start : start + batch_size]
+        results: list[dict[str, Any]] = []
+        for item in selected:
+            profile = dict(item.get("profile") or {})
+            profile_id = int(profile.get("id") or 0)
+            if not profile_id:
+                results.append({
+                    "source_key": item.get("source_key"),
+                    "source_name": item.get("source_name"),
+                    "status": "failed",
+                    "error": "collection profile not ready",
+                })
+                continue
+            try:
+                result = self.run(
+                    profile_id,
+                    auto_ingest=auto_ingest,
+                    auto_extract=auto_extract,
+                    use_model=use_model,
+                )
+                results.append({
+                    "source_key": item.get("source_key"),
+                    "source_name": item.get("source_name"),
+                    "profile_key": profile.get("profile_key"),
+                    "status": "completed",
+                    "content_status": result.get("content_status"),
+                    "document_id": result.get("document_id"),
+                    "bytes_received": result.get("bytes_received"),
+                })
+            except Exception as exc:
+                results.append({
+                    "source_key": item.get("source_key"),
+                    "source_name": item.get("source_name"),
+                    "profile_key": profile.get("profile_key"),
+                    "status": "failed",
+                    "error": str(exc),
+                })
+        return {
+            "offset": start,
+            "limit": batch_size,
+            "next_offset": start + len(selected),
+            "done": start + len(selected) >= len(wave),
+            "results": results,
+            "summary": {
+                "requested": len(selected),
+                "success": sum(1 for item in results if item.get("status") == "completed"),
+                "failed": sum(1 for item in results if item.get("status") == "failed"),
+                **self.first_wave_profiles()["summary"],
+            },
+        }
+
     def run(
         self,
         profile_id: int,
