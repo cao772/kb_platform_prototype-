@@ -184,6 +184,7 @@ def analyze_product_access_v2(
     region_code: str,
     include_demo: bool = False,
     as_of: str | None = None,
+    product_class_terms: list[str] | tuple[str, ...] | None = None,
 ) -> dict[str, Any]:
     requested_region = canonical_region_code(region_code)
     scope_codes = set(knowledge_scope_codes(requested_region)) if requested_region else set()
@@ -202,8 +203,14 @@ def analyze_product_access_v2(
         demo_data = True
 
     prepared = []
+    match_terms = [str(item).strip() for item in (product_class_terms or []) if str(item).strip()]
+    if product_class and product_class not in match_terms:
+        match_terms.insert(0, product_class)
     for source in records:
-        if not _matches_product_class(source, product_class):
+        if match_terms:
+            if not any(_matches_product_class(source, term) for term in match_terms):
+                continue
+        elif not _matches_product_class(source, product_class):
             continue
         item = dict(source)
         item["lifecycle_state"] = lifecycle_state(item, as_of=as_of)
