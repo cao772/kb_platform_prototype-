@@ -18,6 +18,8 @@ SOURCE_STATUSES = {"research", "validated", "connected", "paused", "archived"}
 SOURCE_PRIORITIES = {"A", "B", "C"}
 ACCESS_METHODS = {"html", "pdf", "xml", "api", "rss", "mixed", "metadata_only"}
 REFRESH_POLICIES = {"daily", "weekly", "monthly", "event", "manual"}
+HARVESTABILITY_TYPES = {"direct", "adapter", "metadata_only", "manual_authorized", "unavailable"}
+VERIFICATION_STATUSES = {"pending", "preclassified", "verified", "failed"}
 
 SOURCE_EXPORT_COLUMNS = (
     ("来源编码", "source_key"),
@@ -33,6 +35,12 @@ SOURCE_EXPORT_COLUMNS = (
     ("语言", "languages"),
     ("文件类型", "file_types"),
     ("更新频率", "refresh_policy"),
+    ("可采集性", "harvestability"),
+    ("核验状态", "verification_status"),
+    ("最近核验时间", "last_verified_at"),
+    ("HTTP状态", "last_http_status"),
+    ("内容类型", "last_content_type"),
+    ("核验说明", "verification_note"),
     ("网站简述", "source_summary"),
     ("可提取资料简述", "extractable_summary"),
     ("采集范围", "crawl_scope"),
@@ -54,6 +62,12 @@ SOURCE_HEADER_ALIASES = {
     "语言": "languages", "languages": "languages",
     "文件类型": "file_types", "file_types": "file_types",
     "更新频率": "refresh_policy", "refresh_policy": "refresh_policy",
+    "可采集性": "harvestability", "harvestability": "harvestability",
+    "核验状态": "verification_status", "verification_status": "verification_status",
+    "最近核验时间": "last_verified_at", "last_verified_at": "last_verified_at",
+    "HTTP状态": "last_http_status", "last_http_status": "last_http_status",
+    "内容类型": "last_content_type", "last_content_type": "last_content_type",
+    "核验说明": "verification_note", "verification_note": "verification_note",
     "网站简述": "source_summary", "source_summary": "source_summary",
     "可提取资料简述": "extractable_summary", "extractable_summary": "extractable_summary",
     "采集范围": "crawl_scope", "crawl_scope": "crawl_scope",
@@ -176,11 +190,27 @@ SEED_SOURCES: tuple[SeedSource, ...] = (
 )
 
 
+def _preclassify_harvestability(item: dict[str, Any]) -> tuple[str, str]:
+    access_method = str(item.get("access_method") or "html")
+    source_type = str(item.get("source_type") or "")
+    notes = (str(item.get("notes") or "") + " " + str(item.get("extractable_summary") or "")).lower()
+    if access_method == "metadata_only":
+        return "metadata_only", "标准/目录类来源按公开元数据采集，标准全文仍按授权范围处理。"
+    if source_type == "standard" and any(token in notes for token in ("licence", "license", "版权", "授权")):
+        return "manual_authorized", "存在标准全文版权或许可边界，优先自动采集公开元数据，全文需授权后处理。"
+    if access_method in {"html", "pdf", "xml", "api", "rss"}:
+        return "direct", f"按{access_method}入口具备直接采集条件，仍需联网实测确认访问和内容结构。"
+    if access_method == "mixed":
+        return "adapter", "来源包含多种页面或资料形态，建议先联网核验，再配置站点级采集适配。"
+    return "adapter", "当前接入方式需要进一步确认并配置采集适配。"
+
+
 class SourceRegistryService:
     def __init__(self, store: KnowledgeStore):
         self.store = store
         self._ensure_schema()
         self._seed()
+        self._ensure_preclassification()
 
     def _ensure_schema(self) -> None:
         with self.store.lock:
@@ -201,6 +231,14 @@ class SourceRegistryService:
                     languages_json TEXT DEFAULT '[]',
                     file_types_json TEXT DEFAULT '[]',
                     refresh_policy TEXT DEFAULT 'weekly',
+                    harvestability TEXT DEFAULT '',
+                    verification_status TEXT DEFAULT 'pending',
+                    last_verified_at TEXT DEFAULT '',
+                    last_http_status INTEGER DEFAULT 0,
+                    last_content_type TEXT DEFAULT '',
+                    last_final_url TEXT DEFAULT '',
+                    robots_allowed TEXT DEFAULT 'unknown',
+                    verification_note TEXT DEFAULT '',
                     source_summary TEXT DEFAULT '',
                     extractable_summary TEXT DEFAULT '',
                     crawl_scope TEXT DEFAULT '',
@@ -223,6 +261,19 @@ class SourceRegistryService:
                 self.store.conn.execute("ALTER TABLE knowledge_sources ADD COLUMN source_summary TEXT DEFAULT ''")
             if "extractable_summary" not in columns:
                 self.store.conn.execute("ALTER TABLE knowledge_sources ADD COLUMN extractable_summary TEXT DEFAULT ''")
+            migrations = {
+                "harvestability": "TEXT DEFAULT ''",
+                "verification_status": "TEXT DEFAULT 'pending'",
+                "last_verified_at": "TEXT DEFAULT ''",
+                "last_http_status": "INTEGER DEFAULT 0",
+                "last_content_type": "TEXT DEFAULT ''",
+                "last_final_url": "TEXT DEFAULT ''",
+                "robots_allowed": "TEXT DEFAULT 'unknown'",
+                "verification_note": "TEXT DEFAULT ''",
+            }
+            for column, definition in migrations.items():
+                if column not in columns:
+                    self.store.conn.execute(f"ALTER TABLE knowledge_sources ADD COLUMN {column} {definition}")
             self.store.conn.commit()
 
     def _seed(self) -> None:
@@ -307,6 +358,76 @@ class SourceRegistryService:
                 )
             self.store.conn.commit()
 
+    def _ensure_preclassification(self) -> None:
+        with self.store.lock:
+            rows = self.store.conn.execute(
+                "SELECT * FROM knowledge_sources WHERE harvestability='' OR verification_status='pending'"
+            ).fetchall()
+            for row in rows:
+                item = dict(row)
+                harvestability, note = _preclassify_harvestability(item)
+                self.store.conn.execute(
+                    """UPDATE knowledge_sources
+                       SET harvestability=?,
+                           verification_status=CASE WHEN verification_status='pending' THEN 'preclassified' ELSE verification_status END,
+                           verification_note=CASE WHEN verification_note='' THEN ? ELSE verification_note END
+                       WHERE id=?""",
+                    (harvestability, note, int(item["id"])),
+                )
+            self.store.conn.commit()
+
+    def record_verification(self, source_id: int, payload: dict[str, Any]) -> dict[str, Any]:
+        harvestability = str(payload.get("harvestability") or "").strip()
+        verification_status = str(payload.get("verification_status") or "").strip()
+        if harvestability not in HARVESTABILITY_TYPES:
+            raise ValueError(f"unsupported harvestability: {harvestability}")
+        if verification_status not in VERIFICATION_STATUSES:
+            raise ValueError(f"unsupported verification status: {verification_status}")
+        params = (
+            harvestability,
+            verification_status,
+            str(payload.get("last_verified_at") or ""),
+            int(payload.get("last_http_status") or 0),
+            str(payload.get("last_content_type") or ""),
+            str(payload.get("last_final_url") or ""),
+            str(payload.get("robots_allowed") or "unknown"),
+            str(payload.get("verification_note") or ""),
+            int(source_id),
+        )
+        with self.store.lock:
+            cur = self.store.conn.execute(
+                """UPDATE knowledge_sources
+                   SET harvestability=?,verification_status=?,last_verified_at=?,
+                       last_http_status=?,last_content_type=?,last_final_url=?,
+                       robots_allowed=?,verification_note=?,updated_at=CURRENT_TIMESTAMP
+                   WHERE id=?""",
+                params,
+            )
+            if not cur.rowcount:
+                raise ValueError("source not found")
+            self.store.conn.commit()
+        return self.detail(source_id)
+
+    def verification_summary(self) -> dict[str, Any]:
+        with self.store.lock:
+            rows = self.store.conn.execute(
+                """SELECT harvestability,verification_status,COUNT(*) count
+                   FROM knowledge_sources
+                   WHERE status!='archived'
+                   GROUP BY harvestability,verification_status"""
+            ).fetchall()
+        by_harvestability: Counter[str] = Counter()
+        by_verification: Counter[str] = Counter()
+        for row in rows:
+            count = int(row["count"] or 0)
+            by_harvestability[str(row["harvestability"] or "unknown")] += count
+            by_verification[str(row["verification_status"] or "pending")] += count
+        return {
+            "total": sum(by_harvestability.values()),
+            "by_harvestability": dict(by_harvestability),
+            "by_verification_status": dict(by_verification),
+        }
+
     def _row(self, row) -> dict[str, Any]:
         item = dict(row)
         item["shared_scope"] = bool(item.get("shared_scope"))
@@ -360,6 +481,8 @@ class SourceRegistryService:
             "target_markets_with_sources": len(regions & target_codes),
             "by_type": dict(active_by_type),
             "by_status": dict(by_status),
+            "by_harvestability": dict(Counter(item.get("harvestability") or "unknown" for item in active_items)),
+            "by_verification_status": dict(Counter(item.get("verification_status") or "pending" for item in active_items)),
             "shared_sources": sum(1 for item in items if item.get("shared_scope")),
         }
 
@@ -569,7 +692,7 @@ class SourceRegistryService:
                         value = "是" if value else "否"
                     row.append(value)
                 sheet.append(row)
-        widths = [18, 12, 28, 16, 28, 44, 14, 10, 12, 10, 18, 18, 12, 48, 52, 42, 36, 36]
+        widths = [18, 12, 28, 16, 28, 44, 14, 10, 12, 10, 18, 18, 12, 16, 14, 20, 12, 24, 48, 48, 52, 42, 36, 36]
         for index, width in enumerate(widths, start=1):
             sheet.column_dimensions[sheet.cell(row=1, column=index).column_letter].width = width
         sheet.freeze_panes = "A2"
