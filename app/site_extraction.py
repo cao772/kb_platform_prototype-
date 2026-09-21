@@ -76,9 +76,15 @@ class _HTMLCollector(HTMLParser):
         self.headings: list[dict[str, str]] = []
         self.text_parts: list[str] = []
         self.meta: dict[str, str] = {}
+        self._skip_depth = 0
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = {str(k).lower(): str(v or "") for k, v in attrs}
+        if tag in {"script", "style", "noscript", "svg"}:
+            self._skip_depth += 1
+            return
+        if self._skip_depth:
+            return
         if tag == "a":
             self._link_href = values.get("href", "")
             self._link_text = []
@@ -95,6 +101,11 @@ class _HTMLCollector(HTMLParser):
                 self.meta[name.lower()] = content
 
     def handle_endtag(self, tag: str) -> None:
+        if tag in {"script", "style", "noscript", "svg"} and self._skip_depth:
+            self._skip_depth -= 1
+            return
+        if self._skip_depth:
+            return
         if tag == "a" and self._link_href:
             text = " ".join(" ".join(self._link_text).split())
             self.links.append({"href": self._link_href, "text": text})
@@ -111,6 +122,8 @@ class _HTMLCollector(HTMLParser):
             self._heading_parts = []
 
     def handle_data(self, data: str) -> None:
+        if self._skip_depth:
+            return
         text = " ".join(str(data or "").split())
         if not text:
             return
