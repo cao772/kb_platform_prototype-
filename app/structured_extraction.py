@@ -11,6 +11,34 @@ from app.model_gateway import current_model_config
 from app.store import KnowledgeStore
 
 ALLOWED_TYPES = {"regulation", "standard", "certification", "requirement", "test_item"}
+CONFIDENCE_LABELS = {
+    "high": 0.90,
+    "medium": 0.75,
+    "low": 0.55,
+    "高": 0.90,
+    "中": 0.75,
+    "低": 0.55,
+}
+
+
+def _normalize_confidence(value: Any) -> float:
+    """Accept model confidence labels as well as numeric 0-1 or percentage values."""
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in CONFIDENCE_LABELS:
+            return CONFIDENCE_LABELS[normalized]
+        if normalized.endswith("%"):
+            try:
+                return max(0.0, min(float(normalized[:-1]) / 100, 0.99))
+            except ValueError:
+                return 0.75
+    try:
+        numeric = float(value if value not in (None, "") else 0.75)
+    except (TypeError, ValueError):
+        return 0.75
+    if 1 < numeric <= 100:
+        numeric /= 100
+    return max(0.0, min(numeric, 0.99))
 
 
 def _infer_lifecycle(text: str) -> dict[str, str]:
@@ -105,6 +133,7 @@ def _call_structured_model(chunks: list[dict[str, Any]]) -> tuple[list[dict[str,
         "candidate字段：record_type(regulation|standard|certification|requirement|test_item),"
         "name,code,region_code,region_name,product_class,status(unknown|draft|active|transition|repealed|withdrawn|superseded),"
         "version,effective_from,effective_to,authority,applicability_scope,exceptions,source_chunk_index,confidence。"
+        "confidence必须是0到1之间的数字。"
         "日期使用YYYY-MM-DD；没有依据的字段留空。"
     )
     user = "请从以下证据分片抽取候选，候选后续还会人工审核：\n" + json.dumps(body_chunks, ensure_ascii=False)
@@ -151,7 +180,7 @@ def _create_llm_tasks(store: KnowledgeStore, document_id: int, chunks: list[dict
         chunk = by_index.get(chunk_index)
         if not chunk:
             continue
-        confidence = max(0.0, min(float(raw.get("confidence") or 0.75), 0.99))
+        confidence = _normalize_confidence(raw.get("confidence"))
         attributes = {
             "excerpt": chunk["text"][:500],
             "extraction_method": "model_constrained_v2",

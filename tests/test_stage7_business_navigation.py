@@ -35,9 +35,11 @@ def main() -> None:
     assert "正式知识目录" in html
     assert "变化待办" in html
     assert "法规认证地图" in html
+    assert "来源台账" in html
     assert 'href="/catalog"' in html
     assert 'href="/changes"' in html
     assert 'href="/map"' in html
+    assert 'href="/sources"' in html
     assert "loadBusinessDashboard" in html
     assert "/api/business/dashboard" in html
 

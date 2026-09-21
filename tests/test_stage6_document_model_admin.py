@@ -11,6 +11,10 @@ from app.store import KnowledgeStore
 
 
 def main() -> None:
+    admin_page = (Path(__file__).resolve().parents[1] / "static" / "admin.html").read_text(encoding="utf-8")
+    assert "const refreshedCard=document.querySelector" in admin_page
+    assert "saveSettings({throwOnError:true})" in admin_page
+
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         settings_file = root / "runtime_settings.json"

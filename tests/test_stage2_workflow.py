@@ -6,12 +6,17 @@ from pathlib import Path
 
 from app.governance import analyze_product_access_v2, lifecycle_state, review_task_with_edits, world_map_v2
 from app.ingest import ingest_file
-from app.structured_extraction import extract_review_candidates_v2
+from app.structured_extraction import _normalize_confidence, extract_review_candidates_v2
 from app.store import KnowledgeStore
 from app.upload import save_browser_upload
 
 
 def main() -> None:
+    assert _normalize_confidence("high") == 0.90
+    assert _normalize_confidence("中") == 0.75
+    assert _normalize_confidence("90%") == 0.90
+    assert _normalize_confidence("unexpected") == 0.75
+
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         store = KnowledgeStore(root / "knowledge.db")
