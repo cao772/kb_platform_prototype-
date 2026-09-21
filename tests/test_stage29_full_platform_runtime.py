@@ -43,6 +43,7 @@ def main() -> None:
             "/graph": "知识图谱",
             "/ontology": "知识本体",
             "/admin": "资料及模型配置",
+            "/parse-review": "文档解析复核",
             "/sources": "来源台账",
             "/collection": "采集执行",
             "/ontology-governance": "知识本体",
