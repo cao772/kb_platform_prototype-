@@ -87,6 +87,7 @@ class MarketAccessService:
             region_code=access["region_code"],
             product_class=product_class,
             as_of=effective_date,
+            product_class_terms=classification.get("formal_match_terms") or None,
         )
 
         stages = []
