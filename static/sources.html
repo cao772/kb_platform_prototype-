@@ -31,7 +31,7 @@
       <select id="region"><option value="">全部国家/地区</option></select>
       <select id="type"><option value="">全部来源类别</option><option value="regulation">法规</option><option value="standard">标准</option><option value="certification">认证</option><option value="gma">GMA/市场准入</option></select>
       <select id="status"><option value="">全部状态</option><option value="research">调研中</option><option value="validated">已确认</option><option value="connected">已接入</option><option value="paused">暂停</option><option value="archived">已归档</option></select>
-      <input id="q" placeholder="来源编码、名称、机构、网址、采集范围">
+      <input id="q" placeholder="来源编码、名称、机构、网址、网站简述、可提取资料">
       <button class="btn" onclick="loadSources()">查询</button>
     </div>
     <div class="toolbar">
@@ -85,6 +85,8 @@
           <div><label>语言</label><input id="eLanguages" placeholder="如 en、de 或 multi，逗号分隔"></div>
           <div><label>文件类型</label><input id="eFiles" placeholder="如 html、pdf、xml"></div>
         </div>
+        <label>网站简述</label><textarea id="eSummary" placeholder="说明网站/机构职责及其在法规认证链中的用途"></textarea>
+        <label>可提取资料简述</label><textarea id="eExtract" placeholder="说明可获取的法规、标准、认证规则、公告、名单、API/PDF等资料"></textarea>
         <label>采集范围</label><textarea id="eScope"></textarea>
         <label>备注</label><textarea id="eNotes"></textarea>
         <label>项目维护说明</label><textarea id="eOwner"></textarea>
@@ -158,7 +160,7 @@ async function loadSources(){
     $('progressBar').style.width=ratio+'%';
     $('progressText').textContent='有效来源 '+(s.registered_sources||0)+' / '+(s.target_sources||300)+'，当前覆盖 '+(s.target_markets_with_sources||0)+' 个目标市场。';
     selected.clear();updateSelectedCount();
-    const rows=(d.items||[]).map(x=>'<tr id="source-row-'+x.id+'"><td onclick="event.stopPropagation()"><input class="check" data-source-id="'+x.id+'" type="checkbox" onchange="toggleOne('+x.id+',this.checked)"></td><td onclick="showSource('+x.id+')">'+esc(x.region_code)+'</td><td onclick="showSource('+x.id+')"><div class="source-name">'+esc(x.source_name)+'</div><div class="source-scope">'+esc(x.source_key)+' · '+esc(x.crawl_scope||'')+'</div></td><td onclick="showSource('+x.id+')">'+esc(typeLabel(x.source_type))+'</td><td onclick="showSource('+x.id+')">'+esc(x.authority||'')+'</td><td onclick="showSource('+x.id+')">'+esc(accessLabel(x.access_method))+'</td><td onclick="showSource('+x.id+')"><span class="tag '+esc(x.priority)+'">'+esc(x.priority)+'</span></td><td onclick="showSource('+x.id+')"><span class="tag status '+esc(x.status)+'">'+esc(statusLabel(x.status))+'</span></td><td onclick="showSource('+x.id+')">'+esc(x.refresh_policy||'')+'</td><td><a class="url" href="'+esc(x.base_url)+'" target="_blank">打开</a></td></tr>').join('');
+    const rows=(d.items||[]).map(x=>'<tr id="source-row-'+x.id+'"><td onclick="event.stopPropagation()"><input class="check" data-source-id="'+x.id+'" type="checkbox" onchange="toggleOne('+x.id+',this.checked)"></td><td onclick="showSource('+x.id+')">'+esc(x.region_code)+'</td><td onclick="showSource('+x.id+')"><div class="source-name">'+esc(x.source_name)+'</div><div class="source-scope">'+esc(x.source_key)+' · '+esc(x.source_summary||x.crawl_scope||'')+'</div></td><td onclick="showSource('+x.id+')">'+esc(typeLabel(x.source_type))+'</td><td onclick="showSource('+x.id+')">'+esc(x.authority||'')+'</td><td onclick="showSource('+x.id+')">'+esc(accessLabel(x.access_method))+'</td><td onclick="showSource('+x.id+')"><span class="tag '+esc(x.priority)+'">'+esc(x.priority)+'</span></td><td onclick="showSource('+x.id+')"><span class="tag status '+esc(x.status)+'">'+esc(statusLabel(x.status))+'</span></td><td onclick="showSource('+x.id+')">'+esc(x.refresh_policy||'')+'</td><td><a class="url" href="'+esc(x.base_url)+'" target="_blank">打开</a></td></tr>').join('');
     $('rows').innerHTML=rows||'<tr><td colspan="10" class="empty">当前筛选条件下没有来源。</td></tr>';
   }catch(e){$('rows').innerHTML='<tr><td colspan="10" class="empty">'+esc(e.message)+'</td></tr>'}
 }
@@ -169,7 +171,7 @@ function clearForm(){
   $('detailTitle').textContent='新增来源';$('eKey').readOnly=false;
   $('eKey').value='';$('eRegion').value='DE';$('eName').value='';$('eType').value='regulation';$('eAuthority').value='';$('eUrl').value='';
   $('eAccess').value='html';$('ePriority').value='B';$('eStatus').value='research';$('eRefresh').value='weekly';$('eShared').checked=false;
-  $('eLanguages').value='';$('eFiles').value='html';$('eScope').value='';$('eNotes').value='';$('eOwner').value='';$('saveResult').textContent='';
+  $('eLanguages').value='';$('eFiles').value='html';$('eSummary').value='';$('eExtract').value='';$('eScope').value='';$('eNotes').value='';$('eOwner').value='';$('saveResult').textContent='';
   $('profileList').textContent='保存来源后可查看采集配置。';$('profileCreate').classList.add('hidden');$('profileAddBtn').disabled=true;$('profileResult').textContent='';
 }
 function newSource(){clearForm();window.scrollTo({top:document.querySelector('.layout').offsetTop-80,behavior:'smooth'})}
@@ -202,13 +204,13 @@ async function showSource(id){
     $('detailTitle').textContent=current.source_name+' · '+current.region_code;$('eKey').readOnly=true;$('eKey').value=current.source_key||'';
     $('eRegion').value=current.region_code||'DE';$('eName').value=current.source_name||'';$('eType').value=current.source_type||'regulation';$('eAuthority').value=current.authority||'';$('eUrl').value=current.base_url||'';
     $('eAccess').value=current.access_method||'html';$('ePriority').value=current.priority||'B';$('eStatus').value=current.status||'research';$('eRefresh').value=current.refresh_policy||'weekly';$('eShared').checked=!!current.shared_scope;
-    $('eLanguages').value=(current.languages||[]).join('、');$('eFiles').value=(current.file_types||[]).join('、');$('eScope').value=current.crawl_scope||'';$('eNotes').value=current.notes||'';$('eOwner').value=current.owner_note||'';
+    $('eLanguages').value=(current.languages||[]).join('、');$('eFiles').value=(current.file_types||[]).join('、');$('eSummary').value=current.source_summary||'';$('eExtract').value=current.extractable_summary||'';$('eScope').value=current.crawl_scope||'';$('eNotes').value=current.notes||'';$('eOwner').value=current.owner_note||'';
     $('saveResult').textContent='';renderProfiles(current.collection_profiles||[]);$('profileCreate').classList.add('hidden');$('profileAddBtn').disabled=current.status==='archived';$('profileResult').textContent='';
   }catch(e){alert(e.message)}
 }
 
 function formPayload(){
-  return {source_key:$('eKey').value.trim(),region_code:$('eRegion').value,source_name:$('eName').value.trim(),source_type:$('eType').value,authority:$('eAuthority').value.trim(),base_url:$('eUrl').value.trim(),access_method:$('eAccess').value,priority:$('ePriority').value,status:$('eStatus').value,refresh_policy:$('eRefresh').value,shared_scope:$('eShared').checked,languages:$('eLanguages').value,file_types:$('eFiles').value,crawl_scope:$('eScope').value,notes:$('eNotes').value,owner_note:$('eOwner').value}
+  return {source_key:$('eKey').value.trim(),region_code:$('eRegion').value,source_name:$('eName').value.trim(),source_type:$('eType').value,authority:$('eAuthority').value.trim(),base_url:$('eUrl').value.trim(),access_method:$('eAccess').value,priority:$('ePriority').value,status:$('eStatus').value,refresh_policy:$('eRefresh').value,shared_scope:$('eShared').checked,languages:$('eLanguages').value,file_types:$('eFiles').value,source_summary:$('eSummary').value.trim(),extractable_summary:$('eExtract').value.trim(),crawl_scope:$('eScope').value,notes:$('eNotes').value,owner_note:$('eOwner').value}
 }
 
 async function saveSource(){

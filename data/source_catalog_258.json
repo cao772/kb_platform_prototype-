@@ -1,0 +1,5911 @@
+[
+  {
+    "source_key": "EU-SAFETY-GATE",
+    "region_code": "EU",
+    "source_name": "Safety Gate",
+    "source_type": "gma",
+    "authority": "European Commission",
+    "base_url": "https://ec.europa.eu/safety-gate/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "危险非食品产品通报、召回信息、风险类别、产品类别及成员国处置结果",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-NANDO",
+    "region_code": "EU",
+    "source_name": "NANDO",
+    "source_type": "certification",
+    "authority": "European Commission",
+    "base_url": "https://ec.europa.eu/growth/tools-databases/nando/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "欧盟公告机构、公告范围、法规指令、合格评定能力及机构状态",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-CE-MARKING",
+    "region_code": "EU",
+    "source_name": "CE Marking",
+    "source_type": "gma",
+    "authority": "European Commission",
+    "base_url": "https://single-market-economy.ec.europa.eu/single-market/ce-marking_en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "CE标志适用产品、制造商义务、技术文件、符合性声明和合格评定要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-MARKET-SURVEILLANCE",
+    "region_code": "EU",
+    "source_name": "EU Market Surveillance",
+    "source_type": "gma",
+    "authority": "European Commission",
+    "base_url": "https://single-market-economy.ec.europa.eu/single-market/goods/building-blocks/market-surveillance_en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "市场监管法规、协调机制、监管机构协作、产品检查和不合规处置",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-TRIS",
+    "region_code": "EU",
+    "source_name": "TRIS Technical Regulation Information System",
+    "source_type": "regulation",
+    "authority": "European Commission",
+    "base_url": "https://technical-regulation-information-system.ec.europa.eu/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "成员国技术法规草案、通知编号、意见期、法规文本和技术要求变化",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-CEN",
+    "region_code": "EU",
+    "source_name": "CEN",
+    "source_type": "standard",
+    "authority": "European Committee for Standardization",
+    "base_url": "https://www.cencenelec.eu/european-standardization/cen/",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "欧洲标准化领域、标准项目、技术委员会、EN标准元数据和发布信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-CENELEC",
+    "region_code": "EU",
+    "source_name": "CENELEC",
+    "source_type": "standard",
+    "authority": "European Committee for Electrotechnical Standardization",
+    "base_url": "https://www.cencenelec.eu/european-standardization/cenelec/",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电工电子欧洲标准、技术委员会、标准项目及EN/HD标准元数据",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-ETSI",
+    "region_code": "EU",
+    "source_name": "ETSI",
+    "source_type": "standard",
+    "authority": "European Telecommunications Standards Institute",
+    "base_url": "https://www.etsi.org/",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "通信、无线电、网络与数字技术标准目录、版本、工作项目和技术规范",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-EA",
+    "region_code": "EU",
+    "source_name": "European co-operation for Accreditation",
+    "source_type": "certification",
+    "authority": "European co-operation for Accreditation",
+    "base_url": "https://european-accreditation.org/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "欧洲认可机构成员、互认协议、认可政策、指南及合格评定领域",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-RED-STANDARDS",
+    "region_code": "EU",
+    "source_name": "EU Radio Equipment Harmonised Standards",
+    "source_type": "standard",
+    "authority": "European Commission",
+    "base_url": "https://single-market-economy.ec.europa.eu/single-market/goods/european-standards/harmonised-standards/radio-equipment_en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "RED无线电设备协调标准清单、标准引用、撤销日期及官方公报信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-LVD-STANDARDS",
+    "region_code": "EU",
+    "source_name": "EU Low Voltage Harmonised Standards",
+    "source_type": "standard",
+    "authority": "European Commission",
+    "base_url": "https://single-market-economy.ec.europa.eu/single-market/goods/european-standards/harmonised-standards/low-voltage-lvd_en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "低电压指令协调标准清单、标准引用、撤销和替代信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-EMC-STANDARDS",
+    "region_code": "EU",
+    "source_name": "EU EMC Harmonised Standards",
+    "source_type": "standard",
+    "authority": "European Commission",
+    "base_url": "https://single-market-economy.ec.europa.eu/single-market/goods/european-standards/harmonised-standards/electromagnetic-compatibility-emc_en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "EMC协调标准、适用范围、标准引用和官方公报发布状态",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-ROHS",
+    "region_code": "EU",
+    "source_name": "EU RoHS",
+    "source_type": "regulation",
+    "authority": "European Commission",
+    "base_url": "https://environment.ec.europa.eu/topics/waste-and-recycling/rohs-directive_en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "电子电气产品有害物质限制法规、豁免、修订、实施指南和相关技术文件",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-WEEE",
+    "region_code": "EU",
+    "source_name": "EU WEEE",
+    "source_type": "regulation",
+    "authority": "European Commission",
+    "base_url": "https://environment.ec.europa.eu/topics/waste-and-recycling/waste-electrical-and-electronic-equipment-weee_en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "电子电气废弃物责任、注册回收、标识和生产者责任要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "EU-BATTERY",
+    "region_code": "EU",
+    "source_name": "EU Batteries",
+    "source_type": "regulation",
+    "authority": "European Commission",
+    "base_url": "https://environment.ec.europa.eu/topics/waste-and-recycling/batteries_en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": true,
+    "languages": [
+      "multi"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "电池法规、可持续性、标签、回收、尽职调查和生产者责任要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DE-RECHT-BUND",
+    "region_code": "DE",
+    "source_name": "Recht.bund.de",
+    "source_type": "regulation",
+    "authority": "Federal Ministry of Justice",
+    "base_url": "https://www.recht.bund.de/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "联邦法律公报、法规公布、修订文本和生效信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DE-BAUA-PRODUCT-SAFETY",
+    "region_code": "DE",
+    "source_name": "BAuA Product Safety",
+    "source_type": "gma",
+    "authority": "Federal Institute for Occupational Safety and Health",
+    "base_url": "https://www.baua.de/EN/Topics/Work-design/Product-safety/Product-safety_node.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "产品安全法、市场监管、设备与消费品安全指南和监管资料",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DE-BNETZA-MARKET",
+    "region_code": "DE",
+    "source_name": "Bundesnetzagentur Market Surveillance",
+    "source_type": "gma",
+    "authority": "Federal Network Agency",
+    "base_url": "https://www.bundesnetzagentur.de/EN/Areas/Telecommunications/Technology/PlacingProductsOnMarket/MarketSurveillance/MarketSurveillance_node.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电、EMC和电信设备市场监管、抽检、违规案例及合规要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DE-DAKKS",
+    "region_code": "DE",
+    "source_name": "DAkkS",
+    "source_type": "certification",
+    "authority": "Deutsche Akkreditierungsstelle",
+    "base_url": "https://www.dakks.de/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可机构名录、认可范围、证书状态、认证检测实验室和认可规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DE-PTB",
+    "region_code": "DE",
+    "source_name": "PTB",
+    "source_type": "certification",
+    "authority": "Physikalisch-Technische Bundesanstalt",
+    "base_url": "https://www.ptb.de/cms/en.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量、型式评价、测量技术要求、计量器具认证和技术指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DE-UBA",
+    "region_code": "DE",
+    "source_name": "German Environment Agency",
+    "source_type": "gma",
+    "authority": "Umweltbundesamt",
+    "base_url": "https://www.umweltbundesamt.de/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "环保法规实施、化学品、生态设计、资源效率和产品环境要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DE-BAFA",
+    "region_code": "DE",
+    "source_name": "BAFA",
+    "source_type": "gma",
+    "authority": "Federal Office for Economic Affairs and Export Control",
+    "base_url": "https://www.bafa.de/EN/Home/home_node.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效、出口管制、市场准入相关许可、产品清单和政策指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DE-ZOLL",
+    "region_code": "DE",
+    "source_name": "German Customs",
+    "source_type": "gma",
+    "authority": "German Customs",
+    "base_url": "https://www.zoll.de/EN/Home/home_node.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口监管、商品分类、限制措施、边境产品合规和通关要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DE-BAM",
+    "region_code": "DE",
+    "source_name": "BAM",
+    "source_type": "certification",
+    "authority": "Federal Institute for Materials Research and Testing",
+    "base_url": "https://www.bam.de/Navigation/EN/Home/home.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "材料与产品安全、危险品、测试方法、认证认可和技术规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DE-BMWK",
+    "region_code": "DE",
+    "source_name": "Federal Ministry for Economic Affairs",
+    "source_type": "regulation",
+    "authority": "Federal Ministry for Economic Affairs",
+    "base_url": "https://www.bmwk.de/Navigation/EN/Home/home.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "工业产品、能源、市场监管和欧盟产品法规实施政策与公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DE-BAUA-MARKET-SURVEILLANCE",
+    "region_code": "DE",
+    "source_name": "BAuA Market Surveillance",
+    "source_type": "gma",
+    "authority": "Federal Institute for Occupational Safety and Health",
+    "base_url": "https://www.baua.de/EN/Topics/Work-design/Product-safety/Market-surveillance/Market-surveillance_node.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "德国市场监管机构协调、监管计划、产品安全通报和执法信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DE-VDE",
+    "region_code": "DE",
+    "source_name": "VDE Testing and Certification",
+    "source_type": "certification",
+    "authority": "VDE",
+    "base_url": "https://www.vde.com/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电工电子标准、VDE认证规则、检测服务、标志和技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FR-JORF",
+    "region_code": "FR",
+    "source_name": "Journal officiel",
+    "source_type": "regulation",
+    "authority": "French Government",
+    "base_url": "https://www.legifrance.gouv.fr/jorf/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "法国官方公报、法律法令发布、修订和生效日期",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FR-SERVICE-PUBLIC",
+    "region_code": "FR",
+    "source_name": "Service-Public.fr",
+    "source_type": "gma",
+    "authority": "French Government",
+    "base_url": "https://www.service-public.fr/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "企业和产品合规办事指引、行政要求、申报和许可信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FR-COFRAC",
+    "region_code": "FR",
+    "source_name": "COFRAC",
+    "source_type": "certification",
+    "authority": "COFRAC",
+    "base_url": "https://www.cofrac.fr/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、认可范围、证书状态和认可规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FR-DGCCRF",
+    "region_code": "FR",
+    "source_name": "DGCCRF",
+    "source_type": "gma",
+    "authority": "Ministry of Economy and Finance",
+    "base_url": "https://www.economie.gouv.fr/dgccrf",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品安全、市场监管、召回、检查结果和经营者合规义务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FR-ANFR",
+    "region_code": "FR",
+    "source_name": "ANFR",
+    "source_type": "gma",
+    "authority": "Agence nationale des fréquences",
+    "base_url": "https://www.anfr.fr/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电设备、频谱、合规测试、市场监管和无线电技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FR-ADEME",
+    "region_code": "FR",
+    "source_name": "ADEME",
+    "source_type": "gma",
+    "authority": "French Agency for Ecological Transition",
+    "base_url": "https://www.ademe.fr/en/frontpage/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效、生态设计、环境标签、循环经济和生产者责任要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FR-ECOLOGIE-MARKET",
+    "region_code": "FR",
+    "source_name": "Market Surveillance - Ecological Transition",
+    "source_type": "gma",
+    "authority": "Ministry for Ecological Transition",
+    "base_url": "https://www.ecologie.gouv.fr/politiques-publiques/surveillance-marche-produits-equipements-risques",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "压力设备、ATEX、燃气等高风险产品市场监管法规和指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FR-DOUANE",
+    "region_code": "FR",
+    "source_name": "French Customs",
+    "source_type": "gma",
+    "authority": "Direction générale des douanes et droits indirects",
+    "base_url": "https://www.douane.gouv.fr/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口限制、商品分类、边境监管、产品合规和通关要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FR-LNE",
+    "region_code": "FR",
+    "source_name": "LNE",
+    "source_type": "certification",
+    "authority": "Laboratoire national de métrologie et d'essais",
+    "base_url": "https://www.lne.fr/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "产品测试、计量、认证、CE相关合格评定和技术服务规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FR-INERIS",
+    "region_code": "FR",
+    "source_name": "INERIS",
+    "source_type": "certification",
+    "authority": "Institut national de l'environnement industriel et des risques",
+    "base_url": "https://www.ineris.fr/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "工业风险、ATEX、化学品、测试认证和技术规范资料",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FR-DGE",
+    "region_code": "FR",
+    "source_name": "Direction générale des Entreprises",
+    "source_type": "gma",
+    "authority": "Ministry for the Economy",
+    "base_url": "https://www.entreprises.gouv.fr/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "工业政策、产品法规、标准化、市场准入和企业合规指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FR-METROLOGY",
+    "region_code": "FR",
+    "source_name": "French Metrology",
+    "source_type": "certification",
+    "authority": "LNE / French Metrology",
+    "base_url": "https://metrologie-francaise.lne.fr/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量体系、计量法规、测量标准和计量器具要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IT-GAZZETTA",
+    "region_code": "IT",
+    "source_name": "Gazzetta Ufficiale",
+    "source_type": "regulation",
+    "authority": "Italian Government",
+    "base_url": "https://www.gazzettaufficiale.it/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "意大利官方公报、法律法令、实施日期和修订公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IT-ACCREDIA",
+    "region_code": "IT",
+    "source_name": "Accredia",
+    "source_type": "certification",
+    "authority": "Accredia",
+    "base_url": "https://www.accredia.it/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、检查机构、认可范围和证书状态",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IT-MIMIT-PRODUCT-SAFETY",
+    "region_code": "IT",
+    "source_name": "MIMIT Product Safety",
+    "source_type": "gma",
+    "authority": "Ministry of Enterprises and Made in Italy",
+    "base_url": "https://www.mimit.gov.it/en/single-digital-market/consumer-product-safety",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品、电气、EMC、PPE等产品安全法规、市场监管和CE要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IT-AGCOM",
+    "region_code": "IT",
+    "source_name": "AGCOM",
+    "source_type": "gma",
+    "authority": "Autorità per le Garanzie nelle Comunicazioni",
+    "base_url": "https://www.agcom.it/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "通信和无线电监管、设备规则、频谱和市场监管相关公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IT-ENEA",
+    "region_code": "IT",
+    "source_name": "ENEA",
+    "source_type": "gma",
+    "authority": "ENEA",
+    "base_url": "https://www.enea.it/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效、生态设计、能源标签技术资料和节能要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IT-ISPRA",
+    "region_code": "IT",
+    "source_name": "ISPRA",
+    "source_type": "gma",
+    "authority": "Italian Institute for Environmental Protection and Research",
+    "base_url": "https://www.isprambiente.gov.it/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "环境法规实施、废弃物、化学品、循环经济和产品环境要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IT-ADM",
+    "region_code": "IT",
+    "source_name": "Italian Customs and Monopolies Agency",
+    "source_type": "gma",
+    "authority": "Agenzia delle Dogane e dei Monopoli",
+    "base_url": "https://www.adm.gov.it/portale/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品分类、限制措施和边境产品监管",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IT-CEI",
+    "region_code": "IT",
+    "source_name": "CEI",
+    "source_type": "standard",
+    "authority": "Comitato Elettrotecnico Italiano",
+    "base_url": "https://www.ceinorme.it/en/",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "意大利电工电子标准目录、CEI/EN/IEC标准元数据和技术委员会",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IT-INRIM",
+    "region_code": "IT",
+    "source_name": "INRIM",
+    "source_type": "certification",
+    "authority": "National Institute of Metrological Research",
+    "base_url": "https://www.inrim.it/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "国家计量标准、测量能力、校准、法定计量和技术指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IT-LEGAL-METROLOGY",
+    "region_code": "IT",
+    "source_name": "Legal Metrology Portal",
+    "source_type": "gma",
+    "authority": "Unioncamere",
+    "base_url": "https://www.metrologialegale.unioncamere.it/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量法规、计量器具、验证要求和经营者义务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IT-GSE",
+    "region_code": "IT",
+    "source_name": "GSE",
+    "source_type": "gma",
+    "authority": "Gestore dei Servizi Energetici",
+    "base_url": "https://www.gse.it/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能源产品政策、能效激励、可再生能源和技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IT-MASE",
+    "region_code": "IT",
+    "source_name": "Ministry of Environment and Energy Security",
+    "source_type": "regulation",
+    "authority": "MASE",
+    "base_url": "https://www.mase.gov.it/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "环境、能源、废弃物、电池和产品环境合规法规及政策",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "ES-BOE-GAZETTE",
+    "region_code": "ES",
+    "source_name": "BOE Diario Oficial",
+    "source_type": "regulation",
+    "authority": "Agencia Estatal BOE",
+    "base_url": "https://www.boe.es/diario_boe/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "西班牙官方公报、法律法令、技术法规公布和生效信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "ES-ENAC",
+    "region_code": "ES",
+    "source_name": "ENAC",
+    "source_type": "certification",
+    "authority": "Entidad Nacional de Acreditación",
+    "base_url": "https://www.enac.es/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可认证机构、实验室、检查机构、认可范围和证书状态",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "ES-CONSUMO-MARKET",
+    "region_code": "ES",
+    "source_name": "Consumer Market Surveillance",
+    "source_type": "gma",
+    "authority": "Ministry of Social Rights, Consumer Affairs and Agenda 2030",
+    "base_url": "https://www.dsca.gob.es/es/consumo/calidad-seguridad-vigilancia-mercado",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品市场监管、检查计划、警报、产品安全和执法统计",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "ES-CNMC",
+    "region_code": "ES",
+    "source_name": "CNMC",
+    "source_type": "gma",
+    "authority": "Comisión Nacional de los Mercados y la Competencia",
+    "base_url": "https://www.cnmc.es/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电信、能源等受监管市场规则、技术要求和监管公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "ES-DIGITAL",
+    "region_code": "ES",
+    "source_name": "Digital Transformation Ministry",
+    "source_type": "gma",
+    "authority": "Government of Spain",
+    "base_url": "https://digital.gob.es/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电信、无线电、数字产品和技术监管政策与公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "ES-IDAE",
+    "region_code": "ES",
+    "source_name": "IDAE",
+    "source_type": "gma",
+    "authority": "Institute for Energy Diversification and Saving",
+    "base_url": "https://www.idae.es/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效、能源标签、生态设计和节能产品技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "ES-MITECO",
+    "region_code": "ES",
+    "source_name": "MITECO",
+    "source_type": "regulation",
+    "authority": "Ministry for Ecological Transition",
+    "base_url": "https://www.miteco.gob.es/en.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "环境、废弃物、化学品、能源和产品环境合规法规",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "ES-AEAT-CUSTOMS",
+    "region_code": "ES",
+    "source_name": "Spanish Customs",
+    "source_type": "gma",
+    "authority": "Agencia Tributaria",
+    "base_url": "https://sede.agenciatributaria.gob.es/Sede/en_gb/aduanas.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品分类、限制措施和边境监管要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "ES-CEM",
+    "region_code": "ES",
+    "source_name": "Centro Español de Metrología",
+    "source_type": "certification",
+    "authority": "CEM",
+    "base_url": "https://www.cem.es/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量、计量器具型式、测量标准和技术法规",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "ES-INDUSTRY",
+    "region_code": "ES",
+    "source_name": "Spanish Industry Portal",
+    "source_type": "gma",
+    "authority": "Ministry of Industry",
+    "base_url": "https://industria.gob.es/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "工业产品法规、市场监管、产品安全、标准和合格评定指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "ES-INCIBE",
+    "region_code": "ES",
+    "source_name": "INCIBE",
+    "source_type": "gma",
+    "authority": "National Cybersecurity Institute",
+    "base_url": "https://www.incibe.es/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "数字产品网络安全指南、设备安全、漏洞与合规相关资料",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "ES-AEMPS",
+    "region_code": "ES",
+    "source_name": "AEMPS",
+    "source_type": "gma",
+    "authority": "Spanish Agency of Medicines and Medical Devices",
+    "base_url": "https://www.aemps.gob.es/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "es",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "医疗器械法规、注册、警报、认证和市场监管信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NL-OFFICIAL-PUBLICATIONS",
+    "region_code": "NL",
+    "source_name": "Officiële bekendmakingen",
+    "source_type": "regulation",
+    "authority": "Dutch Government",
+    "base_url": "https://www.officielebekendmakingen.nl/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "官方公报、法规公告、部长规章和政策文件",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NL-RVA",
+    "region_code": "NL",
+    "source_name": "RvA",
+    "source_type": "certification",
+    "authority": "Dutch Accreditation Council",
+    "base_url": "https://www.rva.nl/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、检查机构、认可范围和证书",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NL-NVWA",
+    "region_code": "NL",
+    "source_name": "NVWA",
+    "source_type": "gma",
+    "authority": "Netherlands Food and Consumer Product Safety Authority",
+    "base_url": "https://www.nvwa.nl/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品安全、市场监管、召回、检查结果和产品合规要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NL-RDI",
+    "region_code": "NL",
+    "source_name": "Rijksinspectie Digitale Infrastructuur",
+    "source_type": "gma",
+    "authority": "RDI",
+    "base_url": "https://www.rdi.nl/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电、电信、EMC、数字基础设施产品监管和技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NL-RVO",
+    "region_code": "NL",
+    "source_name": "Netherlands Enterprise Agency",
+    "source_type": "gma",
+    "authority": "RVO",
+    "base_url": "https://english.rvo.nl/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "企业市场准入、能效、生态设计、补贴和产品法规办事指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NL-ILT",
+    "region_code": "NL",
+    "source_name": "Human Environment and Transport Inspectorate",
+    "source_type": "gma",
+    "authority": "ILT",
+    "base_url": "https://english.ilent.nl/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "环境、运输及部分产品市场监管、检查和合规要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NL-CUSTOMS",
+    "region_code": "NL",
+    "source_name": "Dutch Customs",
+    "source_type": "gma",
+    "authority": "Customs Administration of the Netherlands",
+    "base_url": "https://www.douane.nl/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口产品安全、商品分类、限制措施和边境监管",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NL-LABOUR-AUTHORITY",
+    "region_code": "NL",
+    "source_name": "Netherlands Labour Authority",
+    "source_type": "gma",
+    "authority": "Netherlands Labour Authority",
+    "base_url": "https://www.nllabourauthority.nl/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "工作设备、机械、PPE等产品监管和职业安全要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NL-RDW",
+    "region_code": "NL",
+    "source_name": "RDW",
+    "source_type": "certification",
+    "authority": "Netherlands Vehicle Authority",
+    "base_url": "https://www.rdw.nl/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "车辆及零部件型式批准、技术要求、认证和登记",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NL-VSL",
+    "region_code": "NL",
+    "source_name": "VSL",
+    "source_type": "certification",
+    "authority": "Dutch Metrology Institute",
+    "base_url": "https://www.vsl.nl/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "计量标准、校准、测量技术和法定计量相关服务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NL-IW-MINISTRY",
+    "region_code": "NL",
+    "source_name": "Infrastructure and Water Management",
+    "source_type": "regulation",
+    "authority": "Dutch Government",
+    "base_url": "https://www.government.nl/ministries/ministry-of-infrastructure-and-water-management",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "环境、运输、产品监管相关政策法规和公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NL-EZ-MINISTRY",
+    "region_code": "NL",
+    "source_name": "Ministry of Economic Affairs",
+    "source_type": "regulation",
+    "authority": "Dutch Government",
+    "base_url": "https://www.government.nl/ministries/ministry-of-economic-affairs",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "工业、能源、标准化和市场准入政策法规",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "BE-MONITEUR",
+    "region_code": "BE",
+    "source_name": "Belgian Official Gazette",
+    "source_type": "regulation",
+    "authority": "Belgian Federal Government",
+    "base_url": "https://www.ejustice.just.fgov.be/cgi/welcome.pl",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "fr",
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "比利时官方公报、法律法令和法规公布信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "BE-BELAC",
+    "region_code": "BE",
+    "source_name": "BELAC",
+    "source_type": "certification",
+    "authority": "FPS Economy",
+    "base_url": "https://economie.fgov.be/en/themes/quality-and-safety/accreditation-belac",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "fr",
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、检查机构和认可范围",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "BE-PRODUCT-SAFETY",
+    "region_code": "BE",
+    "source_name": "FPS Economy Product Safety",
+    "source_type": "gma",
+    "authority": "FPS Economy",
+    "base_url": "https://economie.fgov.be/en/themes/quality-and-safety/safety-products-and-services",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "fr",
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "产品安全、市场监管、CE、召回和经营者义务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "BE-BIPT",
+    "region_code": "BE",
+    "source_name": "BIPT",
+    "source_type": "gma",
+    "authority": "Belgian Institute for Postal Services and Telecommunications",
+    "base_url": "https://www.bipt.be/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "fr",
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电信、无线电设备、频谱和市场监管规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "BE-ENERGY",
+    "region_code": "BE",
+    "source_name": "FPS Economy Energy",
+    "source_type": "gma",
+    "authority": "FPS Economy",
+    "base_url": "https://economie.fgov.be/en/themes/energy",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "fr",
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效、能源标签、生态设计和能源产品要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "BE-HEALTH",
+    "region_code": "BE",
+    "source_name": "FPS Public Health",
+    "source_type": "regulation",
+    "authority": "FPS Health",
+    "base_url": "https://www.health.belgium.be/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "fr",
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "健康相关产品、化学品、环境与消费品法规",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "BE-ENVIRONMENT",
+    "region_code": "BE",
+    "source_name": "Belgian Environment Portal",
+    "source_type": "gma",
+    "authority": "FPS Health",
+    "base_url": "https://www.health.belgium.be/en/environment",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "fr",
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "化学品、废弃物、产品环境责任和限制要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "BE-CUSTOMS",
+    "region_code": "BE",
+    "source_name": "Belgian Customs and Excise",
+    "source_type": "gma",
+    "authority": "FPS Finance",
+    "base_url": "https://finance.belgium.be/en/customs_excises",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "fr",
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品分类、限制措施和边境监管",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "BE-METROLOGY",
+    "region_code": "BE",
+    "source_name": "Belgian Metrology",
+    "source_type": "certification",
+    "authority": "FPS Economy",
+    "base_url": "https://economie.fgov.be/en/themes/quality-and-safety/metrology",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "fr",
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量、计量器具、测量要求和监督",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "BE-FANC",
+    "region_code": "BE",
+    "source_name": "FANC",
+    "source_type": "gma",
+    "authority": "Federal Agency for Nuclear Control",
+    "base_url": "https://fanc.fgov.be/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "fr",
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "辐射相关设备、合规许可、技术规则和市场监管",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "BE-CREG",
+    "region_code": "BE",
+    "source_name": "CREG",
+    "source_type": "gma",
+    "authority": "Commission for Electricity and Gas Regulation",
+    "base_url": "https://www.creg.be/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "fr",
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能源市场监管、计量、设备与技术规则相关公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "BE-CONSUMER",
+    "region_code": "BE",
+    "source_name": "Belgium Consumer Protection",
+    "source_type": "gma",
+    "authority": "Belgian Federal Government",
+    "base_url": "https://www.belgium.be/en/economy/consumer_protection",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "nl",
+      "fr",
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费者产品安全、标签、销售义务和投诉召回指引",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SE-SFS",
+    "region_code": "SE",
+    "source_name": "Svensk författningssamling",
+    "source_type": "regulation",
+    "authority": "Swedish Government",
+    "base_url": "https://www.svenskforfattningssamling.se/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "瑞典法规公报、法律条例文本和生效信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SE-SWEDAC",
+    "region_code": "SE",
+    "source_name": "Swedac",
+    "source_type": "certification",
+    "authority": "Swedac",
+    "base_url": "https://www.swedac.se/?lang=en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可机构、实验室、认证范围、法定计量和市场监管协调信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SE-MARKET-SURVEILLANCE",
+    "region_code": "SE",
+    "source_name": "Swedish Market Surveillance Council",
+    "source_type": "gma",
+    "authority": "Swedac / Swedish authorities",
+    "base_url": "https://marknadskontroll.se/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "市场监管机构职责、产品检查、法规指南和联合监管信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SE-CONSUMER-AGENCY",
+    "region_code": "SE",
+    "source_name": "Swedish Consumer Agency",
+    "source_type": "gma",
+    "authority": "Konsumentverket",
+    "base_url": "https://www.konsumentverket.se/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品安全、召回、市场监管和经营者义务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SE-ELECTRICAL-SAFETY",
+    "region_code": "SE",
+    "source_name": "Swedish Electrical Safety Authority",
+    "source_type": "gma",
+    "authority": "Elsäkerhetsverket",
+    "base_url": "https://www.elsakerhetsverket.se/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电气产品安全、CE、市场监管、事故召回和技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SE-PTS",
+    "region_code": "SE",
+    "source_name": "PTS",
+    "source_type": "gma",
+    "authority": "Swedish Post and Telecom Authority",
+    "base_url": "https://www.pts.se/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电、通信终端、频谱和设备合规规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SE-ENERGY-AGENCY",
+    "region_code": "SE",
+    "source_name": "Swedish Energy Agency",
+    "source_type": "gma",
+    "authority": "Energimyndigheten",
+    "base_url": "https://www.energimyndigheten.se/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效、能源标签、生态设计和能源相关产品要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SE-KEMI",
+    "region_code": "SE",
+    "source_name": "Swedish Chemicals Agency",
+    "source_type": "gma",
+    "authority": "Kemikalieinspektionen",
+    "base_url": "https://www.kemi.se/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "REACH、CLP、RoHS、化学限制和产品化学合规指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SE-EPA",
+    "region_code": "SE",
+    "source_name": "Swedish Environmental Protection Agency",
+    "source_type": "gma",
+    "authority": "Naturvårdsverket",
+    "base_url": "https://www.naturvardsverket.se/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "废弃物、生产者责任、电池、包装和环境产品要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SE-CUSTOMS",
+    "region_code": "SE",
+    "source_name": "Swedish Customs",
+    "source_type": "gma",
+    "authority": "Tullverket",
+    "base_url": "https://www.tullverket.se/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口产品安全、边境监管、商品限制和通关要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SE-WORK-ENVIRONMENT",
+    "region_code": "SE",
+    "source_name": "Swedish Work Environment Authority",
+    "source_type": "gma",
+    "authority": "Arbetsmiljöverket",
+    "base_url": "https://www.av.se/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "机械、PPE、工作设备安全和市场监管要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SE-BOVERKET",
+    "region_code": "SE",
+    "source_name": "Boverket",
+    "source_type": "gma",
+    "authority": "National Board of Housing, Building and Planning",
+    "base_url": "https://www.boverket.se/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "建筑产品、升降机、索道市场监管、CE和技术文件要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DK-STANDARD",
+    "region_code": "DK",
+    "source_name": "Danish Standards",
+    "source_type": "standard",
+    "authority": "Dansk Standard",
+    "base_url": "https://www.ds.dk/en/",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "da",
+      "en"
+    ],
+    "file_types": [
+      "html"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "丹麦及EN/ISO/IEC标准目录、版本、状态和技术委员会",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DK-DANAK",
+    "region_code": "DK",
+    "source_name": "DANAK",
+    "source_type": "certification",
+    "authority": "DANAK",
+    "base_url": "https://danak.dk/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "da",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、检查机构和认可范围",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DK-SAFETY-TECH",
+    "region_code": "DK",
+    "source_name": "Danish Safety Technology Authority",
+    "source_type": "gma",
+    "authority": "Sikkerhedsstyrelsen",
+    "base_url": "https://www.sik.dk/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "da",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电气、燃气、产品安全、市场监管、CE和法定计量要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DK-COMPETITION-CONSUMER",
+    "region_code": "DK",
+    "source_name": "Danish Competition and Consumer Authority",
+    "source_type": "gma",
+    "authority": "Danish Competition and Consumer Authority",
+    "base_url": "https://en.kfst.dk/consumer",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "da",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费者权益、产品信息、市场规则和经营者义务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DK-ENERGY-AGENCY",
+    "region_code": "DK",
+    "source_name": "Danish Energy Agency",
+    "source_type": "gma",
+    "authority": "Energistyrelsen",
+    "base_url": "https://ens.dk/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "da",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "生态设计、能源标签、能效和能源产品技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DK-EPA",
+    "region_code": "DK",
+    "source_name": "Danish Environmental Protection Agency",
+    "source_type": "gma",
+    "authority": "Miljøstyrelsen",
+    "base_url": "https://eng.mst.dk/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "da",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "化学品、RoHS、废弃物、包装和生产者责任要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DK-DIGITAL-AGENCY",
+    "region_code": "DK",
+    "source_name": "Agency for Digital Government",
+    "source_type": "gma",
+    "authority": "Danish Agency for Digital Government",
+    "base_url": "https://en.digst.dk/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "da",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "数字产品、网络安全、电子通信和数字法规政策",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DK-CUSTOMS",
+    "region_code": "DK",
+    "source_name": "Danish Customs Agency",
+    "source_type": "gma",
+    "authority": "Toldstyrelsen",
+    "base_url": "https://toldst.dk/en-us",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "da",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品限制、边境监管和海关要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DK-WORKING-ENVIRONMENT",
+    "region_code": "DK",
+    "source_name": "Danish Working Environment Authority",
+    "source_type": "gma",
+    "authority": "Arbejdstilsynet",
+    "base_url": "https://at.dk/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "da",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "机械、PPE、工作设备及职业安全产品要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DK-BUSINESS-AUTHORITY",
+    "region_code": "DK",
+    "source_name": "Danish Business Authority",
+    "source_type": "gma",
+    "authority": "Erhvervsstyrelsen",
+    "base_url": "https://danishbusinessauthority.dk/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "da",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "市场准入、产品法规、企业义务和数字申报指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DK-LEGAL-METROLOGY",
+    "region_code": "DK",
+    "source_name": "Danish Legal Metrology",
+    "source_type": "certification",
+    "authority": "Danish Safety Technology Authority",
+    "base_url": "https://www.sik.dk/en/business/legal-metrology",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "da",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量器具、型式、验证和市场监督要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "DK-ECODESIGN",
+    "region_code": "DK",
+    "source_name": "Danish Ecodesign and Energy Labelling",
+    "source_type": "gma",
+    "authority": "Danish Energy Agency",
+    "base_url": "https://ens.dk/en/our-responsibilities/energy-labelling-and-ecodesign",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "da",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "生态设计法规、能源标签、产品组要求和实施指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FI-FINAS",
+    "region_code": "FI",
+    "source_name": "FINAS",
+    "source_type": "certification",
+    "authority": "Finnish Accreditation Service",
+    "base_url": "https://www.finas.fi/sites/en/Pages/default.aspx",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fi",
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、检查机构和认可范围",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FI-TUKES",
+    "region_code": "FI",
+    "source_name": "Tukes",
+    "source_type": "gma",
+    "authority": "Finnish Safety and Chemicals Agency",
+    "base_url": "https://tukes.fi/en/frontpage",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fi",
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电气、化学品、消费品、工业产品市场监管和安全要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FI-TRAFICOM",
+    "region_code": "FI",
+    "source_name": "Traficom",
+    "source_type": "gma",
+    "authority": "Finnish Transport and Communications Agency",
+    "base_url": "https://www.traficom.fi/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fi",
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电、通信终端、频谱和设备技术规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FI-ENERGY-AUTHORITY",
+    "region_code": "FI",
+    "source_name": "Energy Authority Finland",
+    "source_type": "gma",
+    "authority": "Energiavirasto",
+    "base_url": "https://energiavirasto.fi/en/frontpage",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fi",
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能源市场、能效、计量和能源相关技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FI-MOTIVA",
+    "region_code": "FI",
+    "source_name": "Motiva",
+    "source_type": "gma",
+    "authority": "Motiva",
+    "base_url": "https://www.motiva.fi/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fi",
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能源标签、生态设计、能效产品和实施指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FI-SYKE",
+    "region_code": "FI",
+    "source_name": "Finnish Environment Institute",
+    "source_type": "gma",
+    "authority": "SYKE",
+    "base_url": "https://www.syke.fi/en-US",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fi",
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "环境、化学品、废弃物、循环经济和产品环境要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FI-CUSTOMS",
+    "region_code": "FI",
+    "source_name": "Finnish Customs",
+    "source_type": "gma",
+    "authority": "Tulli",
+    "base_url": "https://tulli.fi/en/frontpage",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fi",
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口限制、商品分类、边境监管和通关要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FI-VTT",
+    "region_code": "FI",
+    "source_name": "VTT",
+    "source_type": "certification",
+    "authority": "VTT Technical Research Centre of Finland",
+    "base_url": "https://www.vttresearch.com/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fi",
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "产品测试、认证、技术评估和标准相关服务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FI-OCCUPATIONAL-SAFETY",
+    "region_code": "FI",
+    "source_name": "Occupational Safety and Health Administration",
+    "source_type": "gma",
+    "authority": "Finnish OSH Administration",
+    "base_url": "https://tyosuojelu.fi/web/en/home",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fi",
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "机械、PPE和工作设备安全及市场监管要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FI-MEAE",
+    "region_code": "FI",
+    "source_name": "Ministry of Economic Affairs and Employment",
+    "source_type": "regulation",
+    "authority": "Finnish Government",
+    "base_url": "https://tem.fi/en/frontpage",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fi",
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "工业产品、能源、市场监管、标准和经济法规政策",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "FI-STUK",
+    "region_code": "FI",
+    "source_name": "STUK",
+    "source_type": "gma",
+    "authority": "Radiation and Nuclear Safety Authority",
+    "base_url": "https://stuk.fi/en/frontpage",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "fi",
+      "sv",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "辐射设备安全、许可、技术规则和监管公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AT-ACCREDITATION",
+    "region_code": "AT",
+    "source_name": "Akkreditierung Austria",
+    "source_type": "certification",
+    "authority": "Federal Ministry for Economic Affairs",
+    "base_url": "https://www.bmaw.gv.at/Services/Akkreditierung.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、检查机构和认可范围",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AT-OVE",
+    "region_code": "AT",
+    "source_name": "OVE",
+    "source_type": "standard",
+    "authority": "Austrian Electrotechnical Association",
+    "base_url": "https://www.ove.at/en/",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电工电子标准、OVE认证、技术规则和标准目录",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AT-RTR",
+    "region_code": "AT",
+    "source_name": "RTR",
+    "source_type": "gma",
+    "authority": "Austrian Regulatory Authority",
+    "base_url": "https://www.rtr.at/rtr/startpage.en.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电信、无线电设备、频谱和数字市场监管规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AT-E-CONTROL",
+    "region_code": "AT",
+    "source_name": "E-Control",
+    "source_type": "gma",
+    "authority": "E-Control",
+    "base_url": "https://www.e-control.at/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能源市场、计量、能源设备和技术规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AT-ENVIRONMENT",
+    "region_code": "AT",
+    "source_name": "Environment Agency Austria",
+    "source_type": "gma",
+    "authority": "Umweltbundesamt",
+    "base_url": "https://www.umweltbundesamt.at/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "环境、化学品、废弃物、资源效率和产品环境要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AT-CUSTOMS",
+    "region_code": "AT",
+    "source_name": "Austrian Customs",
+    "source_type": "gma",
+    "authority": "Federal Ministry of Finance",
+    "base_url": "https://www.bmf.gv.at/en/topics/customs.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口、商品限制、海关监管和边境产品要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AT-BEV",
+    "region_code": "AT",
+    "source_name": "BEV",
+    "source_type": "certification",
+    "authority": "Federal Office of Metrology and Surveying",
+    "base_url": "https://www.bev.gv.at/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量、计量器具、型式批准和测量技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AT-PRODUCT-SAFETY",
+    "region_code": "AT",
+    "source_name": "Austria Product Safety",
+    "source_type": "gma",
+    "authority": "Federal Ministry of Social Affairs",
+    "base_url": "https://www.sozialministerium.at/en/Topics/Consumer-Protection/Product-Safety.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品安全、市场监管、召回和经营者义务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AT-BMAW",
+    "region_code": "AT",
+    "source_name": "Federal Ministry for Economic Affairs",
+    "source_type": "regulation",
+    "authority": "BMAW",
+    "base_url": "https://www.bmaw.gv.at/en.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "工业产品、标准化、市场准入和技术法规政策",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AT-AGES",
+    "region_code": "AT",
+    "source_name": "AGES",
+    "source_type": "gma",
+    "authority": "Austrian Agency for Health and Food Safety",
+    "base_url": "https://www.ages.at/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品化学安全、风险通报、实验室和监管资料",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AT-USP",
+    "region_code": "AT",
+    "source_name": "Austrian Business Service Portal",
+    "source_type": "gma",
+    "authority": "Austrian Government",
+    "base_url": "https://www.usp.gv.at/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "企业市场准入、许可、产品义务和行政办事指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IE-GAZETTE",
+    "region_code": "IE",
+    "source_name": "Iris Oifigiúil",
+    "source_type": "regulation",
+    "authority": "Government of Ireland",
+    "base_url": "https://www.irisoifigiuil.ie/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "ga"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "爱尔兰官方公报、政府公告、法规公布和生效信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IE-INAB",
+    "region_code": "IE",
+    "source_name": "INAB",
+    "source_type": "certification",
+    "authority": "Irish National Accreditation Board",
+    "base_url": "https://www.inab.ie/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "ga"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、检查机构和认可范围",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IE-CCPC-PRODUCT-SAFETY",
+    "region_code": "IE",
+    "source_name": "CCPC Product Safety",
+    "source_type": "gma",
+    "authority": "Competition and Consumer Protection Commission",
+    "base_url": "https://www.ccpc.ie/business/product-safety/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "ga"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品安全、召回、GPSR义务、市场监管和企业指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IE-COMREG",
+    "region_code": "IE",
+    "source_name": "ComReg",
+    "source_type": "gma",
+    "authority": "Commission for Communications Regulation",
+    "base_url": "https://www.comreg.ie/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "ga"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电设备、频谱、电信和市场监管技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IE-SEAI",
+    "region_code": "IE",
+    "source_name": "SEAI",
+    "source_type": "gma",
+    "authority": "Sustainable Energy Authority of Ireland",
+    "base_url": "https://www.seai.ie/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "ga"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效、能源标签、生态设计和能源产品要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IE-EPA",
+    "region_code": "IE",
+    "source_name": "EPA Ireland",
+    "source_type": "gma",
+    "authority": "Environmental Protection Agency",
+    "base_url": "https://www.epa.ie/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "ga"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "环境、废弃物、化学品、生产者责任和许可要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IE-REVENUE-CUSTOMS",
+    "region_code": "IE",
+    "source_name": "Irish Customs",
+    "source_type": "gma",
+    "authority": "Revenue",
+    "base_url": "https://www.revenue.ie/en/customs/index.aspx",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "ga"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品分类、限制措施和边境监管",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IE-HSA",
+    "region_code": "IE",
+    "source_name": "Health and Safety Authority",
+    "source_type": "gma",
+    "authority": "HSA",
+    "base_url": "https://www.hsa.ie/eng/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "ga"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "机械、PPE、工作设备、化学品和职业安全市场监管",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IE-CRU",
+    "region_code": "IE",
+    "source_name": "CRU",
+    "source_type": "gma",
+    "authority": "Commission for Regulation of Utilities",
+    "base_url": "https://www.cru.ie/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "ga"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能源市场、计量和相关技术规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IE-ENTERPRISE",
+    "region_code": "IE",
+    "source_name": "Department of Enterprise",
+    "source_type": "regulation",
+    "authority": "Government of Ireland",
+    "base_url": "https://enterprise.gov.ie/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "ga"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "工业产品、标准化、市场监管、贸易和企业法规",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "IE-LEGAL-METROLOGY",
+    "region_code": "IE",
+    "source_name": "NSAI Legal Metrology",
+    "source_type": "certification",
+    "authority": "NSAI",
+    "base_url": "https://www.nsai.ie/legal-metrology/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "ga"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量器具、型式、验证、监督和技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NO-STANDARD",
+    "region_code": "NO",
+    "source_name": "Standards Norway",
+    "source_type": "standard",
+    "authority": "Standard Norge",
+    "base_url": "https://www.standard.no/en/",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "no",
+      "en"
+    ],
+    "file_types": [
+      "html"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "挪威及EN/ISO/IEC标准目录、版本、状态和元数据",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NO-ACCREDITATION",
+    "region_code": "NO",
+    "source_name": "Norwegian Accreditation",
+    "source_type": "certification",
+    "authority": "Norsk akkreditering",
+    "base_url": "https://www.akkreditert.no/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "no",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、检查机构和认可范围",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NO-DSB",
+    "region_code": "NO",
+    "source_name": "DSB",
+    "source_type": "gma",
+    "authority": "Norwegian Directorate for Civil Protection",
+    "base_url": "https://www.dsb.no/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "no",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电气产品、消费品、危险品、市场监管和安全要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NO-NKOM",
+    "region_code": "NO",
+    "source_name": "Nkom",
+    "source_type": "gma",
+    "authority": "Norwegian Communications Authority",
+    "base_url": "https://nkom.no/english",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "no",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电设备、通信终端、频谱和技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NO-RME",
+    "region_code": "NO",
+    "source_name": "Norwegian Energy Regulatory Authority",
+    "source_type": "gma",
+    "authority": "NVE-RME",
+    "base_url": "https://www.nve.no/energy-regulatory-authority/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "no",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能源市场、计量和能源相关技术规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NO-ENVIRONMENT",
+    "region_code": "NO",
+    "source_name": "Norwegian Environment Agency",
+    "source_type": "gma",
+    "authority": "Miljødirektoratet",
+    "base_url": "https://www.environmentagency.no/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "no",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "化学品、废弃物、产品环境要求和生产者责任",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NO-CUSTOMS",
+    "region_code": "NO",
+    "source_name": "Norwegian Customs",
+    "source_type": "gma",
+    "authority": "Tolletaten",
+    "base_url": "https://www.toll.no/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "no",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品限制、边境监管和海关要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NO-METROLOGY",
+    "region_code": "NO",
+    "source_name": "Justervesenet",
+    "source_type": "certification",
+    "authority": "Norwegian Metrology Service",
+    "base_url": "https://www.justervesenet.no/english/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "no",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量、计量器具、型式和测量要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NO-LABOUR",
+    "region_code": "NO",
+    "source_name": "Norwegian Labour Inspection Authority",
+    "source_type": "gma",
+    "authority": "Arbeidstilsynet",
+    "base_url": "https://www.arbeidstilsynet.no/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "no",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "机械、PPE、工作设备和职业安全要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NO-CONSUMER-AUTHORITY",
+    "region_code": "NO",
+    "source_name": "Norwegian Consumer Authority",
+    "source_type": "gma",
+    "authority": "Forbrukertilsynet",
+    "base_url": "https://www.forbrukertilsynet.no/english",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "no",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费者产品信息、市场行为和经营者义务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NO-BUILDING-AUTHORITY",
+    "region_code": "NO",
+    "source_name": "Norwegian Building Authority",
+    "source_type": "gma",
+    "authority": "Direktoratet for byggkvalitet",
+    "base_url": "https://www.dibk.no/english/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "no",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "建筑产品、CE、技术评估和建筑法规要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NO-GOV-PRODUCT-SAFETY",
+    "region_code": "NO",
+    "source_name": "Norway Product Safety Policy",
+    "source_type": "regulation",
+    "authority": "Norwegian Government",
+    "base_url": "https://www.regjeringen.no/en/topics/business-and-industry/competition-and-state-aid/product-safety/id439307/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "no",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "产品安全政策、EEA法规实施和市场监管框架",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CH-SAS",
+    "region_code": "CH",
+    "source_name": "Swiss Accreditation Service",
+    "source_type": "certification",
+    "authority": "SAS",
+    "base_url": "https://www.sas.admin.ch/sas/en/home.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "fr",
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、检查机构和认可范围",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CH-ESTI",
+    "region_code": "CH",
+    "source_name": "ESTI",
+    "source_type": "gma",
+    "authority": "Federal Inspectorate for Heavy Current Installations",
+    "base_url": "https://www.esti.admin.ch/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "fr",
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电气产品安全、市场监管、认证标志和技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CH-OFCOM",
+    "region_code": "CH",
+    "source_name": "OFCOM",
+    "source_type": "gma",
+    "authority": "Federal Office of Communications",
+    "base_url": "https://www.bakom.admin.ch/bakom/en/homepage.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "fr",
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电设备、通信终端、频谱和技术规范",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CH-SFOE",
+    "region_code": "CH",
+    "source_name": "Swiss Federal Office of Energy",
+    "source_type": "gma",
+    "authority": "SFOE",
+    "base_url": "https://www.bfe.admin.ch/bfe/en/home.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "fr",
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效、能源标签、设备能耗和能源相关法规",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CH-FOEN",
+    "region_code": "CH",
+    "source_name": "FOEN",
+    "source_type": "gma",
+    "authority": "Federal Office for the Environment",
+    "base_url": "https://www.bafu.admin.ch/bafu/en/home.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "fr",
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "化学品、废弃物、电池、环境标签和产品环境要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CH-CUSTOMS",
+    "region_code": "CH",
+    "source_name": "Swiss Customs",
+    "source_type": "gma",
+    "authority": "Federal Office for Customs and Border Security",
+    "base_url": "https://www.bazg.admin.ch/bazg/en/home.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "fr",
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品限制、边境监管和税则要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CH-METAS",
+    "region_code": "CH",
+    "source_name": "METAS",
+    "source_type": "certification",
+    "authority": "Federal Institute of Metrology",
+    "base_url": "https://www.metas.ch/metas/en/home.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "fr",
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量、计量器具、型式评价和测量标准",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CH-SECO-PRODUCT-SAFETY",
+    "region_code": "CH",
+    "source_name": "SECO Product Safety",
+    "source_type": "gma",
+    "authority": "State Secretariat for Economic Affairs",
+    "base_url": "https://www.seco.admin.ch/seco/en/home/Arbeit/Arbeitsbedingungen/Produktsicherheit.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "fr",
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "产品安全法、市场监管、机械和工作设备要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CH-FOPH",
+    "region_code": "CH",
+    "source_name": "Federal Office of Public Health",
+    "source_type": "regulation",
+    "authority": "FOPH",
+    "base_url": "https://www.bag.admin.ch/bag/en/home.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "fr",
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "健康相关产品、化学品、辐射和消费品监管要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CH-SWISSMEDIC",
+    "region_code": "CH",
+    "source_name": "Swissmedic",
+    "source_type": "gma",
+    "authority": "Swissmedic",
+    "base_url": "https://www.swissmedic.ch/swissmedic/en/home.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "fr",
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "医疗器械和治疗产品法规、市场监管、警报和注册",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CH-ENERGY-EFFICIENCY",
+    "region_code": "CH",
+    "source_name": "Swiss Energy Efficiency",
+    "source_type": "gma",
+    "authority": "SFOE",
+    "base_url": "https://www.bfe.admin.ch/bfe/en/home/efficiency.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "de",
+      "fr",
+      "it",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "产品能效、能源标签、最低性能要求和实施指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "GB-OPSS",
+    "region_code": "GB",
+    "source_name": "Office for Product Safety and Standards",
+    "source_type": "gma",
+    "authority": "OPSS",
+    "base_url": "https://www.gov.uk/government/organisations/office-for-product-safety-and-standards",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "产品安全、市场监管、召回、合格评定和英国CA/CE相关指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "GB-UKAS",
+    "region_code": "GB",
+    "source_name": "UKAS",
+    "source_type": "certification",
+    "authority": "United Kingdom Accreditation Service",
+    "base_url": "https://www.ukas.com/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、检查机构和认可范围",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "GB-OFCOM",
+    "region_code": "GB",
+    "source_name": "Ofcom",
+    "source_type": "gma",
+    "authority": "Ofcom",
+    "base_url": "https://www.ofcom.org.uk/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电设备、通信终端、频谱和技术监管规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "GB-DESNZ",
+    "region_code": "GB",
+    "source_name": "Department for Energy Security and Net Zero",
+    "source_type": "regulation",
+    "authority": "UK Government",
+    "base_url": "https://www.gov.uk/government/organisations/department-for-energy-security-and-net-zero",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "能效、能源标签、生态设计和能源产品政策",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "GB-ENVIRONMENT-AGENCY",
+    "region_code": "GB",
+    "source_name": "Environment Agency",
+    "source_type": "gma",
+    "authority": "UK Environment Agency",
+    "base_url": "https://www.gov.uk/government/organisations/environment-agency",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "环境、废弃物、生产者责任和产品环境监管",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "GB-HMRC-IMPORT-EXPORT",
+    "region_code": "GB",
+    "source_name": "HMRC Import and Export",
+    "source_type": "gma",
+    "authority": "HM Revenue & Customs",
+    "base_url": "https://www.gov.uk/topic/business-tax/import-export",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品税则、限制措施和边境要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "GB-TRADE-TARIFF",
+    "region_code": "GB",
+    "source_name": "UK Trade Tariff",
+    "source_type": "gma",
+    "authority": "UK Government",
+    "base_url": "https://www.gov.uk/trade-tariff",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "商品分类、进口税则、许可、限制和贸易措施",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "GB-HSE",
+    "region_code": "GB",
+    "source_name": "Health and Safety Executive",
+    "source_type": "gma",
+    "authority": "HSE",
+    "base_url": "https://www.hse.gov.uk/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "机械、PPE、工作设备、化学品和职业产品安全要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "GB-NATIONAL-MEASUREMENT",
+    "region_code": "GB",
+    "source_name": "National Measurement Regulation Office",
+    "source_type": "certification",
+    "authority": "UK Government",
+    "base_url": "https://www.gov.uk/guidance/national-measurement-regulation-office",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量、计量器具、市场监管和技术规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "GB-MHRA",
+    "region_code": "GB",
+    "source_name": "MHRA",
+    "source_type": "gma",
+    "authority": "Medicines and Healthcare products Regulatory Agency",
+    "base_url": "https://www.gov.uk/government/organisations/medicines-and-healthcare-products-regulatory-agency",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "医疗器械法规、注册、警报、市场监管和技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "GB-BUILDING-SAFETY",
+    "region_code": "GB",
+    "source_name": "Building Safety Regulator",
+    "source_type": "gma",
+    "authority": "UK Government / HSE",
+    "base_url": "https://www.gov.uk/government/organisations/building-safety-regulator",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "建筑产品和建筑安全监管、指南和合规要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "US-REGULATIONS",
+    "region_code": "US",
+    "source_name": "Regulations.gov",
+    "source_type": "regulation",
+    "authority": "US Federal Government",
+    "base_url": "https://www.regulations.gov/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "联邦规则制定案卷、拟议规则、公众意见、附件和最终规则材料",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "US-CPSC",
+    "region_code": "US",
+    "source_name": "Consumer Product Safety Commission",
+    "source_type": "gma",
+    "authority": "CPSC",
+    "base_url": "https://www.cpsc.gov/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品安全法规、召回、强制标准、处罚和合规指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "US-FCC",
+    "region_code": "US",
+    "source_name": "Federal Communications Commission",
+    "source_type": "gma",
+    "authority": "FCC",
+    "base_url": "https://www.fcc.gov/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电设备认证、频谱、技术规则、设备授权和公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "US-NIST",
+    "region_code": "US",
+    "source_name": "NIST",
+    "source_type": "standard",
+    "authority": "National Institute of Standards and Technology",
+    "base_url": "https://www.nist.gov/",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "美国技术标准、测量、网络安全框架、标准参考和技术指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "US-OSHA-NRTL",
+    "region_code": "US",
+    "source_name": "OSHA NRTL Program",
+    "source_type": "certification",
+    "authority": "Occupational Safety and Health Administration",
+    "base_url": "https://www.osha.gov/nationally-recognized-testing-laboratory-program",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "NRTL认可实验室名单、认可范围、产品认证和电气安全要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "US-DOE-EFFICIENCY",
+    "region_code": "US",
+    "source_name": "DOE Appliance and Equipment Standards",
+    "source_type": "gma",
+    "authority": "US Department of Energy",
+    "base_url": "https://www.energy.gov/eere/buildings/appliance-and-equipment-standards-program",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "产品能效标准、测试程序、合规认证和规则制定",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "US-EPA",
+    "region_code": "US",
+    "source_name": "US Environmental Protection Agency",
+    "source_type": "gma",
+    "authority": "EPA",
+    "base_url": "https://www.epa.gov/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "化学品、环境标签、能源环境要求、废弃物和合规规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "US-FTC-ENERGY-LABEL",
+    "region_code": "US",
+    "source_name": "FTC Energy Labeling",
+    "source_type": "gma",
+    "authority": "Federal Trade Commission",
+    "base_url": "https://www.ftc.gov/business-guidance/advertising-marketing/energy-labeling",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "EnergyGuide等能源标签、广告声明和消费者信息要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "US-CBP-TRADE",
+    "region_code": "US",
+    "source_name": "US Customs and Border Protection - Trade",
+    "source_type": "gma",
+    "authority": "CBP",
+    "base_url": "https://www.cbp.gov/trade",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品限制、边境执法和贸易合规",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "US-BIS",
+    "region_code": "US",
+    "source_name": "Bureau of Industry and Security",
+    "source_type": "gma",
+    "authority": "US Department of Commerce",
+    "base_url": "https://www.bis.gov/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "出口管制、ECCN分类、许可和受控产品要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CA-GAZETTE",
+    "region_code": "CA",
+    "source_name": "Canada Gazette",
+    "source_type": "regulation",
+    "authority": "Government of Canada",
+    "base_url": "https://gazette.gc.ca/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "fr"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "加拿大官方公报、拟议法规、最终法规和生效公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CA-SCC",
+    "region_code": "CA",
+    "source_name": "Standards Council of Canada",
+    "source_type": "standard",
+    "authority": "Standards Council of Canada",
+    "base_url": "https://scc-ccn.ca/",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "fr"
+    ],
+    "file_types": [
+      "html"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "加拿大标准体系、认可、标准开发组织和标准元数据",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CA-ISED",
+    "region_code": "CA",
+    "source_name": "Innovation, Science and Economic Development Canada",
+    "source_type": "gma",
+    "authority": "ISED",
+    "base_url": "https://ised-isde.canada.ca/site/ised/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "fr"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电、计量、消费品标识、通信设备和技术法规",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CA-HEALTH-PRODUCT-SAFETY",
+    "region_code": "CA",
+    "source_name": "Health Canada Consumer Product Safety",
+    "source_type": "gma",
+    "authority": "Health Canada",
+    "base_url": "https://www.canada.ca/en/health-canada/services/consumer-product-safety.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "fr"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品安全法规、召回、风险通报和合规指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CA-NRC-CODES",
+    "region_code": "CA",
+    "source_name": "Codes Canada",
+    "source_type": "standard",
+    "authority": "National Research Council Canada",
+    "base_url": "https://nrc.canada.ca/en/certifications-evaluations-standards/codes-canada",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "fr"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "国家建筑、消防、能源等规范和版本信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CA-NRC-CCMC",
+    "region_code": "CA",
+    "source_name": "Canadian Construction Materials Centre",
+    "source_type": "certification",
+    "authority": "National Research Council Canada",
+    "base_url": "https://nrc.canada.ca/en/certifications-evaluations-standards/canadian-construction-materials-centre",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "fr"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "建筑产品技术评估、评价报告、认证和适用性信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CA-NRCAN-ENERGY",
+    "region_code": "CA",
+    "source_name": "Natural Resources Canada Energy Efficiency",
+    "source_type": "gma",
+    "authority": "Natural Resources Canada",
+    "base_url": "https://natural-resources.canada.ca/energy-efficiency",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "fr"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效法规、能源标签、产品标准和测试要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CA-ECCC",
+    "region_code": "CA",
+    "source_name": "Environment and Climate Change Canada",
+    "source_type": "gma",
+    "authority": "Government of Canada",
+    "base_url": "https://www.canada.ca/en/environment-climate-change.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "fr"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "化学品、环境法规、生产者责任和产品环境限制",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CA-CBSA",
+    "region_code": "CA",
+    "source_name": "Canada Border Services Agency",
+    "source_type": "gma",
+    "authority": "CBSA",
+    "base_url": "https://www.cbsa-asfc.gc.ca/menu-eng.html",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "fr"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品分类、边境监管和限制措施",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CA-COMPETITION-BUREAU",
+    "region_code": "CA",
+    "source_name": "Competition Bureau Canada",
+    "source_type": "gma",
+    "authority": "Competition Bureau",
+    "base_url": "https://competition-bureau.canada.ca/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "fr"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "产品标识、广告、包装和市场行为合规指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CA-MEASUREMENT-CANADA",
+    "region_code": "CA",
+    "source_name": "Measurement Canada",
+    "source_type": "certification",
+    "authority": "ISED",
+    "base_url": "https://ised-isde.canada.ca/site/measurement-canada/en",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "fr"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量、计量器具批准、检定和监管要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "CA-CSA-GROUP",
+    "region_code": "CA",
+    "source_name": "CSA Group",
+    "source_type": "certification",
+    "authority": "CSA Group",
+    "base_url": "https://www.csagroup.org/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en",
+      "fr"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "加拿大标准、产品认证、测试服务、认证标志和技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "JP-KANPO",
+    "region_code": "JP",
+    "source_name": "Official Gazette of Japan",
+    "source_type": "regulation",
+    "authority": "National Printing Bureau",
+    "base_url": "https://kanpou.npb.go.jp/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ja",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "日本官报、法律政令、省令、告示和生效公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "JP-JISC",
+    "region_code": "JP",
+    "source_name": "JISC",
+    "source_type": "standard",
+    "authority": "Japanese Industrial Standards Committee",
+    "base_url": "https://www.jisc.go.jp/eng/",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ja",
+      "en"
+    ],
+    "file_types": [
+      "html"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "JIS标准目录、标准化政策、技术委员会和国际标准活动",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "JP-JAB",
+    "region_code": "JP",
+    "source_name": "JAB",
+    "source_type": "certification",
+    "authority": "Japan Accreditation Board",
+    "base_url": "https://www.jab.or.jp/english/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ja",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、检查机构和认可范围",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "JP-METI-PRODUCT-SAFETY",
+    "region_code": "JP",
+    "source_name": "METI Product Safety",
+    "source_type": "gma",
+    "authority": "Ministry of Economy, Trade and Industry",
+    "base_url": "https://www.meti.go.jp/english/policy/economy/consumer/product_safety/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ja",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电气用品、消费品、产品安全法规、召回和PSE要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "JP-MIC-RADIO",
+    "region_code": "JP",
+    "source_name": "MIC Radio Use",
+    "source_type": "gma",
+    "authority": "Ministry of Internal Affairs and Communications",
+    "base_url": "https://www.tele.soumu.go.jp/e/index.htm",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ja",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电设备技术基准、认证、频谱和设备规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "JP-MOE",
+    "region_code": "JP",
+    "source_name": "Ministry of the Environment Japan",
+    "source_type": "gma",
+    "authority": "Ministry of the Environment",
+    "base_url": "https://www.env.go.jp/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ja",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "化学品、废弃物、资源循环和产品环境法规",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "JP-CUSTOMS",
+    "region_code": "JP",
+    "source_name": "Japan Customs",
+    "source_type": "gma",
+    "authority": "Ministry of Finance",
+    "base_url": "https://www.customs.go.jp/english/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ja",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品分类、禁限物品和边境监管",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "JP-NITE",
+    "region_code": "JP",
+    "source_name": "NITE",
+    "source_type": "gma",
+    "authority": "National Institute of Technology and Evaluation",
+    "base_url": "https://www.nite.go.jp/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ja",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "产品事故、化学品、标准测试、安全评估和技术数据库",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "JP-JETRO",
+    "region_code": "JP",
+    "source_name": "JETRO",
+    "source_type": "gma",
+    "authority": "Japan External Trade Organization",
+    "base_url": "https://www.jetro.go.jp/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ja",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口制度、市场准入、产品标准认证和贸易办事指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "JP-JQA",
+    "region_code": "JP",
+    "source_name": "JQA",
+    "source_type": "certification",
+    "authority": "Japan Quality Assurance Organization",
+    "base_url": "https://www.jqa.jp/english/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ja",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "产品认证、S-JQA、测试、管理体系和合格评定要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "JP-ANRE",
+    "region_code": "JP",
+    "source_name": "Agency for Natural Resources and Energy",
+    "source_type": "gma",
+    "authority": "METI",
+    "base_url": "https://www.enecho.meti.go.jp/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ja",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效、Top Runner、能源标签和设备节能要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "JP-PSE",
+    "region_code": "JP",
+    "source_name": "METI Electrical Product Safety",
+    "source_type": "gma",
+    "authority": "METI",
+    "base_url": "https://www.meti.go.jp/english/policy/economy/consumer/product_safety/electrical_products/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ja",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "PSE电气产品分类、技术要求、符合性评定和标签规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "KR-GAZETTE",
+    "region_code": "KR",
+    "source_name": "Korea Official Gazette",
+    "source_type": "regulation",
+    "authority": "Government of Korea",
+    "base_url": "https://gwanbo.go.kr/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "韩国官报、法律法规、行政规则和公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "KR-KAB",
+    "region_code": "KR",
+    "source_name": "KAB",
+    "source_type": "certification",
+    "authority": "Korea Accreditation Board",
+    "base_url": "https://www.kab.or.kr/eng/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认证机构认可、认可范围、管理体系和合格评定规则",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "KR-SAFETYKOREA",
+    "region_code": "KR",
+    "source_name": "Safety Korea",
+    "source_type": "gma",
+    "authority": "Korean Agency for Technology and Standards",
+    "base_url": "https://www.safetykorea.kr/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "KC产品安全、认证查询、召回、不合格产品和产品类别要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "KR-RRA",
+    "region_code": "KR",
+    "source_name": "National Radio Research Agency",
+    "source_type": "gma",
+    "authority": "Ministry of Science and ICT",
+    "base_url": "https://www.rra.go.kr/en/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电设备、KC适合性评定、EMC、技术标准和认证查询",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "KR-MOTIE",
+    "region_code": "KR",
+    "source_name": "MOTIE",
+    "source_type": "regulation",
+    "authority": "Ministry of Trade, Industry and Energy",
+    "base_url": "https://english.motie.go.kr/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "工业产品、能源、技术法规、标准和市场政策",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "KR-MOE",
+    "region_code": "KR",
+    "source_name": "Ministry of Environment Korea",
+    "source_type": "gma",
+    "authority": "Ministry of Environment",
+    "base_url": "https://eng.me.go.kr/eng/web/main.do",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "化学品、环境标志、资源循环和产品环境法规",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "KR-CUSTOMS",
+    "region_code": "KR",
+    "source_name": "Korea Customs Service",
+    "source_type": "gma",
+    "authority": "Korea Customs Service",
+    "base_url": "https://www.customs.go.kr/english/main.do",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品分类、认证检查和边境监管",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "KR-KTR",
+    "region_code": "KR",
+    "source_name": "KTR",
+    "source_type": "certification",
+    "authority": "Korea Testing & Research Institute",
+    "base_url": "https://www.ktr.or.kr/eng/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "KC认证、产品测试、化学检测和国际认证服务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "KR-KTL",
+    "region_code": "KR",
+    "source_name": "KTL",
+    "source_type": "certification",
+    "authority": "Korea Testing Laboratory",
+    "base_url": "https://www.ktl.re.kr/eng/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电气电子、机械、能效、KC测试认证和技术服务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "KR-KEA",
+    "region_code": "KR",
+    "source_name": "Korea Energy Agency",
+    "source_type": "gma",
+    "authority": "Korea Energy Agency",
+    "base_url": "https://www.energy.or.kr/eng/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效等级、待机功耗、能源标签和产品能效要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "KR-STANDARD-PORTAL",
+    "region_code": "KR",
+    "source_name": "Korean Standards Portal",
+    "source_type": "standard",
+    "authority": "KATS",
+    "base_url": "https://standard.go.kr/KSCI/portalindex.do",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "file_types": [
+      "html"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "KS标准目录、版本、状态和标准化信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AU-GAZETTES",
+    "region_code": "AU",
+    "source_name": "Commonwealth Gazettes",
+    "source_type": "regulation",
+    "authority": "Australian Government",
+    "base_url": "https://www.legislation.gov.au/gazettes",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "联邦公报、法规通知、标准引用和政府公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AU-JASANZ",
+    "region_code": "AU",
+    "source_name": "JAS-ANZ",
+    "source_type": "certification",
+    "authority": "Joint Accreditation System of Australia and New Zealand",
+    "base_url": "https://www.jasanz.org/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认证机构认可、认可范围、认可状态和合格评定方案",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AU-PRODUCT-SAFETY",
+    "region_code": "AU",
+    "source_name": "Product Safety Australia",
+    "source_type": "gma",
+    "authority": "Australian Competition and Consumer Commission",
+    "base_url": "https://www.productsafety.gov.au/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品安全标准、禁令、召回、警示和供应商义务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AU-ACMA",
+    "region_code": "AU",
+    "source_name": "ACMA",
+    "source_type": "gma",
+    "authority": "Australian Communications and Media Authority",
+    "base_url": "https://www.acma.gov.au/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电、EMC、电信设备、RCM标签和供应商合规要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AU-ENERGY-RATING",
+    "region_code": "AU",
+    "source_name": "Energy Rating",
+    "source_type": "gma",
+    "authority": "Australian Government",
+    "base_url": "https://www.energyrating.gov.au/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效标准、能源标签、GEMS注册、测试方法和产品数据库",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AU-DCCEEW",
+    "region_code": "AU",
+    "source_name": "DCCEEW",
+    "source_type": "regulation",
+    "authority": "Australian Government",
+    "base_url": "https://www.dcceew.gov.au/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "环境、气候、废弃物、化学品和产品环境法规",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AU-ABF",
+    "region_code": "AU",
+    "source_name": "Australian Border Force",
+    "source_type": "gma",
+    "authority": "Australian Border Force",
+    "base_url": "https://www.abf.gov.au/importing-exporting-and-manufacturing",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、禁限物品、边境监管和贸易要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AU-NMI",
+    "region_code": "AU",
+    "source_name": "National Measurement Institute",
+    "source_type": "certification",
+    "authority": "Australian Government",
+    "base_url": "https://www.industry.gov.au/national-measurement-institute",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "法定计量、测量标准、型式批准和贸易计量要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AU-SAFE-WORK",
+    "region_code": "AU",
+    "source_name": "Safe Work Australia",
+    "source_type": "gma",
+    "authority": "Safe Work Australia",
+    "base_url": "https://www.safeworkaustralia.gov.au/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "工作设备、机械、PPE和危险化学品安全指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AU-EESS",
+    "region_code": "AU",
+    "source_name": "Electrical Equipment Safety System",
+    "source_type": "certification",
+    "authority": "ERAC",
+    "base_url": "https://www.eess.gov.au/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电气设备风险等级、供应商注册、产品认证和RCM要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "AU-WELS",
+    "region_code": "AU",
+    "source_name": "Water Efficiency Labelling and Standards",
+    "source_type": "gma",
+    "authority": "Australian Government",
+    "base_url": "https://www.waterrating.gov.au/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "WELS水效标签、产品注册、测试标准和合规要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NZ-GAZETTE",
+    "region_code": "NZ",
+    "source_name": "New Zealand Gazette",
+    "source_type": "regulation",
+    "authority": "New Zealand Government",
+    "base_url": "https://gazette.govt.nz/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "官方公报、法规通知、标准引用和政府公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NZ-STANDARDS",
+    "region_code": "NZ",
+    "source_name": "Standards New Zealand",
+    "source_type": "standard",
+    "authority": "Standards New Zealand",
+    "base_url": "https://www.standards.govt.nz/",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "新西兰标准目录、版本、状态和AS/NZS标准元数据",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NZ-IANZ",
+    "region_code": "NZ",
+    "source_name": "IANZ",
+    "source_type": "certification",
+    "authority": "International Accreditation New Zealand",
+    "base_url": "https://www.ianz.govt.nz/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、检查机构、认可范围和证书状态",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NZ-WORKSAFE",
+    "region_code": "NZ",
+    "source_name": "WorkSafe New Zealand",
+    "source_type": "gma",
+    "authority": "WorkSafe New Zealand",
+    "base_url": "https://www.worksafe.govt.nz/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "机械、电气、PPE、危险品和工作设备安全要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NZ-PRODUCT-SAFETY",
+    "region_code": "NZ",
+    "source_name": "New Zealand Product Safety",
+    "source_type": "gma",
+    "authority": "Consumer Protection / MBIE",
+    "base_url": "https://www.consumerprotection.govt.nz/general-help/consumer-laws/product-safety/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品安全标准、禁令、召回和供应商义务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NZ-RSM",
+    "region_code": "NZ",
+    "source_name": "Radio Spectrum Management",
+    "source_type": "gma",
+    "authority": "MBIE",
+    "base_url": "https://www.rsm.govt.nz/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "无线电设备、频谱、EMC、供应商声明和标签要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NZ-EECA",
+    "region_code": "NZ",
+    "source_name": "EECA",
+    "source_type": "gma",
+    "authority": "Energy Efficiency and Conservation Authority",
+    "base_url": "https://www.eeca.govt.nz/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效、能源标签、MEPS和设备注册要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NZ-EPA",
+    "region_code": "NZ",
+    "source_name": "EPA New Zealand",
+    "source_type": "gma",
+    "authority": "Environmental Protection Authority",
+    "base_url": "https://www.epa.govt.nz/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "危险物质、化学品、环境许可和产品环境要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NZ-CUSTOMS",
+    "region_code": "NZ",
+    "source_name": "New Zealand Customs Service",
+    "source_type": "gma",
+    "authority": "New Zealand Customs Service",
+    "base_url": "https://www.customs.govt.nz/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、商品限制、边境监管和贸易要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NZ-CONSUMER-PROTECTION",
+    "region_code": "NZ",
+    "source_name": "Consumer Protection NZ",
+    "source_type": "gma",
+    "authority": "MBIE",
+    "base_url": "https://www.consumerprotection.govt.nz/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费者法、产品信息、召回、供应商义务和市场准入指南",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NZ-BUILDING",
+    "region_code": "NZ",
+    "source_name": "Building Performance",
+    "source_type": "gma",
+    "authority": "MBIE",
+    "base_url": "https://www.building.govt.nz/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "建筑产品、建筑规范、产品认证和技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "NZ-ELECTRICAL-SAFETY",
+    "region_code": "NZ",
+    "source_name": "New Zealand Electrical Safety",
+    "source_type": "gma",
+    "authority": "WorkSafe New Zealand",
+    "base_url": "https://www.worksafe.govt.nz/topic-and-industry/electricity/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电气产品、设备安全、认证和供应商责任",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SG-EGAZETTE",
+    "region_code": "SG",
+    "source_name": "Singapore eGazette",
+    "source_type": "regulation",
+    "authority": "Government of Singapore",
+    "base_url": "https://www.egazette.gov.sg/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "新加坡政府公报、法令附属立法和生效公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SG-STANDARDS",
+    "region_code": "SG",
+    "source_name": "Enterprise Singapore Standards",
+    "source_type": "standard",
+    "authority": "Enterprise Singapore",
+    "base_url": "https://www.enterprisesg.gov.sg/quality-standards/standards",
+    "access_method": "metadata_only",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "Singapore Standards、技术参考、版本和标准化信息",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SG-SAC",
+    "region_code": "SG",
+    "source_name": "Singapore Accreditation Council",
+    "source_type": "certification",
+    "authority": "Enterprise Singapore / SAC",
+    "base_url": "https://www.sac-accreditation.gov.sg/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "认可实验室、认证机构、检查机构和认可范围",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SG-CPSO",
+    "region_code": "SG",
+    "source_name": "Consumer Product Safety Office",
+    "source_type": "gma",
+    "authority": "Enterprise Singapore",
+    "base_url": "https://www.consumerproductsafety.gov.sg/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "消费品安全、CPSR、受控商品、注册、召回和供应商义务",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SG-IMDA",
+    "region_code": "SG",
+    "source_name": "IMDA",
+    "source_type": "gma",
+    "authority": "Infocomm Media Development Authority",
+    "base_url": "https://www.imda.gov.sg/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "电信和无线电设备注册、技术规范、频谱和标签要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SG-NEA-ENERGY",
+    "region_code": "SG",
+    "source_name": "NEA Energy Efficiency",
+    "source_type": "gma",
+    "authority": "National Environment Agency",
+    "base_url": "https://www.nea.gov.sg/our-services/climate-change-energy-efficiency/energy-efficiency",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能效标签、最低能效标准、注册和产品要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SG-NEA",
+    "region_code": "SG",
+    "source_name": "National Environment Agency",
+    "source_type": "gma",
+    "authority": "National Environment Agency",
+    "base_url": "https://www.nea.gov.sg/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "环境、化学品、废弃物、能效和产品环境要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SG-CUSTOMS",
+    "region_code": "SG",
+    "source_name": "Singapore Customs",
+    "source_type": "gma",
+    "authority": "Singapore Customs",
+    "base_url": "https://www.customs.gov.sg/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "进口通关、HS分类、受控商品和贸易许可",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SG-MTI",
+    "region_code": "SG",
+    "source_name": "Ministry of Trade and Industry",
+    "source_type": "regulation",
+    "authority": "Singapore Government",
+    "base_url": "https://www.mti.gov.sg/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "daily",
+    "crawl_scope": "贸易、工业、市场准入和技术法规政策",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SG-EMA",
+    "region_code": "SG",
+    "source_name": "Energy Market Authority",
+    "source_type": "gma",
+    "authority": "EMA",
+    "base_url": "https://www.ema.gov.sg/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "能源市场、电气设备、技术规则和能源监管公告",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SG-PUB-WELS",
+    "region_code": "SG",
+    "source_name": "PUB Water Efficiency Labelling Scheme",
+    "source_type": "gma",
+    "authority": "PUB",
+    "base_url": "https://www.pub.gov.sg/Public/KeyInitiatives/WaterEfficiencyLabellingScheme",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "水效标签、产品分级、注册和测试要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  },
+  {
+    "source_key": "SG-BCA",
+    "region_code": "SG",
+    "source_name": "Building and Construction Authority",
+    "source_type": "gma",
+    "authority": "BCA",
+    "base_url": "https://www1.bca.gov.sg/",
+    "access_method": "mixed",
+    "priority": "B",
+    "status": "research",
+    "shared_scope": false,
+    "languages": [
+      "en"
+    ],
+    "file_types": [
+      "html",
+      "pdf"
+    ],
+    "refresh_policy": "weekly",
+    "crawl_scope": "建筑产品、材料、建筑标准、绿色标识和技术要求",
+    "notes": "新增来源调研基线；正式接入前需确认抓取范围、访问频率、许可及页面/API稳定性。"
+  }
+]

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from io import BytesIO
+from pathlib import Path
 from collections import Counter
 from dataclasses import dataclass, asdict
 from typing import Any
@@ -32,6 +33,8 @@ SOURCE_EXPORT_COLUMNS = (
     ("语言", "languages"),
     ("文件类型", "file_types"),
     ("更新频率", "refresh_policy"),
+    ("网站简述", "source_summary"),
+    ("可提取资料简述", "extractable_summary"),
     ("采集范围", "crawl_scope"),
     ("备注", "notes"),
     ("项目维护说明", "owner_note"),
@@ -51,6 +54,8 @@ SOURCE_HEADER_ALIASES = {
     "语言": "languages", "languages": "languages",
     "文件类型": "file_types", "file_types": "file_types",
     "更新频率": "refresh_policy", "refresh_policy": "refresh_policy",
+    "网站简述": "source_summary", "source_summary": "source_summary",
+    "可提取资料简述": "extractable_summary", "extractable_summary": "extractable_summary",
     "采集范围": "crawl_scope", "crawl_scope": "crawl_scope",
     "备注": "notes", "notes": "notes",
     "项目维护说明": "owner_note", "owner_note": "owner_note",
@@ -60,6 +65,39 @@ SOURCE_TYPE_ALIASES = {"法规": "regulation", "标准": "standard", "认证": "
 SOURCE_STATUS_ALIASES = {"调研中": "research", "已确认": "validated", "已接入": "connected", "暂停": "paused", "已归档": "archived"}
 ACCESS_METHOD_ALIASES = {"网页": "html", "PDF": "pdf", "XML": "xml", "API": "api", "RSS": "rss", "混合": "mixed", "仅元数据": "metadata_only"}
 REFRESH_POLICY_ALIASES = {"每日": "daily", "每周": "weekly", "每月": "monthly", "按事件": "event", "人工": "manual"}
+SOURCE_CATALOG_PATH = Path(__file__).resolve().parent.parent / "data" / "source_catalog_258.json"
+
+
+def _default_source_summary(*, name: str, authority: str, source_type: str, crawl_scope: str) -> str:
+    type_label = {"regulation": "法规", "standard": "标准", "certification": "认证", "gma": "市场准入"}.get(source_type, "法规认证")
+    authority_text = authority or "相关主管机构"
+    scope = str(crawl_scope or "").strip()
+    tail = f"，重点覆盖{scope}" if scope else ""
+    return f"{name}是{authority_text}维护的{type_label}相关官方来源{tail}。"
+
+
+def _default_extractable_summary(*, source_type: str, crawl_scope: str, access_method: str) -> str:
+    type_text = {
+        "regulation": "法规正文、版本/修订状态、实施日期、公告及相关解释材料",
+        "standard": "标准编号、名称、版本、状态、适用范围、引用关系及公开元数据",
+        "certification": "认证制度、认可/认证机构信息、申请规则、技术文件要求及公开名单",
+        "gma": "市场准入要求、产品合规义务、标签/能效/环保/贸易要求及办事指引",
+    }.get(source_type, "公开法规认证资料")
+    scope = str(crawl_scope or "").strip()
+    method = str(access_method or "html").strip()
+    prefix = f"可提取{type_text}"
+    if scope:
+        prefix += f"；重点范围：{scope}"
+    return prefix + f"；接入形态：{method}。"
+
+
+def _load_expansion_catalog() -> list[dict[str, Any]]:
+    if not SOURCE_CATALOG_PATH.exists():
+        return []
+    payload = json.loads(SOURCE_CATALOG_PATH.read_text(encoding="utf-8"))
+    if not isinstance(payload, list):
+        raise ValueError("source expansion catalog must be a JSON list")
+    return [dict(item) for item in payload if isinstance(item, dict)]
 
 
 @dataclass(frozen=True)
@@ -163,6 +201,8 @@ class SourceRegistryService:
                     languages_json TEXT DEFAULT '[]',
                     file_types_json TEXT DEFAULT '[]',
                     refresh_policy TEXT DEFAULT 'weekly',
+                    source_summary TEXT DEFAULT '',
+                    extractable_summary TEXT DEFAULT '',
                     crawl_scope TEXT DEFAULT '',
                     notes TEXT DEFAULT '',
                     owner_note TEXT DEFAULT '',
@@ -175,26 +215,94 @@ class SourceRegistryService:
                 CREATE INDEX IF NOT EXISTS idx_knowledge_sources_type ON knowledge_sources(source_type);
                 """
             )
+            columns = {
+                row["name"]
+                for row in self.store.conn.execute("PRAGMA table_info(knowledge_sources)").fetchall()
+            }
+            if "source_summary" not in columns:
+                self.store.conn.execute("ALTER TABLE knowledge_sources ADD COLUMN source_summary TEXT DEFAULT ''")
+            if "extractable_summary" not in columns:
+                self.store.conn.execute("ALTER TABLE knowledge_sources ADD COLUMN extractable_summary TEXT DEFAULT ''")
             self.store.conn.commit()
 
     def _seed(self) -> None:
         with self.store.lock:
             for seed in SEED_SOURCES:
                 item = seed.to_dict()
+                source_summary = _default_source_summary(
+                    name=item["name"],
+                    authority=item["authority"],
+                    source_type=item["source_type"],
+                    crawl_scope=item["crawl_scope"],
+                )
+                extractable_summary = _default_extractable_summary(
+                    source_type=item["source_type"],
+                    crawl_scope=item["crawl_scope"],
+                    access_method=item["access_method"],
+                )
                 self.store.conn.execute(
                     """
                     INSERT INTO knowledge_sources(
                         source_key,region_code,source_name,source_type,authority,base_url,access_method,
-                        priority,status,shared_scope,languages_json,file_types_json,refresh_policy,crawl_scope,notes
-                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-                    ON CONFLICT(source_key) DO NOTHING
+                        priority,status,shared_scope,languages_json,file_types_json,refresh_policy,
+                        source_summary,extractable_summary,crawl_scope,notes
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    ON CONFLICT(source_key) DO UPDATE SET
+                        source_summary=CASE WHEN knowledge_sources.source_summary='' THEN excluded.source_summary ELSE knowledge_sources.source_summary END,
+                        extractable_summary=CASE WHEN knowledge_sources.extractable_summary='' THEN excluded.extractable_summary ELSE knowledge_sources.extractable_summary END
                     """,
                     (
                         item["key"], canonical_region_code(item["region_code"]), item["name"], item["source_type"],
                         item["authority"], item["url"], item["access_method"], item["priority"], item["status"],
                         1 if item["shared_scope"] else 0, json.dumps(item["languages"], ensure_ascii=False),
                         json.dumps(item["file_types"], ensure_ascii=False), item["refresh_policy"],
-                        item["crawl_scope"], item["notes"],
+                        source_summary, extractable_summary, item["crawl_scope"], item["notes"],
+                    ),
+                )
+
+            for item in _load_expansion_catalog():
+                source_key = str(item.get("source_key") or "").strip()
+                region_code = canonical_region_code(str(item.get("region_code") or "").strip())
+                source_name = str(item.get("source_name") or "").strip()
+                source_type = str(item.get("source_type") or "").strip()
+                authority = str(item.get("authority") or "").strip()
+                base_url = str(item.get("base_url") or "").strip()
+                access_method = str(item.get("access_method") or "html").strip()
+                priority = str(item.get("priority") or "B").strip().upper()
+                status = str(item.get("status") or "research").strip()
+                shared_scope = 1 if bool(item.get("shared_scope")) else 0
+                languages = item.get("languages") or []
+                file_types = item.get("file_types") or ["html"]
+                refresh_policy = str(item.get("refresh_policy") or "weekly").strip()
+                crawl_scope = str(item.get("crawl_scope") or "").strip()
+                notes = str(item.get("notes") or "").strip()
+                source_summary = str(item.get("source_summary") or "").strip() or _default_source_summary(
+                    name=source_name,
+                    authority=authority,
+                    source_type=source_type,
+                    crawl_scope=crawl_scope,
+                )
+                extractable_summary = str(item.get("extractable_summary") or "").strip() or _default_extractable_summary(
+                    source_type=source_type,
+                    crawl_scope=crawl_scope,
+                    access_method=access_method,
+                )
+                self.store.conn.execute(
+                    """
+                    INSERT INTO knowledge_sources(
+                        source_key,region_code,source_name,source_type,authority,base_url,access_method,
+                        priority,status,shared_scope,languages_json,file_types_json,refresh_policy,
+                        source_summary,extractable_summary,crawl_scope,notes
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    ON CONFLICT(source_key) DO UPDATE SET
+                        source_summary=CASE WHEN knowledge_sources.source_summary='' THEN excluded.source_summary ELSE knowledge_sources.source_summary END,
+                        extractable_summary=CASE WHEN knowledge_sources.extractable_summary='' THEN excluded.extractable_summary ELSE knowledge_sources.extractable_summary END
+                    """,
+                    (
+                        source_key, region_code, source_name, source_type, authority, base_url, access_method,
+                        priority, status, shared_scope, json.dumps(languages, ensure_ascii=False),
+                        json.dumps(file_types, ensure_ascii=False), refresh_policy, source_summary,
+                        extractable_summary, crawl_scope, notes,
                     ),
                 )
             self.store.conn.commit()
@@ -219,9 +327,9 @@ class SourceRegistryService:
             clauses.append("status=?")
             params.append(status)
         if q:
-            clauses.append("(lower(source_key) LIKE ? OR lower(source_name) LIKE ? OR lower(authority) LIKE ? OR lower(base_url) LIKE ? OR lower(crawl_scope) LIKE ?)")
+            clauses.append("(lower(source_key) LIKE ? OR lower(source_name) LIKE ? OR lower(authority) LIKE ? OR lower(base_url) LIKE ? OR lower(source_summary) LIKE ? OR lower(extractable_summary) LIKE ? OR lower(crawl_scope) LIKE ?)")
             term = f"%{q.lower()}%"
-            params.extend([term, term, term, term, term])
+            params.extend([term, term, term, term, term, term, term])
         where = "WHERE " + " AND ".join(clauses) if clauses else ""
         params.append(min(max(int(limit), 1), 3000))
         with self.store.lock:
@@ -321,7 +429,7 @@ class SourceRegistryService:
                 raise ValueError("base_url must start with http:// or https://")
             result["base_url"] = base_url
 
-        text_fields = ("authority", "crawl_scope", "notes", "owner_note")
+        text_fields = ("authority", "source_summary", "extractable_summary", "crawl_scope", "notes", "owner_note")
         for key in text_fields:
             if key in payload:
                 result[key] = str(payload.get(key) or "").strip()
@@ -382,7 +490,7 @@ class SourceRegistryService:
         columns = [
             "source_key", "region_code", "source_name", "source_type", "authority", "base_url",
             "access_method", "priority", "status", "shared_scope", "languages_json", "file_types_json",
-            "refresh_policy", "crawl_scope", "notes", "owner_note",
+            "refresh_policy", "source_summary", "extractable_summary", "crawl_scope", "notes", "owner_note",
         ]
         values = [item.get(key, "") for key in columns]
         with self.store.lock:
@@ -461,7 +569,7 @@ class SourceRegistryService:
                         value = "是" if value else "否"
                     row.append(value)
                 sheet.append(row)
-        widths = [18, 12, 28, 16, 28, 44, 14, 10, 12, 10, 18, 18, 12, 42, 36, 36]
+        widths = [18, 12, 28, 16, 28, 44, 14, 10, 12, 10, 18, 18, 12, 48, 52, 42, 36, 36]
         for index, width in enumerate(widths, start=1):
             sheet.column_dimensions[sheet.cell(row=1, column=index).column_letter].width = width
         sheet.freeze_panes = "A2"
