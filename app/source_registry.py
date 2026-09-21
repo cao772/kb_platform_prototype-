@@ -639,6 +639,7 @@ class SourceRegistryService:
             )
             self.store.conn.commit()
             source_id = int(cur.lastrowid)
+        self._ensure_preclassification()
         return self.detail(source_id)
 
     def update(self, source_id: int, payload: dict[str, Any]) -> dict[str, Any]:
@@ -646,6 +647,19 @@ class SourceRegistryService:
         item.pop("source_key", None)
         if not item:
             return self.detail(source_id)
+        verification_sensitive = {"base_url", "access_method", "source_type", "notes"}
+        reset_verification = bool(verification_sensitive & set(item))
+        if reset_verification:
+            item.update({
+                "harvestability": "",
+                "verification_status": "pending",
+                "last_verified_at": "",
+                "last_http_status": 0,
+                "last_content_type": "",
+                "last_final_url": "",
+                "robots_allowed": "unknown",
+                "verification_note": "",
+            })
         updates = [f"{key}=?" for key in item]
         params = list(item.values()) + [int(source_id)]
         with self.store.lock:
@@ -656,6 +670,8 @@ class SourceRegistryService:
             if not cur.rowcount:
                 raise ValueError("source not found")
             self.store.conn.commit()
+        if reset_verification:
+            self._ensure_preclassification()
         return self.detail(source_id)
 
     def archive(self, source_id: int, *, note: str = "") -> dict[str, Any]:
