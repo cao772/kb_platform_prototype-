@@ -85,3 +85,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage31_source_catalog_300.py
       - name: Stage32 source harvestability verification tests
         run: PYTHONPATH=. python tests/test_stage32_source_harvestability.py
+      - name: Stage33 POC document parsing tests
+        run: PYTHONPATH=. python tests/test_stage33_poc_document_parsing.py
