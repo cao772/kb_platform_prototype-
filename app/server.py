@@ -554,6 +554,7 @@ class Handler(BaseHTTPRequestHandler):
                     product_class=payload.get("product_class", ""),
                     region_code=payload.get("region_code", ""),
                     as_of=payload.get("as_of") or None,
+                    product_attributes=payload.get("product_attributes") or {},
                 )
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
