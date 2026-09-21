@@ -144,6 +144,19 @@ class KnowledgeStore:
             rows = self.conn.execute("SELECT id,filename,title,knowledge_type,mime_type,parser,ingestion_status,tags,created_at FROM documents ORDER BY id").fetchall()
         return [{**dict(row), "tags": json.loads(row["tags"])} for row in rows]
 
+    def document_detail(self, document_id: int) -> dict[str, Any]:
+        with self.lock:
+            row = self.conn.execute(
+                "SELECT id,filename,title,knowledge_type,mime_type,parser,ingestion_status,tags,source_path,full_text,metadata,created_at FROM documents WHERE id=?",
+                (int(document_id),),
+            ).fetchone()
+        if not row:
+            raise ValueError("document not found")
+        item = dict(row)
+        item["tags"] = json.loads(item.get("tags") or "[]")
+        item["metadata"] = json.loads(item.get("metadata") or "{}")
+        return item
+
     def document_chunks(self, document_id: int) -> list[dict[str, Any]]:
         with self.lock:
             rows = self.conn.execute("SELECT id,document_id,chunk_index,text,metadata FROM chunks WHERE document_id=? ORDER BY chunk_index,id", (document_id,)).fetchall()
