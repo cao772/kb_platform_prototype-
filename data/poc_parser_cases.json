@@ -1,0 +1,64 @@
+[
+  {
+    "case_id": "eu_lvd_2014_35",
+    "filename_hint": "Directive 2014-35-EU.pdf",
+    "category": "原生文本法规",
+    "focus": [
+      "正文完整性",
+      "Article层级",
+      "阅读顺序",
+      "页码定位"
+    ],
+    "expected_route": "native_text"
+  },
+  {
+    "case_id": "id_energy_14_2021",
+    "filename_hint": "Permen ESDM No. 14 Tahun 2021",
+    "category": "复杂排版法规",
+    "focus": [
+      "断行",
+      "页内图片",
+      "章节层级",
+      "版面顺序"
+    ],
+    "expected_route": "mixed_or_native"
+  },
+  {
+    "case_id": "id_safety_7_2025",
+    "filename_hint": "Permenperin No. 7 Tahun 2025",
+    "category": "扫描/文本混合长文档",
+    "focus": [
+      "扫描页识别",
+      "逐页路由",
+      "长文档稳定性",
+      "OCR异常页"
+    ],
+    "expected_route": "mixed_pdf"
+  },
+  {
+    "case_id": "eess_risk_levels",
+    "filename_hint": "EESS-Inscope-Equipment-Definitions-and-Risk-Levels-v4.3-Approved.pdf",
+    "category": "复杂表格",
+    "focus": [
+      "表格行列",
+      "Equipment type",
+      "Risk Level",
+      "Comments",
+      "跨页表格"
+    ],
+    "expected_route": "table_rich"
+  },
+  {
+    "case_id": "asnzs_3820",
+    "filename_hint": "AS-NZS 3820 preview.pdf",
+    "category": "标准类文档",
+    "focus": [
+      "目录",
+      "章节",
+      "条款",
+      "标准编号",
+      "版权边界"
+    ],
+    "expected_route": "native_text"
+  }
+]
