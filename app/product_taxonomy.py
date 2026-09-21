@@ -67,7 +67,12 @@ class ProductTaxonomyService:
         if ranked:
             ranked.sort(key=lambda item: item[0], reverse=True)
             return ranked[0][1]
-        return next((dict(item) for item in children if item.get("id") == "refrigerator"), None)
+        default_child_id = str(family.get("default_child_id") or "")
+        if default_child_id:
+            child = next((item for item in children if item.get("id") == default_child_id), None)
+            if child:
+                return dict(child)
+        return dict(children[0]) if children else None
 
     def _market_mapping(self, family: dict[str, Any], region_code: str) -> dict[str, Any]:
         code = canonical_region_code(region_code)
