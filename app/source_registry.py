@@ -435,7 +435,7 @@ class SourceRegistryService:
         item["file_types"] = json.loads(item.pop("file_types_json") or "[]")
         return item
 
-    def list_sources(self, *, region_code: str = "", source_type: str = "", status: str = "", q: str = "", limit: int = 1000) -> dict[str, Any]:
+    def list_sources(self, *, region_code: str = "", source_type: str = "", status: str = "", harvestability: str = "", verification_status: str = "", q: str = "", limit: int = 1000) -> dict[str, Any]:
         clauses: list[str] = []
         params: list[Any] = []
         if region_code:
@@ -447,6 +447,16 @@ class SourceRegistryService:
         if status:
             clauses.append("status=?")
             params.append(status)
+        if harvestability:
+            if harvestability not in HARVESTABILITY_TYPES:
+                raise ValueError(f"unsupported harvestability: {harvestability}")
+            clauses.append("harvestability=?")
+            params.append(harvestability)
+        if verification_status:
+            if verification_status not in VERIFICATION_STATUSES:
+                raise ValueError(f"unsupported verification status: {verification_status}")
+            clauses.append("verification_status=?")
+            params.append(verification_status)
         if q:
             clauses.append("(lower(source_key) LIKE ? OR lower(source_name) LIKE ? OR lower(authority) LIKE ? OR lower(base_url) LIKE ? OR lower(source_summary) LIKE ? OR lower(extractable_summary) LIKE ? OR lower(crawl_scope) LIKE ?)")
             term = f"%{q.lower()}%"
