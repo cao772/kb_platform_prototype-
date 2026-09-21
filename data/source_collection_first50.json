@@ -1,0 +1,252 @@
+[
+  {
+    "order": 1,
+    "source_key": "EU-EURLEX",
+    "purpose": "欧盟法规正文与版本"
+  },
+  {
+    "order": 2,
+    "source_key": "EU-ECHA",
+    "purpose": "欧盟化学品合规"
+  },
+  {
+    "order": 3,
+    "source_key": "EU-EPREL",
+    "purpose": "欧盟能效标签与产品注册"
+  },
+  {
+    "order": 4,
+    "source_key": "EU-ACCESS2MARKETS",
+    "purpose": "欧盟市场准入与贸易要求"
+  },
+  {
+    "order": 5,
+    "source_key": "EU-HARMONISED-STANDARDS",
+    "purpose": "欧盟协调标准元数据"
+  },
+  {
+    "order": 6,
+    "source_key": "DE-LAW",
+    "purpose": "德国法规"
+  },
+  {
+    "order": 7,
+    "source_key": "FR-LAW",
+    "purpose": "法国法规"
+  },
+  {
+    "order": 8,
+    "source_key": "IT-LAW",
+    "purpose": "意大利法规"
+  },
+  {
+    "order": 9,
+    "source_key": "ES-LAW",
+    "purpose": "西班牙法规"
+  },
+  {
+    "order": 10,
+    "source_key": "NL-LAW",
+    "purpose": "荷兰法规"
+  },
+  {
+    "order": 11,
+    "source_key": "BE-LAW",
+    "purpose": "比利时法规"
+  },
+  {
+    "order": 12,
+    "source_key": "SE-LAW",
+    "purpose": "瑞典法规"
+  },
+  {
+    "order": 13,
+    "source_key": "DK-LAW",
+    "purpose": "丹麦法规"
+  },
+  {
+    "order": 14,
+    "source_key": "FI-LAW",
+    "purpose": "芬兰法规"
+  },
+  {
+    "order": 15,
+    "source_key": "AT-LAW",
+    "purpose": "奥地利法规"
+  },
+  {
+    "order": 16,
+    "source_key": "IE-LAW",
+    "purpose": "爱尔兰法规"
+  },
+  {
+    "order": 17,
+    "source_key": "NO-LAW",
+    "purpose": "挪威法规"
+  },
+  {
+    "order": 18,
+    "source_key": "CH-LAW",
+    "purpose": "瑞士法规"
+  },
+  {
+    "order": 19,
+    "source_key": "GB-LAW",
+    "purpose": "英国法规"
+  },
+  {
+    "order": 20,
+    "source_key": "US-ECFR",
+    "purpose": "美国现行联邦法规"
+  },
+  {
+    "order": 21,
+    "source_key": "US-FEDREG",
+    "purpose": "美国联邦规则与公告"
+  },
+  {
+    "order": 22,
+    "source_key": "CA-LAW",
+    "purpose": "加拿大联邦法规"
+  },
+  {
+    "order": 23,
+    "source_key": "JP-LAW",
+    "purpose": "日本法令"
+  },
+  {
+    "order": 24,
+    "source_key": "KR-LAW",
+    "purpose": "韩国法令"
+  },
+  {
+    "order": 25,
+    "source_key": "AU-LAW",
+    "purpose": "澳大利亚联邦法规"
+  },
+  {
+    "order": 26,
+    "source_key": "NZ-LAW",
+    "purpose": "新西兰法规"
+  },
+  {
+    "order": 27,
+    "source_key": "SG-LAW",
+    "purpose": "新加坡法规"
+  },
+  {
+    "order": 28,
+    "source_key": "DE-STD",
+    "purpose": "德国标准元数据"
+  },
+  {
+    "order": 29,
+    "source_key": "FR-STD",
+    "purpose": "法国标准元数据"
+  },
+  {
+    "order": 30,
+    "source_key": "IT-STD",
+    "purpose": "意大利标准元数据"
+  },
+  {
+    "order": 31,
+    "source_key": "ES-STD",
+    "purpose": "西班牙标准元数据"
+  },
+  {
+    "order": 32,
+    "source_key": "NL-STD",
+    "purpose": "荷兰标准元数据"
+  },
+  {
+    "order": 33,
+    "source_key": "BE-STD",
+    "purpose": "比利时标准元数据"
+  },
+  {
+    "order": 34,
+    "source_key": "SE-STD",
+    "purpose": "瑞典标准元数据"
+  },
+  {
+    "order": 35,
+    "source_key": "FI-STD",
+    "purpose": "芬兰标准元数据"
+  },
+  {
+    "order": 36,
+    "source_key": "AT-STD",
+    "purpose": "奥地利标准元数据"
+  },
+  {
+    "order": 37,
+    "source_key": "IE-STD",
+    "purpose": "爱尔兰标准元数据"
+  },
+  {
+    "order": 38,
+    "source_key": "CH-STD",
+    "purpose": "瑞士标准元数据"
+  },
+  {
+    "order": 39,
+    "source_key": "GB-STD",
+    "purpose": "英国标准元数据"
+  },
+  {
+    "order": 40,
+    "source_key": "US-STD",
+    "purpose": "美国标准元数据"
+  },
+  {
+    "order": 41,
+    "source_key": "AU-STD",
+    "purpose": "澳大利亚标准元数据"
+  },
+  {
+    "order": 42,
+    "source_key": "EU-SAFETY-GATE",
+    "purpose": "欧盟产品安全通报"
+  },
+  {
+    "order": 43,
+    "source_key": "EU-NANDO",
+    "purpose": "欧盟公告机构"
+  },
+  {
+    "order": 44,
+    "source_key": "US-CPSC",
+    "purpose": "美国消费品安全"
+  },
+  {
+    "order": 45,
+    "source_key": "US-DOE-EFFICIENCY",
+    "purpose": "美国能效法规与测试"
+  },
+  {
+    "order": 46,
+    "source_key": "CA-HEALTH-PRODUCT-SAFETY",
+    "purpose": "加拿大消费品安全"
+  },
+  {
+    "order": 47,
+    "source_key": "CA-ISED",
+    "purpose": "加拿大无线电/计量与技术监管"
+  },
+  {
+    "order": 48,
+    "source_key": "JP-METI-PRODUCT-SAFETY",
+    "purpose": "日本产品安全"
+  },
+  {
+    "order": 49,
+    "source_key": "AU-PRODUCT-SAFETY",
+    "purpose": "澳大利亚消费品安全"
+  },
+  {
+    "order": 50,
+    "source_key": "SG-CPSO",
+    "purpose": "新加坡消费品安全"
+  }
+]
