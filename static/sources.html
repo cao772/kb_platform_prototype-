@@ -17,6 +17,7 @@
   </div>
 
   <div class="metrics">
+    <div class="metric"><span>目标来源规模</span><strong id="mTarget">300</strong></div>
     <div class="metric"><span>有效来源</span><strong id="mRegistered">-</strong></div>
     <div class="metric"><span>覆盖目标市场</span><strong id="mRegions">-</strong></div>
     <div class="metric"><span>可直接自动采集</span><strong id="mDirect">-</strong></div>
@@ -168,7 +169,7 @@ async function loadSources(){
   if($('q').value.trim())p.set('q',$('q').value.trim());
   try{
     const d=await api('/api/sources?'+p.toString()),s=d.summary||{};
-    $('mRegistered').textContent=s.registered_sources||0;
+    $('mTarget').textContent=s.target_sources||300;$('mRegistered').textContent=s.registered_sources||0;
     $('mRegions').textContent=(s.target_markets_with_sources||0)+' / '+(s.target_markets||21);
     const h=s.by_harvestability||{},v=s.by_verification_status||{};
     $('mDirect').textContent=h.direct||0;$('mAdapter').textContent=h.adapter||0;$('mMetadata').textContent=h.metadata_only||0;$('mManual').textContent=h.manual_authorized||0;$('mUnavailable').textContent=h.unavailable||0;
