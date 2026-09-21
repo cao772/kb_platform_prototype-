@@ -334,7 +334,14 @@ class GraphGovernanceService:
             self.store.conn.commit()
         return {"relation_id": relation_id, "status": status}
 
-    def _filtered_records(self, *, region_code: str = "", product_class: str = "", as_of: str | None = None) -> list[dict[str, Any]]:
+    def _filtered_records(
+        self,
+        *,
+        region_code: str = "",
+        product_class: str = "",
+        as_of: str | None = None,
+        product_class_terms: list[str] | tuple[str, ...] | None = None,
+    ) -> list[dict[str, Any]]:
         records = self.store.list_compliance_records(
             review_status="approved",
             limit=5000,
@@ -347,8 +354,14 @@ class GraphGovernanceService:
                 if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
             ]
         output = []
+        match_terms = [str(item).strip() for item in (product_class_terms or []) if str(item).strip()]
+        if product_class and product_class not in match_terms:
+            match_terms.insert(0, product_class)
         for source in records:
-            if product_class and not _matches_product_class(source.get("product_class", ""), product_class):
+            if match_terms:
+                if not any(_matches_product_class(source.get("product_class", ""), term) for term in match_terms):
+                    continue
+            elif product_class and not _matches_product_class(source.get("product_class", ""), product_class):
                 continue
             item = dict(source)
             item["lifecycle_state"] = lifecycle_state(item, as_of=as_of)
@@ -357,8 +370,20 @@ class GraphGovernanceService:
             output.append(item)
         return output
 
-    def project_graph(self, *, region_code: str = "", product_class: str = "", as_of: str | None = None) -> dict[str, Any]:
-        records = self._filtered_records(region_code=region_code, product_class=product_class, as_of=as_of)
+    def project_graph(
+        self,
+        *,
+        region_code: str = "",
+        product_class: str = "",
+        as_of: str | None = None,
+        product_class_terms: list[str] | tuple[str, ...] | None = None,
+    ) -> dict[str, Any]:
+        records = self._filtered_records(
+            region_code=region_code,
+            product_class=product_class,
+            as_of=as_of,
+            product_class_terms=product_class_terms,
+        )
         node_ids = {int(item["id"]) for item in records}
         relations = [
             item for item in self.list_relations(status="approved", limit=5000)
@@ -406,8 +431,20 @@ class GraphGovernanceService:
             "boundary": "图谱只投影已审核节点和已审核关系；候选关系不参与路径推理。",
         }
 
-    def certification_paths(self, *, region_code: str, product_class: str, as_of: str | None = None) -> dict[str, Any]:
-        graph = self.project_graph(region_code=region_code, product_class=product_class, as_of=as_of)
+    def certification_paths(
+        self,
+        *,
+        region_code: str,
+        product_class: str,
+        as_of: str | None = None,
+        product_class_terms: list[str] | tuple[str, ...] | None = None,
+    ) -> dict[str, Any]:
+        graph = self.project_graph(
+            region_code=region_code,
+            product_class=product_class,
+            as_of=as_of,
+            product_class_terms=product_class_terms,
+        )
         nodes = {int(item["id"]): item for item in graph["nodes"]}
         adjacency: dict[int, list[dict[str, Any]]] = defaultdict(list)
         for edge in graph["edges"]:
