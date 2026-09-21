@@ -91,3 +91,7 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage34_first50_collection.py
       - name: Stage35 fine-grained product market access tests
         run: PYTHONPATH=. python tests/test_stage35_fine_product_access.py
+      - name: Stage36 configurable deep site extraction tests
+        run: PYTHONPATH=. python tests/test_stage36_site_extraction.py
+      - name: Stage37 expanded product access taxonomy tests
+        run: PYTHONPATH=. python tests/test_stage37_product_taxonomy_expansion.py

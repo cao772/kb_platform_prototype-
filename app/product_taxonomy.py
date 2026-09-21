@@ -67,11 +67,16 @@ class ProductTaxonomyService:
         if ranked:
             ranked.sort(key=lambda item: item[0], reverse=True)
             return ranked[0][1]
-        return next((dict(item) for item in children if item.get("id") == "refrigerator"), None)
+        default_child_id = str(family.get("default_child_id") or "")
+        if default_child_id:
+            child = next((item for item in children if item.get("id") == default_child_id), None)
+            if child:
+                return dict(child)
+        return dict(children[0]) if children else None
 
-    def _market_mapping(self, region_code: str) -> dict[str, Any]:
+    def _market_mapping(self, family: dict[str, Any], region_code: str) -> dict[str, Any]:
         code = canonical_region_code(region_code)
-        mappings = dict(self.data.get("market_mappings") or {})
+        mappings = dict(family.get("market_mappings") or self.data.get("market_mappings") or {})
         if code in set(self.data.get("eu_member_markets") or []):
             base = dict(mappings.get("EU") or {})
             base["inherited_from"] = "EU"
@@ -83,7 +88,7 @@ class ProductTaxonomyService:
                 + f" {base['requested_region_name']}作为欧盟成员市场复用欧盟共享产品规则，并叠加国家执行、语言、市场监管和注册要求。"
             ).strip()
             return base
-        mapping = dict(mappings.get(code) or {})
+        mapping = dict(mappings.get(code) or family.get("default_market_mapping") or {})
         mapping["requested_region_code"] = code
         mapping["requested_region_name"] = str(REGION_META.get(code, {}).get("name") or code)
         return mapping
@@ -110,7 +115,7 @@ class ProductTaxonomyService:
             }
 
         child = self._resolve_child(family, product, product_class, attrs)
-        mapping = self._market_mapping(region_code)
+        mapping = self._market_mapping(family, region_code)
         path = list(family.get("parent_path") or []) + [family.get("name_zh", "")]
         if child:
             path.append(str(child.get("name_zh") or ""))
@@ -124,10 +129,11 @@ class ProductTaxonomyService:
         applied_dimensions = list(mapping.get("regulatory_dimensions") or [])
         if bool(attrs.get("wireless")) and not any("无线" in item for item in applied_dimensions):
             applied_dimensions.append("无线电/通信功能附加要求")
-        if child and child.get("id") == "wine_storage":
-            applied_dimensions.append("酒类储藏柜适用范围/豁免条件")
-        if child and child.get("id") == "commercial_refrigeration":
-            applied_dimensions.append("商用制冷设备专用能效/安全分类")
+        conditional_dimensions = dict(family.get("conditional_dimensions") or {})
+        if child and child.get("id") in conditional_dimensions:
+            for item in conditional_dimensions.get(child.get("id")) or []:
+                if item not in applied_dimensions:
+                    applied_dimensions.append(item)
 
         terms = []
         for term in [product_class, product, family.get("name_zh"), *(family.get("formal_match_terms") or [])]:

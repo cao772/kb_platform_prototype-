@@ -12,6 +12,7 @@ from app.regions import target_market_catalog
 from app.source_registry import SourceRegistryService
 from app.source_verification import SourceVerificationService
 from app.source_collection import SourceCollectionService
+from app.site_extraction import SiteExtractionService
 from app.source_diff import SourceDifferenceService
 from app.source_impact import SourceImpactService
 from app.document_translation import DocumentTranslationService
@@ -28,6 +29,7 @@ ontology_registry = OntologyRegistryService(store)
 source_registry = SourceRegistryService(store)
 source_verification = SourceVerificationService(source_registry)
 source_collection = SourceCollectionService(store, source_registry, ROOT / "data" / "source_downloads", change_monitor=change_monitor)
+site_extraction = SiteExtractionService(store, source_registry, ROOT / "data" / "source_downloads")
 source_diff = SourceDifferenceService(store)
 source_impact = SourceImpactService(store, source_diff, graph_service)
 document_translation = DocumentTranslationService(store)
@@ -110,6 +112,35 @@ class Handler(BaseHandler):
         if parsed.path == "/api/collection/first-wave":
             try:
                 self._send_json(source_collection.first_wave_profiles())
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/site-plans":
+            try:
+                self._send_json(site_extraction.list_plans(
+                    source_key=params.get("source_key", [""])[0]
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/site-items":
+            try:
+                self._send_json(site_extraction.list_items(
+                    source_key=params.get("source_key", [""])[0],
+                    limit=min(int(params.get("limit", ["200"])[0] or 200), 2000),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/site-runs":
+            try:
+                self._send_json(site_extraction.list_runs(
+                    source_key=params.get("source_key", [""])[0],
+                    limit=min(int(params.get("limit", ["100"])[0] or 100), 500),
+                ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
@@ -591,6 +622,31 @@ class Handler(BaseHandler):
                     auto_ingest=bool(payload.get("auto_ingest", True)),
                     auto_extract=bool(payload.get("auto_extract", False)),
                     use_model=bool(payload.get("use_model", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/site-plan/update":
+            try:
+                payload = self._read_json()
+                self._send_json(site_extraction.update_plan(
+                    str(payload.get("source_key") or ""),
+                    config=payload.get("config") or {},
+                    enabled=bool(payload.get("enabled", True)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/site-crawl/run":
+            try:
+                payload = self._read_json()
+                self._send_json(site_extraction.run(
+                    str(payload.get("source_key") or ""),
+                    max_pages=int(payload.get("max_pages") or 0) or None,
+                    max_items=int(payload.get("max_items") or 0) or None,
+                    auto_ingest=bool(payload.get("auto_ingest", False)),
                 ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)

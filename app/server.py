@@ -279,6 +279,12 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
+        if parsed.path == "/api/product-taxonomy":
+            try:
+                self._send_json(market_access.product_taxonomy.catalog())
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
         if parsed.path == "/api/change-watch/summary":
             self._send_json(change_monitor.summary())
             return
