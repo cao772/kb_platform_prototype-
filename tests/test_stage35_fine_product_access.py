@@ -123,9 +123,14 @@ def main() -> None:
     workflow = Path(".github/workflows/quality.yml").read_text(encoding="utf-8")
     assert 'value="电冰箱"' in page
     assert "标准产品分类" in page
-    assert "冷藏冷冻组合式冰箱" in page
+    assert "/api/product-taxonomy" in page
+    assert "renderAccessAttributes" in page
     assert "产品分类与市场映射" in page
     assert "product_attributes" in page
+    assert any(
+        child.get("name_zh") == "冷藏冷冻组合式冰箱"
+        for child in taxonomy.data["product_families"][0]["children"]
+    )
     assert "product_attributes" in server
     assert "Stage35 fine-grained product market access tests" in workflow
 
