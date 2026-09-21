@@ -143,13 +143,23 @@ class DocumentProcessingService:
             document_id = ingest_file(self.store, saved["path"])
             docs = [item for item in self.store.list_documents() if int(item.get("id") or 0) == int(document_id)]
             parser_name = docs[0].get("parser", "") if docs else ""
+            detail = self.store.document_detail(int(document_id))
+            parse_summary = dict((detail.get("metadata") or {}).get("parse_summary") or {})
+            indexed_message = "文档已解析，可进入知识识别"
+            if parse_summary:
+                indexed_message += (
+                    f"；平均质量 {parse_summary.get('average_quality', '-')}"
+                    f"，异常页 {len(parse_summary.get('issue_pages') or [])}"
+                    f"，表格页 {parse_summary.get('table_pages', 0)}"
+                )
             self.tasks.update(
                 task_id,
                 stage="indexed",
                 status="running",
-                message="文档已解析，可进入知识识别",
+                message=indexed_message,
                 document_id=document_id,
                 parser=parser_name,
+                parse_summary=parse_summary,
                 file_size=saved.get("size"),
                 sha256=saved.get("sha256"),
             )

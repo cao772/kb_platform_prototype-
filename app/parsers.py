@@ -9,6 +9,7 @@ from pathlib import Path
 
 from app.docx_parser import parse_docx
 from app.model_gateway import call_vision_ocr, current_model_config
+from app.pdf_structure import extract_pdf_structure
 from app.runtime_settings import current_parser_settings
 from app.vendor_path import activate_vendor
 
@@ -121,45 +122,56 @@ def _render_pdf_page(path: Path, page_index: int) -> bytes | None:
 
 
 def parse_pdf_standard(path: Path) -> StandardDocument:
-    from pypdf import PdfReader
-
-    reader = PdfReader(str(path))
-    blocks: list[StandardBlock] = []
-    ocr_pages = 0
-    empty_pages = 0
     max_vision_pages = int(current_parser_settings().get("vision_max_pages") or 6)
-    for i, page in enumerate(reader.pages, 1):
-        text = (page.extract_text() or "").strip()
-        if text:
-            blocks.append(StandardBlock("page_text", text, page_no=i, metadata={"source": "text_layer"}))
-            continue
-        empty_pages += 1
-        if _ocr_enabled() and ocr_pages < max_vision_pages:
-            rendered = _render_pdf_page(path, i - 1)
-            if rendered:
-                recognized, trace = call_vision_ocr(
-                    rendered,
-                    "image/png",
-                    instruction=(
-                        f"这是PDF第{i}页。请识别页面中的正文、条款编号、表格文字、日期、法规标准编号和认证要求。"
-                        "尽量保持阅读顺序；无法确认的字符不要猜测。"
-                    ),
-                )
-                if recognized:
-                    ocr_pages += 1
-                    blocks.append(StandardBlock("page_ocr", recognized, page_no=i, metadata={"source": "vision_model", "trace": trace}))
-                    continue
-        blocks.append(StandardBlock("page_unreadable", f"[第{i}页未识别到可提取文字]", page_no=i, metadata={"source": "unreadable"}))
+    ocr_available = _ocr_enabled()
 
-    parser_name = "pypdf+vision" if ocr_pages else "pypdf"
+    def _ocr_callback(image_bytes: bytes, page_no: int) -> tuple[str, dict]:
+        return call_vision_ocr(
+            image_bytes,
+            "image/png",
+            instruction=(
+                f"这是PDF第{page_no}页。请识别正文、章节/条款编号、表格文字、日期、法规标准编号和认证要求。"
+                "保持阅读顺序和层级；表格尽量按行列输出；无法确认的字符不要猜测。"
+            ),
+        )
+
+    structured_blocks, parse_report = extract_pdf_structure(
+        path,
+        ocr_enabled=ocr_available,
+        max_vision_pages=max_vision_pages,
+        ocr_callback=_ocr_callback if ocr_available else None,
+    )
+    blocks = [
+        StandardBlock(
+            str(item.get("type") or "paragraph"),
+            str(item.get("text") or ""),
+            page_no=int(item.get("page_no") or 0) or None,
+            section_title=str(item.get("section_title") or "") or None,
+            metadata={
+                "source": "structured_pdf",
+                "bbox": item.get("bbox", []),
+                "heading_level": item.get("heading_level"),
+                "hierarchy": item.get("hierarchy", []),
+                "rows": item.get("rows", []) if item.get("type") == "table" else [],
+            },
+        )
+        for item in structured_blocks
+        if str(item.get("text") or "").strip()
+    ]
+    summary = dict(parse_report.get("summary") or {})
+    if not blocks:
+        blocks = [StandardBlock("page_unreadable", "[PDF未识别到可索引内容]", metadata={"source": "unreadable"})]
+    parser_name = "pymupdf-layout+vision" if summary.get("ocr_pages") else "pymupdf-layout"
     return StandardDocument(
         str(path.resolve()), path.name, path.stem, "application/pdf", parser_name,
         blocks,
         {
-            "page_count": len(reader.pages),
-            "empty_text_pages": empty_pages,
-            "vision_ocr_pages": ocr_pages,
-            "ocr_available": _ocr_enabled(),
+            "page_count": int(summary.get("page_count") or 0),
+            "empty_text_pages": int(summary.get("scan_pages") or 0),
+            "vision_ocr_pages": int(summary.get("ocr_pages") or 0),
+            "ocr_available": ocr_available,
+            "parse_summary": summary,
+            "parse_report": parse_report,
         },
     )
 
