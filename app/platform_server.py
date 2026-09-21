@@ -10,6 +10,7 @@ from app.ontology_governance import OntologyGovernanceService
 from app.ontology_registry import OntologyRegistryService
 from app.regions import target_market_catalog
 from app.source_registry import SourceRegistryService
+from app.source_verification import SourceVerificationService
 from app.source_collection import SourceCollectionService
 from app.source_diff import SourceDifferenceService
 from app.source_impact import SourceImpactService
@@ -25,6 +26,7 @@ regulation_map = RegulationMapService(store)
 ontology_governance = OntologyGovernanceService(store)
 ontology_registry = OntologyRegistryService(store)
 source_registry = SourceRegistryService(store)
+source_verification = SourceVerificationService(source_registry)
 source_collection = SourceCollectionService(store, source_registry, ROOT / "data" / "source_downloads", change_monitor=change_monitor)
 source_diff = SourceDifferenceService(store)
 source_impact = SourceImpactService(store, source_diff, graph_service)
@@ -66,6 +68,13 @@ class Handler(BaseHandler):
                     source_key=item.get("source_key", "")
                 ).get("items", [])
                 self._send_json(item)
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/sources/verification-summary":
+            try:
+                self._send_json(source_registry.verification_summary())
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
@@ -581,6 +590,21 @@ class Handler(BaseHandler):
         if parsed.path == "/api/sources/create":
             try:
                 self._send_json(source_registry.create(self._read_json()), HTTPStatus.CREATED)
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/sources/verify":
+            try:
+                payload = self._read_json()
+                source_ids = payload.get("source_ids")
+                if source_ids is None:
+                    source_ids = [int(payload.get("id") or 0)]
+                self._send_json(source_verification.verify_many(
+                    source_ids,
+                    timeout=max(3, min(int(payload.get("timeout") or 12), 30)),
+                    max_workers=max(1, min(int(payload.get("max_workers") or 6), 8)),
+                ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
