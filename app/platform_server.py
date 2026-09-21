@@ -54,6 +54,8 @@ class Handler(BaseHandler):
                     region_code=params.get("region", [""])[0],
                     source_type=params.get("type", [""])[0],
                     status=params.get("status", [""])[0],
+                    harvestability=params.get("harvestability", [""])[0],
+                    verification_status=params.get("verification_status", [""])[0],
                     q=params.get("q", [""])[0],
                     limit=min(int(params.get("limit", ["1000"])[0] or 1000), 3000),
                 ))
