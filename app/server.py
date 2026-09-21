@@ -21,6 +21,7 @@ from app.market_access import MarketAccessService
 from app.ingest import ingest_directory, ingest_file
 from app.model_gateway import build_rag_prompt, current_model_config, test_model_connection
 from app.ontology import ontology_schema
+from app.parser_review import ParserReviewService
 from app.processing import DocumentProcessingService
 from app.query_router import QueryRouter
 from app.retrieval import RetrievalPipeline
@@ -49,6 +50,7 @@ graph_backend = GraphBackendRouter(graph_service)
 agent = KnowledgeAgent(store, graph_service=graph_service, graph_backend=graph_backend)
 runtime_settings = RuntimeSettingsStore(SETTINGS_PATH)
 processing = DocumentProcessingService(store, UPLOAD_DIR, PROCESSING_TASK_PATH, change_monitor=change_monitor)
+parser_review = ParserReviewService(store)
 
 
 def json_bytes(payload: object) -> bytes:
@@ -175,6 +177,28 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/documents":
             self._send_json({"items": store.list_documents()})
+            return
+        if parsed.path == "/api/parser/report":
+            try:
+                document_id = int(params.get("document_id", ["0"])[0] or 0)
+                self._send_json(parser_review.report(document_id))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        if parsed.path == "/api/parser/page-image":
+            try:
+                document_id = int(params.get("document_id", ["0"])[0] or 0)
+                page_no = int(params.get("page", ["1"])[0] or 1)
+                scale = float(params.get("scale", ["1.35"])[0] or 1.35)
+                body = parser_review.page_image(document_id, page_no, scale=scale)
+                self.send_response(HTTPStatus.OK)
+                self.send_header("Content-Type", "image/png")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(body)
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
         if parsed.path == "/api/ingestion-events":
             self._send_json({"items": store.recent_ingestion_events()})
@@ -304,6 +328,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path in {"/admin", "/admin.html"}:
             self._send_file(STATIC_DIR / "admin.html")
+            return
+        if parsed.path in {"/parse-review", "/parse-review.html"}:
+            self._send_file(STATIC_DIR / "parse_review.html")
             return
         if parsed.path in {"/catalog", "/catalog.html"}:
             self._send_file(STATIC_DIR / "catalog.html")
