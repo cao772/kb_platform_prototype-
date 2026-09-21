@@ -107,6 +107,13 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/collection/first-wave":
+            try:
+                self._send_json(source_collection.first_wave_profiles())
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/collection/runs":
             try:
                 self._send_json(source_collection.list_runs(
@@ -571,6 +578,20 @@ class Handler(BaseHandler):
         if parsed.path == "/api/collection/profile-create":
             try:
                 self._send_json(source_collection.create_profile(self._read_json()), HTTPStatus.CREATED)
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/first-wave/run":
+            try:
+                payload = self._read_json()
+                self._send_json(source_collection.run_first_wave_batch(
+                    offset=int(payload.get("offset") or 0),
+                    limit=int(payload.get("limit") or 5),
+                    auto_ingest=bool(payload.get("auto_ingest", True)),
+                    auto_extract=bool(payload.get("auto_extract", False)),
+                    use_model=bool(payload.get("use_model", False)),
+                ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return

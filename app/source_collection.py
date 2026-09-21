@@ -83,6 +83,21 @@ PROFILE_SEEDS: tuple[CollectionProfileSeed, ...] = (
     ),
 )
 
+FIRST_WAVE_PATH = Path(__file__).resolve().parent.parent / "data" / "source_collection_first50.json"
+
+
+def _load_first_wave() -> list[dict[str, Any]]:
+    if not FIRST_WAVE_PATH.exists():
+        return []
+    payload = json.loads(FIRST_WAVE_PATH.read_text(encoding="utf-8"))
+    if not isinstance(payload, list):
+        raise ValueError("first-wave collection catalog must be a list")
+    items = [dict(item) for item in payload if isinstance(item, dict)]
+    if len(items) != 50:
+        raise ValueError(f"first-wave collection catalog must contain 50 sources, got {len(items)}")
+    return items
+
+
 Fetcher = Callable[[str, dict[str, str], int, int], tuple[bytes, int, str]]
 
 
@@ -114,6 +129,7 @@ class SourceCollectionService:
         self.fetcher = fetcher or _default_fetcher
         self._ensure_schema()
         self._seed_profiles()
+        self._seed_first_wave_profiles()
 
     def _ensure_schema(self) -> None:
         with self.store.lock:
@@ -221,6 +237,108 @@ class SourceCollectionService:
                     ),
                 )
             self.store.conn.commit()
+
+    def _seed_first_wave_profiles(self) -> None:
+        wave = _load_first_wave()
+        if not wave:
+            return
+        with self.store.lock:
+            for entry in wave:
+                source_key = str(entry.get("source_key") or "").strip()
+                if not source_key:
+                    continue
+                existing = self.store.conn.execute(
+                    "SELECT id FROM collection_profiles WHERE source_key=? LIMIT 1",
+                    (source_key,),
+                ).fetchone()
+                if existing:
+                    continue
+                source_row = self.store.conn.execute(
+                    "SELECT * FROM knowledge_sources WHERE source_key=?",
+                    (source_key,),
+                ).fetchone()
+                if not source_row:
+                    continue
+                source = dict(source_row)
+                profile_key = f"FW-{source_key}-ENTRY"
+                purpose = str(entry.get("purpose") or "").strip() or "首批50站入口资料采集"
+                entry_url = str(source.get("base_url") or "").strip()
+                if not entry_url.startswith(("http://", "https://")):
+                    continue
+                notes = (
+                    "首批50站入口级采集配置。用于保存官方入口页面或公开目录的原始证据；"
+                    "复杂站点的列表翻页、详情页和附件发现后续按站点适配，不把首页采集等同于全站采集。"
+                )
+                self.store.conn.execute(
+                    """INSERT INTO collection_profiles(
+                           profile_key,source_key,adapter,entry_url,output_suffix,purpose,
+                           enabled,timeout_seconds,max_bytes,headers_json,notes
+                       ) VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                       ON CONFLICT(profile_key) DO NOTHING""",
+                    (
+                        profile_key, source_key, "html", entry_url, ".html", purpose,
+                        1, 30, 25 * 1024 * 1024, "{}", notes,
+                    ),
+                )
+            self.store.conn.commit()
+
+    def first_wave_profiles(self) -> dict[str, Any]:
+        wave = _load_first_wave()
+        requested_keys = [str(item.get("source_key") or "") for item in wave]
+        profiles = self.list_profiles()["items"]
+        grouped: dict[str, list[dict[str, Any]]] = {}
+        for profile in profiles:
+            grouped.setdefault(str(profile.get("source_key") or ""), []).append(profile)
+
+        preferred_adapter_order = {"json_api": 0, "xml_api": 1, "pdf": 2, "html": 3}
+        items: list[dict[str, Any]] = []
+        for entry in wave:
+            source_key = str(entry.get("source_key") or "")
+            source = self.source_registry.by_key(source_key)
+            candidates = grouped.get(source_key, [])
+            candidates.sort(key=lambda item: (
+                preferred_adapter_order.get(str(item.get("adapter") or ""), 9),
+                str(item.get("profile_key") or ""),
+            ))
+            profile = candidates[0] if candidates else {}
+            items.append({
+                "order": int(entry.get("order") or 0),
+                "source_key": source_key,
+                "region_code": source.get("region_code", ""),
+                "source_name": source.get("source_name", ""),
+                "source_type": source.get("source_type", ""),
+                "harvestability": source.get("harvestability", ""),
+                "purpose": entry.get("purpose", ""),
+                "profile": profile,
+                "profile_ready": bool(profile),
+            })
+
+        with self.store.lock:
+            run_rows = self.store.conn.execute(
+                """SELECT source_key,
+                          SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) success_count,
+                          SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END) failed_count,
+                          MAX(finished_at) last_finished_at
+                   FROM collection_runs
+                   GROUP BY source_key"""
+            ).fetchall()
+        run_map = {str(row["source_key"]): dict(row) for row in run_rows}
+        for item in items:
+            run = run_map.get(item["source_key"], {})
+            item["success_count"] = int(run.get("success_count") or 0)
+            item["failed_count"] = int(run.get("failed_count") or 0)
+            item["last_finished_at"] = str(run.get("last_finished_at") or "")
+
+        return {
+            "items": items,
+            "summary": {
+                "target_sources": len(requested_keys),
+                "profile_ready": sum(1 for item in items if item["profile_ready"]),
+                "regions": len({item["region_code"] for item in items if item["region_code"] and item["region_code"] != "EU"}),
+                "completed_sources": sum(1 for item in items if item["success_count"] > 0),
+                "failed_sources": sum(1 for item in items if item["failed_count"] > 0 and item["success_count"] == 0),
+            },
+        }
 
     def _profile_row(self, row) -> dict[str, Any]:
         item = dict(row)
@@ -353,6 +471,69 @@ class SourceCollectionService:
 
     def _source_for_profile(self, profile: dict[str, Any]) -> dict[str, Any]:
         return self.source_registry.by_key(profile["source_key"])
+
+    def run_first_wave_batch(
+        self,
+        *,
+        offset: int = 0,
+        limit: int = 5,
+        auto_ingest: bool = True,
+        auto_extract: bool = False,
+        use_model: bool = False,
+    ) -> dict[str, Any]:
+        wave = self.first_wave_profiles()["items"]
+        start = max(0, int(offset))
+        batch_size = max(1, min(int(limit), 10))
+        selected = wave[start : start + batch_size]
+        results: list[dict[str, Any]] = []
+        for item in selected:
+            profile = dict(item.get("profile") or {})
+            profile_id = int(profile.get("id") or 0)
+            if not profile_id:
+                results.append({
+                    "source_key": item.get("source_key"),
+                    "source_name": item.get("source_name"),
+                    "status": "failed",
+                    "error": "collection profile not ready",
+                })
+                continue
+            try:
+                result = self.run(
+                    profile_id,
+                    auto_ingest=auto_ingest,
+                    auto_extract=auto_extract,
+                    use_model=use_model,
+                )
+                results.append({
+                    "source_key": item.get("source_key"),
+                    "source_name": item.get("source_name"),
+                    "profile_key": profile.get("profile_key"),
+                    "status": "completed",
+                    "content_status": result.get("content_status"),
+                    "document_id": result.get("document_id"),
+                    "bytes_received": result.get("bytes_received"),
+                })
+            except Exception as exc:
+                results.append({
+                    "source_key": item.get("source_key"),
+                    "source_name": item.get("source_name"),
+                    "profile_key": profile.get("profile_key"),
+                    "status": "failed",
+                    "error": str(exc),
+                })
+        return {
+            "offset": start,
+            "limit": batch_size,
+            "next_offset": start + len(selected),
+            "done": start + len(selected) >= len(wave),
+            "results": results,
+            "summary": {
+                "requested": len(selected),
+                "success": sum(1 for item in results if item.get("status") == "completed"),
+                "failed": sum(1 for item in results if item.get("status") == "failed"),
+                **self.first_wave_profiles()["summary"],
+            },
+        }
 
     def run(
         self,

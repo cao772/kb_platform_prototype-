@@ -87,3 +87,7 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage32_source_harvestability.py
       - name: Stage33 POC document parsing tests
         run: PYTHONPATH=. python tests/test_stage33_poc_document_parsing.py
+      - name: Stage34 first-wave 50 source collection tests
+        run: PYTHONPATH=. python tests/test_stage34_first50_collection.py
+      - name: Stage35 fine-grained product market access tests
+        run: PYTHONPATH=. python tests/test_stage35_fine_product_access.py

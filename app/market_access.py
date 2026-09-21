@@ -5,6 +5,7 @@ from typing import Any
 
 from app.governance import analyze_product_access_v2
 from app.graph_governance import GraphGovernanceService
+from app.product_taxonomy import ProductTaxonomyService
 from app.regions import REGION_META, canonical_region_code
 from app.store import KnowledgeStore
 
@@ -29,6 +30,7 @@ class MarketAccessService:
     def __init__(self, store: KnowledgeStore, graph_service: GraphGovernanceService):
         self.store = store
         self.graph_service = graph_service
+        self.product_taxonomy = ProductTaxonomyService()
 
     @staticmethod
     def _business_item(record: dict[str, Any]) -> dict[str, Any]:
@@ -63,8 +65,15 @@ class MarketAccessService:
         product_class: str,
         region_code: str,
         as_of: str | None = None,
+        product_attributes: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         effective_date = as_of or date.today().isoformat()
+        classification = self.product_taxonomy.resolve(
+            product=product,
+            product_class=product_class,
+            region_code=region_code,
+            attributes=product_attributes or {},
+        )
         access = analyze_product_access_v2(
             self.store,
             product=product,
@@ -72,11 +81,13 @@ class MarketAccessService:
             region_code=region_code,
             include_demo=False,
             as_of=effective_date,
+            product_class_terms=classification.get("formal_match_terms") or None,
         )
         paths = self.graph_service.certification_paths(
             region_code=access["region_code"],
             product_class=product_class,
             as_of=effective_date,
+            product_class_terms=classification.get("formal_match_terms") or None,
         )
 
         stages = []
@@ -125,6 +136,7 @@ class MarketAccessService:
         return {
             "product": product,
             "product_class": product_class,
+            "product_classification": classification,
             "region_code": requested or region_code,
             "region_name": requested_name,
             "as_of": effective_date,
@@ -157,6 +169,10 @@ class MarketAccessService:
             "decision_boundary": (
                 "本结果用于组织已审核知识和已确认关系，不自动替代产品参数核验、"
                 "例外条件判断、认证机构判定或最终法律合规意见。"
+            ),
+            "classification_boundary": (
+                "产品分类映射只用于缩小适用范围；标记为research_seed的市场分类仍需正式来源复核，"
+                "不得直接作为法规适用或准入通过结论。"
             ),
             "next_action": (
                 "当前市场/产品分类尚无足够正式知识，请先补充并审核依据。"
