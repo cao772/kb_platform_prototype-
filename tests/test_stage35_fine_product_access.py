@@ -8,6 +8,7 @@ from app.graph_governance import GraphGovernanceService
 from app.market_access import MarketAccessService
 from app.product_taxonomy import ProductTaxonomyService
 from app.regions import TARGET_MARKETS
+from app.source_registry import SourceRegistryService
 from app.store import KnowledgeStore
 
 
@@ -67,6 +68,11 @@ def main() -> None:
 
     with tempfile.TemporaryDirectory() as tmp:
         store = KnowledgeStore(Path(tmp) / "taxonomy_access.db")
+        registry = SourceRegistryService(store)
+        for mapping in taxonomy.data.get("market_mappings", {}).values():
+            for source_key in mapping.get("source_keys", []):
+                assert registry.by_key(source_key)["source_key"] == source_key
+
         text = (
             "产品分类：家用电器。欧盟法规 TEST-EU-REF-001 要求制造商保存技术资料。\n"
             "该法规适用于相关家用电器。"
@@ -105,6 +111,12 @@ def main() -> None:
         assert result["product_classification"]["market_mapping"]["inherited_from"] == "EU"
         assert result["summary"]["matched_records"] == 1
         assert result["stages"][0]["count"] == 1
+        graph = service.graph_service.project_graph(
+            region_code="DE",
+            product_class="家用制冷器具",
+            product_class_terms=result["product_classification"]["formal_match_terms"],
+        )
+        assert any(node["product_class"] == "家用电器" for node in graph["nodes"])
 
     page = Path("static/index.html").read_text(encoding="utf-8")
     server = Path("app/server.py").read_text(encoding="utf-8")
