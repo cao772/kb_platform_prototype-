@@ -436,7 +436,7 @@
       "source_keys": [
         "NO-LAW",
         "NO-DSB",
-        "NO-STD"
+        "NO-STANDARD"
       ],
       "important_attributes": [
         "product_form",
