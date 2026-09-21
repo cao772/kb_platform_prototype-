@@ -1,5 +1,5 @@
 {
-  "version": "2026-09",
+  "version": "2026-09-stage37",
   "principle": "产品分类先做统一标准产品树，再映射到各市场监管分类；监管分类只用于组织适用范围，最终法规/标准/认证结论仍来自已审核正式知识。",
   "product_families": [
     {
@@ -145,7 +145,1028 @@
         "冰箱",
         "refrigerator",
         "refrigerating appliances"
-      ]
+      ],
+      "default_child_id": "refrigerator",
+      "conditional_dimensions": {
+        "wine_storage": [
+          "酒类储藏柜适用范围/豁免条件"
+        ],
+        "commercial_refrigeration": [
+          "商用制冷设备专用能效/安全分类"
+        ]
+      }
+    },
+    {
+      "id": "room_air_conditioners",
+      "name_zh": "房间空调器",
+      "name_en": "Room air conditioners",
+      "parent_path": [
+        "家用电器",
+        "空气调节设备"
+      ],
+      "default_child_id": "split_air_conditioner",
+      "aliases": [
+        "空调",
+        "房间空调器",
+        "家用空调",
+        "air conditioner",
+        "room air conditioner",
+        "RAC"
+      ],
+      "children": [
+        {
+          "id": "split_air_conditioner",
+          "name_zh": "分体式空调",
+          "aliases": [
+            "分体空调",
+            "split air conditioner",
+            "single split"
+          ]
+        },
+        {
+          "id": "multi_split_air_conditioner",
+          "name_zh": "多联分体式空调",
+          "aliases": [
+            "多联机",
+            "multi-split air conditioner"
+          ]
+        },
+        {
+          "id": "window_air_conditioner",
+          "name_zh": "窗式/穿墙式空调",
+          "aliases": [
+            "窗机",
+            "window air conditioner",
+            "through-the-wall"
+          ]
+        },
+        {
+          "id": "portable_air_conditioner",
+          "name_zh": "便携式空调",
+          "aliases": [
+            "移动空调",
+            "portable air conditioner"
+          ]
+        },
+        {
+          "id": "vrf_air_conditioner",
+          "name_zh": "VRF多联机",
+          "aliases": [
+            "VRF",
+            "variable refrigerant flow"
+          ]
+        }
+      ],
+      "decision_attributes": [
+        {
+          "key": "use_context",
+          "label": "使用场景",
+          "values": [
+            "household",
+            "commercial"
+          ],
+          "required": true
+        },
+        {
+          "key": "product_form",
+          "label": "产品形态",
+          "values": [
+            "split_air_conditioner",
+            "multi_split_air_conditioner",
+            "window_air_conditioner",
+            "portable_air_conditioner",
+            "vrf_air_conditioner"
+          ],
+          "required": true
+        },
+        {
+          "key": "rated_cooling_capacity_kw",
+          "label": "额定制冷量(kW)",
+          "type": "number"
+        },
+        {
+          "key": "heating_function",
+          "label": "是否具备制热功能",
+          "type": "boolean"
+        },
+        {
+          "key": "phase",
+          "label": "供电相数",
+          "values": [
+            "single_phase",
+            "three_phase"
+          ]
+        },
+        {
+          "key": "inverter",
+          "label": "是否变频",
+          "type": "boolean"
+        },
+        {
+          "key": "refrigerant",
+          "label": "制冷剂",
+          "type": "text"
+        },
+        {
+          "key": "wireless",
+          "label": "是否带Wi-Fi/蓝牙等无线功能",
+          "type": "boolean"
+        }
+      ],
+      "formal_match_terms": [
+        "家用电器",
+        "空气调节设备",
+        "房间空调器",
+        "空调",
+        "air conditioner",
+        "room air conditioner"
+      ],
+      "market_mappings": {
+        "EU": {
+          "market_category": "Air conditioners and comfort fans / room air conditioners",
+          "classification_basis": "欧盟生态设计与能源标签对房间空调器按制冷/制热能力、单/双风管及产品结构区分；≤12 kW产品范围是重要适用边界。",
+          "source_keys": [
+            "EU-EURLEX",
+            "EU-EPREL",
+            "EU-HARMONISED-STANDARDS",
+            "EU-ACCESS2MARKETS"
+          ],
+          "important_attributes": [
+            "product_form",
+            "rated_cooling_capacity_kw",
+            "heating_function",
+            "phase",
+            "wireless"
+          ],
+          "regulatory_dimensions": [
+            "生态设计",
+            "能源标签",
+            "产品安全",
+            "电磁兼容",
+            "制冷剂/环保要求",
+            "无线电（如适用）"
+          ],
+          "research_leads": [
+            "Commission Regulation (EU) 206/2012 — air conditioners ecodesign",
+            "Commission Delegated Regulation (EU) 626/2011 — air conditioners energy labelling"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        },
+        "US": {
+          "market_category": "Consumer room air conditioners / central air conditioners and heat pumps (separate DOE categories)",
+          "classification_basis": "美国DOE按房间空调器、中央空调/热泵等不同产品类别管理；房间空调器现行能效标准在10 CFR 430.32(b)，测试程序见Appendix F。",
+          "source_keys": [
+            "US-ECFR",
+            "US-FEDREG",
+            "US-DOE-EFFICIENCY",
+            "US-CPSC"
+          ],
+          "important_attributes": [
+            "product_form",
+            "rated_cooling_capacity_kw",
+            "heating_function",
+            "phase"
+          ],
+          "regulatory_dimensions": [
+            "DOE能效标准",
+            "DOE测试程序",
+            "认证申报",
+            "EnergyGuide/FTC要求（如适用）",
+            "消费品安全"
+          ],
+          "research_leads": [
+            "10 CFR 430.32(b) — consumer room air conditioner standard",
+            "10 CFR Part 430 Appendix F — room air conditioner test procedure",
+            "10 CFR Part 429 — certification/compliance"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        },
+        "JP": {
+          "market_category": "エアコンディショナー",
+          "classification_basis": "日本Top Runner对空调器按机组形态、冷房能力及室内机尺寸等条件划分区分。",
+          "source_keys": [
+            "JP-LAW",
+            "JP-ANRE",
+            "JP-METI-PRODUCT-SAFETY",
+            "JP-PSE"
+          ],
+          "important_attributes": [
+            "product_form",
+            "rated_cooling_capacity_kw",
+            "inverter",
+            "wireless"
+          ],
+          "regulatory_dimensions": [
+            "Top Runner能效",
+            "省能标签",
+            "PSE产品安全（如适用）",
+            "JIS测试方法",
+            "无线电（如适用）"
+          ],
+          "research_leads": [
+            "Top Runner — Air Conditioners"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        },
+        "SG": {
+          "market_category": "Single-phase air-conditioner / portable air-conditioner / three-phase VRF air-conditioner",
+          "classification_basis": "新加坡NEA按单相空调、便携式空调、三相VRF等产品类型执行MELS/MEPS和产品注册。",
+          "source_keys": [
+            "SG-LAW",
+            "SG-NEA-ENERGY",
+            "SG-CPSO",
+            "SG-STANDARDS"
+          ],
+          "important_attributes": [
+            "product_form",
+            "rated_cooling_capacity_kw",
+            "phase",
+            "inverter"
+          ],
+          "regulatory_dimensions": [
+            "MELS能效标签",
+            "MEPS最低能效",
+            "NEA产品注册",
+            "消费品安全（如适用）"
+          ],
+          "research_leads": [
+            "NEA MELS/MEPS — air-conditioners"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        }
+      },
+      "default_market_mapping": {
+        "market_category": "Air conditioners / 空调设备",
+        "classification_basis": "当前已建立统一产品分类框架，目标市场本地监管分类仍需结合该国正式法规、能效/安全目录和认证规则继续核验。",
+        "source_keys": [],
+        "important_attributes": [],
+        "regulatory_dimensions": [
+          "产品安全",
+          "能效/生态设计（如适用）",
+          "标签/注册（如适用）",
+          "电磁兼容",
+          "无线电（如适用）"
+        ],
+        "research_leads": [],
+        "mapping_status": "research_seed"
+      }
+    },
+    {
+      "id": "household_laundry",
+      "name_zh": "家用洗衣机和洗烘一体机",
+      "name_en": "Household washing machines and washer-dryers",
+      "parent_path": [
+        "家用电器",
+        "衣物护理设备"
+      ],
+      "default_child_id": "front_load_washer",
+      "aliases": [
+        "洗衣机",
+        "滚筒洗衣机",
+        "波轮洗衣机",
+        "洗烘一体机",
+        "clothes washer",
+        "washing machine",
+        "washer-dryer"
+      ],
+      "children": [
+        {
+          "id": "front_load_washer",
+          "name_zh": "前开门/滚筒洗衣机",
+          "aliases": [
+            "滚筒洗衣机",
+            "front-loading washer"
+          ]
+        },
+        {
+          "id": "top_load_washer",
+          "name_zh": "顶开式/波轮洗衣机",
+          "aliases": [
+            "波轮洗衣机",
+            "top-loading washer"
+          ]
+        },
+        {
+          "id": "washer_dryer",
+          "name_zh": "洗烘一体机",
+          "aliases": [
+            "洗干一体机",
+            "washer-dryer"
+          ]
+        }
+      ],
+      "decision_attributes": [
+        {
+          "key": "product_form",
+          "label": "产品形态",
+          "values": [
+            "front_load_washer",
+            "top_load_washer",
+            "washer_dryer"
+          ],
+          "required": true
+        },
+        {
+          "key": "rated_capacity_kg",
+          "label": "额定洗涤容量(kg)",
+          "type": "number"
+        },
+        {
+          "key": "built_in",
+          "label": "是否嵌入式",
+          "type": "boolean"
+        },
+        {
+          "key": "household_style_commercial",
+          "label": "是否为家用型商用机",
+          "type": "boolean"
+        },
+        {
+          "key": "wireless",
+          "label": "是否带无线功能",
+          "type": "boolean"
+        }
+      ],
+      "formal_match_terms": [
+        "家用电器",
+        "衣物护理设备",
+        "洗衣机",
+        "洗烘一体机",
+        "clothes washer",
+        "washing machine",
+        "washer-dryer"
+      ],
+      "market_mappings": {
+        "EU": {
+          "market_category": "Household washing machines and household washer-dryers",
+          "classification_basis": "欧盟对家用洗衣机与洗烘一体机采用同一生态设计/能源标签框架，并对容量、程序和资源效率等设置适用要求。",
+          "source_keys": [
+            "EU-EURLEX",
+            "EU-EPREL",
+            "EU-HARMONISED-STANDARDS"
+          ],
+          "important_attributes": [
+            "product_form",
+            "rated_capacity_kg",
+            "built_in"
+          ],
+          "regulatory_dimensions": [
+            "生态设计",
+            "能源标签",
+            "产品安全",
+            "电磁兼容",
+            "资源效率/维修要求"
+          ],
+          "research_leads": [
+            "Commission Regulation (EU) 2019/2023 — washing machines and washer-dryers ecodesign",
+            "Commission Delegated Regulation (EU) 2019/2014 — energy labelling"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        },
+        "US": {
+          "market_category": "Residential clothes washers",
+          "classification_basis": "美国DOE按家用洗衣机产品类别实施能效与用水标准；现行标准见10 CFR 430.32(g)，测试程序使用Appendix J2。",
+          "source_keys": [
+            "US-ECFR",
+            "US-FEDREG",
+            "US-DOE-EFFICIENCY"
+          ],
+          "important_attributes": [
+            "product_form",
+            "rated_capacity_kg",
+            "household_style_commercial"
+          ],
+          "regulatory_dimensions": [
+            "DOE能效/用水标准",
+            "DOE测试程序",
+            "认证申报",
+            "EnergyGuide（如适用）"
+          ],
+          "research_leads": [
+            "10 CFR 430.32(g) — clothes washer standard",
+            "10 CFR Part 430 Appendix J2 — test procedure",
+            "10 CFR Part 429 — certification/compliance"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        },
+        "CA": {
+          "market_category": "Clothes washers (household and household-style commercial)",
+          "classification_basis": "加拿大NRCan对家用及家用型商用洗衣机按装载方式、容量等产品type实施联邦能效要求，并存在省级附加要求。",
+          "source_keys": [
+            "CA-LAW",
+            "CA-NRCAN-ENERGY"
+          ],
+          "important_attributes": [
+            "product_form",
+            "rated_capacity_kg",
+            "household_style_commercial"
+          ],
+          "regulatory_dimensions": [
+            "联邦能效标准",
+            "能效报告",
+            "测试标准",
+            "省级能效附加要求"
+          ],
+          "research_leads": [
+            "NRCan Energy Efficiency Regulations — clothes washers"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        }
+      },
+      "default_market_mapping": {
+        "market_category": "Household washing machines / 洗衣设备",
+        "classification_basis": "当前已建立统一产品分类框架，目标市场本地监管分类仍需结合该国正式法规、能效/安全目录和认证规则继续核验。",
+        "source_keys": [],
+        "important_attributes": [],
+        "regulatory_dimensions": [
+          "产品安全",
+          "能效/生态设计（如适用）",
+          "标签/注册（如适用）",
+          "电磁兼容",
+          "无线电（如适用）"
+        ],
+        "research_leads": [],
+        "mapping_status": "research_seed"
+      }
+    },
+    {
+      "id": "household_dishwashers",
+      "name_zh": "家用洗碗机",
+      "name_en": "Household dishwashers",
+      "parent_path": [
+        "家用电器",
+        "厨房电器"
+      ],
+      "default_child_id": "standard_dishwasher",
+      "aliases": [
+        "洗碗机",
+        "家用洗碗机",
+        "dishwasher",
+        "household dishwasher"
+      ],
+      "children": [
+        {
+          "id": "standard_dishwasher",
+          "name_zh": "标准型洗碗机",
+          "aliases": [
+            "标准洗碗机",
+            "standard dishwasher"
+          ]
+        },
+        {
+          "id": "compact_dishwasher",
+          "name_zh": "紧凑型洗碗机",
+          "aliases": [
+            "迷你洗碗机",
+            "compact dishwasher"
+          ]
+        },
+        {
+          "id": "built_in_dishwasher",
+          "name_zh": "嵌入式洗碗机",
+          "aliases": [
+            "嵌入式洗碗机",
+            "built-in dishwasher"
+          ]
+        }
+      ],
+      "decision_attributes": [
+        {
+          "key": "product_form",
+          "label": "产品形态",
+          "values": [
+            "standard_dishwasher",
+            "compact_dishwasher",
+            "built_in_dishwasher"
+          ],
+          "required": true
+        },
+        {
+          "key": "place_settings",
+          "label": "餐具套数",
+          "type": "number"
+        },
+        {
+          "key": "built_in",
+          "label": "是否嵌入式",
+          "type": "boolean"
+        },
+        {
+          "key": "battery_capable",
+          "label": "是否可电池供电",
+          "type": "boolean"
+        },
+        {
+          "key": "wireless",
+          "label": "是否带无线功能",
+          "type": "boolean"
+        }
+      ],
+      "formal_match_terms": [
+        "家用电器",
+        "厨房电器",
+        "洗碗机",
+        "dishwasher",
+        "household dishwasher"
+      ],
+      "market_mappings": {
+        "EU": {
+          "market_category": "Household dishwashers",
+          "classification_basis": "欧盟生态设计/能源标签覆盖电网供电的家用洗碗机，包括嵌入式及可同时由电池供电的部分产品。",
+          "source_keys": [
+            "EU-EURLEX",
+            "EU-EPREL",
+            "EU-HARMONISED-STANDARDS"
+          ],
+          "important_attributes": [
+            "product_form",
+            "place_settings",
+            "built_in",
+            "battery_capable"
+          ],
+          "regulatory_dimensions": [
+            "生态设计",
+            "能源标签",
+            "产品安全",
+            "电磁兼容",
+            "资源效率"
+          ],
+          "research_leads": [
+            "Commission Regulation (EU) 2019/2022 — household dishwasher ecodesign",
+            "Commission Delegated Regulation (EU) 2019/2017 — energy labelling"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        },
+        "US": {
+          "market_category": "Residential dishwashers",
+          "classification_basis": "美国DOE家用洗碗机现行能效/用水标准见10 CFR 430.32(f)(3)，测试程序见Appendix C1。",
+          "source_keys": [
+            "US-ECFR",
+            "US-FEDREG",
+            "US-DOE-EFFICIENCY"
+          ],
+          "important_attributes": [
+            "product_form",
+            "place_settings"
+          ],
+          "regulatory_dimensions": [
+            "DOE能效/用水标准",
+            "DOE测试程序",
+            "认证申报",
+            "EnergyGuide（如适用）"
+          ],
+          "research_leads": [
+            "10 CFR 430.32(f)(3) — dishwasher standard",
+            "10 CFR Part 430 Appendix C1 — test procedure",
+            "10 CFR Part 429 — certification/compliance"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        },
+        "CA": {
+          "market_category": "Standard household dishwasher / compact household dishwasher",
+          "classification_basis": "加拿大NRCan按容量区分标准型和紧凑型家用洗碗机；紧凑型通常以小于8套餐具及6件上菜器具为边界。",
+          "source_keys": [
+            "CA-LAW",
+            "CA-NRCAN-ENERGY"
+          ],
+          "important_attributes": [
+            "place_settings",
+            "product_form"
+          ],
+          "regulatory_dimensions": [
+            "联邦能效/用水标准",
+            "EnerGuide标签",
+            "测试标准",
+            "省级要求"
+          ],
+          "research_leads": [
+            "NRCan Energy Efficiency Regulations — dishwashers"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        }
+      },
+      "default_market_mapping": {
+        "market_category": "Household dishwashers / 洗碗机",
+        "classification_basis": "当前已建立统一产品分类框架，目标市场本地监管分类仍需结合该国正式法规、能效/安全目录和认证规则继续核验。",
+        "source_keys": [],
+        "important_attributes": [],
+        "regulatory_dimensions": [
+          "产品安全",
+          "能效/生态设计（如适用）",
+          "标签/注册（如适用）",
+          "电磁兼容",
+          "无线电（如适用）"
+        ],
+        "research_leads": [],
+        "mapping_status": "research_seed"
+      }
+    },
+    {
+      "id": "electronic_displays",
+      "name_zh": "电子显示设备",
+      "name_en": "Electronic displays",
+      "parent_path": [
+        "消费电子",
+        "显示设备"
+      ],
+      "default_child_id": "television",
+      "aliases": [
+        "电视",
+        "电视机",
+        "显示器",
+        "电子显示屏",
+        "television",
+        "TV",
+        "monitor",
+        "electronic display"
+      ],
+      "children": [
+        {
+          "id": "television",
+          "name_zh": "电视机",
+          "aliases": [
+            "电视",
+            "电视机",
+            "television",
+            "TV"
+          ]
+        },
+        {
+          "id": "computer_monitor",
+          "name_zh": "计算机显示器",
+          "aliases": [
+            "显示器",
+            "monitor",
+            "computer display"
+          ]
+        },
+        {
+          "id": "digital_signage",
+          "name_zh": "数字标牌显示屏",
+          "aliases": [
+            "商显",
+            "digital signage",
+            "signage display"
+          ]
+        }
+      ],
+      "decision_attributes": [
+        {
+          "key": "product_form",
+          "label": "产品形态",
+          "values": [
+            "television",
+            "computer_monitor",
+            "digital_signage"
+          ],
+          "required": true
+        },
+        {
+          "key": "screen_area_cm2",
+          "label": "屏幕面积(cm²)",
+          "type": "number"
+        },
+        {
+          "key": "diagonal_in",
+          "label": "屏幕对角线(英寸)",
+          "type": "number"
+        },
+        {
+          "key": "display_technology",
+          "label": "显示技术",
+          "values": [
+            "lcd_led",
+            "oled",
+            "other"
+          ]
+        },
+        {
+          "key": "hdr",
+          "label": "是否支持HDR",
+          "type": "boolean"
+        },
+        {
+          "key": "resolution",
+          "label": "分辨率",
+          "type": "text"
+        },
+        {
+          "key": "wireless",
+          "label": "是否带Wi-Fi/蓝牙等无线功能",
+          "type": "boolean"
+        }
+      ],
+      "formal_match_terms": [
+        "消费电子",
+        "显示设备",
+        "电视",
+        "显示器",
+        "电子显示设备",
+        "television",
+        "monitor",
+        "electronic display"
+      ],
+      "market_mappings": {
+        "EU": {
+          "market_category": "Electronic displays, including televisions, monitors and digital signage displays",
+          "classification_basis": "欧盟2019年后将原电视产品组扩大到电子显示设备；小于等于100 cm²等部分显示设备被排除或仅适用部分要求。",
+          "source_keys": [
+            "EU-EURLEX",
+            "EU-EPREL",
+            "EU-HARMONISED-STANDARDS"
+          ],
+          "important_attributes": [
+            "product_form",
+            "screen_area_cm2",
+            "diagonal_in",
+            "hdr",
+            "resolution",
+            "wireless"
+          ],
+          "regulatory_dimensions": [
+            "生态设计",
+            "能源标签",
+            "待机/网络待机",
+            "可维修性",
+            "产品安全",
+            "电磁兼容",
+            "无线电（如适用）"
+          ],
+          "research_leads": [
+            "Commission Regulation (EU) 2019/2021 — electronic displays ecodesign",
+            "Commission Delegated Regulation (EU) 2019/2013 — electronic displays energy labelling"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        },
+        "US": {
+          "market_category": "Television sets (DOE test procedure); other displays require separate applicable-rule review",
+          "classification_basis": "美国DOE目前对电视机保留能耗测试程序，但当前没有电视机联邦能效最低标准；其他显示器应另行核对EPA/FTC/FCC等适用要求。",
+          "source_keys": [
+            "US-ECFR",
+            "US-FEDREG",
+            "US-DOE-EFFICIENCY",
+            "US-FCC"
+          ],
+          "important_attributes": [
+            "product_form",
+            "diagonal_in",
+            "display_technology",
+            "wireless"
+          ],
+          "regulatory_dimensions": [
+            "DOE电视能耗测试程序",
+            "FTC/ENERGY STAR信息（如适用）",
+            "FCC无线电/EMC（如适用）",
+            "消费品安全"
+          ],
+          "research_leads": [
+            "10 CFR Part 430 Appendix H — television test procedure"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        },
+        "JP": {
+          "market_category": "テレビジョン受信機",
+          "classification_basis": "日本Top Runner对电视接收机按显示方式、尺寸及附加功能等因素组织能效区分。",
+          "source_keys": [
+            "JP-LAW",
+            "JP-ANRE",
+            "JP-METI-PRODUCT-SAFETY"
+          ],
+          "important_attributes": [
+            "product_form",
+            "diagonal_in",
+            "display_technology",
+            "wireless"
+          ],
+          "regulatory_dimensions": [
+            "Top Runner能效",
+            "统一省能标签",
+            "产品安全",
+            "无线电（如适用）"
+          ],
+          "research_leads": [
+            "Top Runner — Television Receivers"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        },
+        "SG": {
+          "market_category": "Television",
+          "classification_basis": "新加坡NEA将电视列为MELS/MEPS受监管产品，并按显示技术、屏幕尺寸等产品信息进行注册和标签管理。",
+          "source_keys": [
+            "SG-LAW",
+            "SG-NEA-ENERGY",
+            "SG-CPSO",
+            "SG-IMDA"
+          ],
+          "important_attributes": [
+            "product_form",
+            "diagonal_in",
+            "display_technology",
+            "wireless"
+          ],
+          "regulatory_dimensions": [
+            "MELS能效标签",
+            "MEPS最低能效",
+            "NEA注册",
+            "IMDA无线/通信要求（如适用）",
+            "消费品安全"
+          ],
+          "research_leads": [
+            "NEA MELS/MEPS — televisions"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        }
+      },
+      "default_market_mapping": {
+        "market_category": "Electronic displays / 电子显示设备",
+        "classification_basis": "当前已建立统一产品分类框架，目标市场本地监管分类仍需结合该国正式法规、能效/安全目录和认证规则继续核验。",
+        "source_keys": [],
+        "important_attributes": [],
+        "regulatory_dimensions": [
+          "产品安全",
+          "能效/生态设计（如适用）",
+          "标签/注册（如适用）",
+          "电磁兼容",
+          "无线电（如适用）"
+        ],
+        "research_leads": [],
+        "mapping_status": "research_seed"
+      }
+    },
+    {
+      "id": "light_sources",
+      "name_zh": "光源和照明产品",
+      "name_en": "Light sources and lighting products",
+      "parent_path": [
+        "电气产品",
+        "照明设备"
+      ],
+      "default_child_id": "led_lamp",
+      "aliases": [
+        "灯具",
+        "灯泡",
+        "LED灯",
+        "光源",
+        "light source",
+        "lamp",
+        "LED lamp",
+        "lighting"
+      ],
+      "children": [
+        {
+          "id": "led_lamp",
+          "name_zh": "LED光源/灯泡",
+          "aliases": [
+            "LED灯",
+            "LED灯泡",
+            "LED lamp"
+          ]
+        },
+        {
+          "id": "linear_led_tube",
+          "name_zh": "LED线性灯管",
+          "aliases": [
+            "LED灯管",
+            "linear LED tube"
+          ]
+        },
+        {
+          "id": "fluorescent_lamp",
+          "name_zh": "荧光灯",
+          "aliases": [
+            "荧光灯",
+            "fluorescent lamp"
+          ]
+        },
+        {
+          "id": "separate_control_gear",
+          "name_zh": "独立控制装置/驱动电源",
+          "aliases": [
+            "驱动电源",
+            "control gear",
+            "LED driver"
+          ]
+        }
+      ],
+      "decision_attributes": [
+        {
+          "key": "product_form",
+          "label": "产品形态",
+          "values": [
+            "led_lamp",
+            "linear_led_tube",
+            "fluorescent_lamp",
+            "separate_control_gear"
+          ],
+          "required": true
+        },
+        {
+          "key": "luminous_flux_lm",
+          "label": "光通量(lm)",
+          "type": "number"
+        },
+        {
+          "key": "rated_power_w",
+          "label": "额定功率(W)",
+          "type": "number"
+        },
+        {
+          "key": "colour_temperature_k",
+          "label": "色温(K)",
+          "type": "number"
+        },
+        {
+          "key": "containing_product",
+          "label": "是否作为整机中的内置光源",
+          "type": "boolean"
+        },
+        {
+          "key": "wireless",
+          "label": "是否带无线控制功能",
+          "type": "boolean"
+        }
+      ],
+      "formal_match_terms": [
+        "电气产品",
+        "照明设备",
+        "光源",
+        "灯具",
+        "LED灯",
+        "light source",
+        "lamp",
+        "lighting"
+      ],
+      "market_mappings": {
+        "EU": {
+          "market_category": "Light sources and separate control gears",
+          "classification_basis": "欧盟生态设计覆盖光源及独立控制装置，并对Annex III列出的特定光源/控制装置设置排除或特殊规则。",
+          "source_keys": [
+            "EU-EURLEX",
+            "EU-EPREL",
+            "EU-HARMONISED-STANDARDS",
+            "EU-LVD-STANDARDS"
+          ],
+          "important_attributes": [
+            "product_form",
+            "luminous_flux_lm",
+            "rated_power_w",
+            "containing_product",
+            "wireless"
+          ],
+          "regulatory_dimensions": [
+            "生态设计",
+            "能源标签",
+            "产品安全",
+            "电磁兼容",
+            "RoHS",
+            "无线电（如适用）"
+          ],
+          "research_leads": [
+            "Commission Regulation (EU) 2019/2020 — light sources ecodesign",
+            "Commission Delegated Regulation (EU) 2019/2015 — light sources energy labelling"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        },
+        "SG": {
+          "market_category": "Lamp / general lighting",
+          "classification_basis": "新加坡NEA对灯具/光源执行MELS/MEPS，并区分常见灯型和线性灯管等产品。",
+          "source_keys": [
+            "SG-LAW",
+            "SG-NEA-ENERGY",
+            "SG-CPSO"
+          ],
+          "important_attributes": [
+            "product_form",
+            "rated_power_w",
+            "luminous_flux_lm"
+          ],
+          "regulatory_dimensions": [
+            "MELS能效标签",
+            "MEPS最低能效",
+            "产品注册",
+            "消费品安全（如适用）"
+          ],
+          "research_leads": [
+            "NEA MELS/MEPS — general lighting"
+          ],
+          "mapping_status": "official_reference_confirmed"
+        }
+      },
+      "default_market_mapping": {
+        "market_category": "Light sources / 照明产品",
+        "classification_basis": "当前已建立统一产品分类框架，目标市场本地监管分类仍需结合该国正式法规、能效/安全目录和认证规则继续核验。",
+        "source_keys": [],
+        "important_attributes": [],
+        "regulatory_dimensions": [
+          "产品安全",
+          "能效/生态设计（如适用）",
+          "标签/注册（如适用）",
+          "电磁兼容",
+          "无线电（如适用）"
+        ],
+        "research_leads": [],
+        "mapping_status": "research_seed"
+      }
     }
   ],
   "market_mappings": {
