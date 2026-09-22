@@ -1357,29 +1357,37 @@ class SiteExtractionService:
                 continue
             exact = "^" + re.escape(url) + "$"
             if automatic == "relevant" and human == "irrelevant":
+                added = False
                 if exact not in exclude_patterns:
                     exclude_patterns.append(exact)
+                    added = True
                 if exact not in confirmed_exclude:
                     confirmed_exclude.append(exact)
-                rationale.append({
-                    "kind": "over_capture",
-                    "url": url,
-                    "action": "exclude_exact_url",
-                    "reason": "规则判为相关，但人工确认应排除",
-                })
-                changed = True
+                    added = True
+                if added:
+                    rationale.append({
+                        "kind": "over_capture",
+                        "url": url,
+                        "action": "exclude_exact_url",
+                        "reason": "规则判为相关，但人工确认应排除",
+                    })
+                    changed = True
             elif human == "relevant" and automatic in {"needs_review", "irrelevant"}:
+                added = False
                 if exact not in include_patterns:
                     include_patterns.append(exact)
+                    added = True
                 if exact not in confirmed_include:
                     confirmed_include.append(exact)
-                rationale.append({
-                    "kind": "under_capture",
-                    "url": url,
-                    "action": "include_exact_url",
-                    "reason": "规则未确认相关，但人工确认应纳入",
-                })
-                changed = True
+                    added = True
+                if added:
+                    rationale.append({
+                        "kind": "under_capture",
+                        "url": url,
+                        "action": "include_exact_url",
+                        "reason": "规则未确认相关，但人工确认应纳入",
+                    })
+                    changed = True
 
         if not changed:
             raise ValueError("no reviewed rule disagreements available")
