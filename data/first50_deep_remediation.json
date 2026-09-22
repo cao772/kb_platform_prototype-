@@ -153,15 +153,27 @@
   },
   "NO-LAW": {
     "alternate_start_urls": [
-      "https://www.regjeringen.no/en/find-document/acts-and-regulations/id438754/",
-      "https://www.regjeringen.no/en/find-document/acts-and-regulations/acts/id438755/"
+      "https://api.lovdata.no/publicData"
     ],
-    "coverage_limited": true,
-    "coverage_note": "Norwegian Government公开索引只能有限覆盖；完整、机器可读现行法规需Lovdata授权API。",
-    "notes": "robots禁止时仅使用政府公开替代索引；正式完整覆盖走Lovdata授权API。",
-    "requires_registration": true,
-    "registration_url": "https://lovdata.no/",
-    "auth_notes": "Lovdata机器可读API为授权/付费服务；公开网页robots限制不绕过。需要完整覆盖时应采购/申请Lovdata API授权。"
+    "archive_dataset": {
+      "enabled": true,
+      "urls": [
+        "https://api.lovdata.no/v1/publicData/get/gjeldende-lover.tar.bz2",
+        "https://api.lovdata.no/v1/publicData/get/gjeldende-sentrale-forskrifter.tar.bz2"
+      ],
+      "member_extensions": [
+        ".xml"
+      ],
+      "max_archives": 2,
+      "max_members": 5000,
+      "max_member_bytes": 8388608,
+      "max_total_member_bytes": 536870912,
+      "max_archive_bytes": 104857600,
+      "trusted_scope": true
+    },
+    "structured_api": true,
+    "direct_content": true,
+    "notes": "使用Lovdata publicData官方开放数据归档：现行法律 + 中央法规。归档与XML成员分别保留SHA256和原始证据；数据按NLOD开放许可使用，不再依赖网页逐页采集。"
   },
   "NZ-LAW": {
     "alternate_start_urls": [
