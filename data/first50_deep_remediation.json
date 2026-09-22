@@ -182,8 +182,13 @@
       "https://sso.agc.gov.sg/SL/S113-2011",
       "https://sso.agc.gov.sg/Act/CPTDSRA1975?ViewType=Sl"
     ],
-    "notes": "直接使用Singapore Statutes Online公开的Consumer Protection安全法规正文与附属法规目录；不依赖受限首页Browse入口。",
-    "direct_content": true
+    "notes": "Singapore Statutes Online允许自动抽取，但仅限新加坡时间03:00-07:00且不得绕过安全措施；执行应优先使用自托管Runner并遵守该时间窗。",
+    "direct_content": true,
+    "automation_window": {
+      "timezone": "Asia/Singapore",
+      "start": "03:00",
+      "end": "07:00"
+    }
   },
   "US-ECFR": {
     "alternate_start_urls": [
