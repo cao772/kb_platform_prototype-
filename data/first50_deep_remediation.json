@@ -1,15 +1,28 @@
 {
-  "US-FEDREG": {
+  "BE-STD": {
     "alternate_start_urls": [
-      "https://www.federalregister.gov/api/v1/documents.json?per_page=20&order=newest"
+      "https://app.nbn.be/data/r/platform/frontend/latest-standards",
+      "https://www.nbn.be/en/buying-standards/latest-standards"
     ],
-    "notes": "优先切换官方Federal Register API；无需API key。"
+    "notes": "使用NBN公开Latest Standards元数据页；全文继续遵守授权边界。"
   },
-  "JP-LAW": {
+  "CA-ISED": {
     "alternate_start_urls": [
-      "https://elaws.e-gov.go.jp/api/1/lawlists/3"
+      "https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/devices-and-equipment/radio-equipment-standards",
+      "https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/devices-and-equipment/radio-equipment-standards/radio-standards-specifications-rss"
     ],
-    "notes": "优先切换日本e-Gov法令XML API。"
+    "notes": "使用ISED公开Radio Equipment Standards和RSS目录，不依赖受限首页。"
+  },
+  "CH-STD": {
+    "alternate_start_urls": [
+      "https://www.snv.ch/en/information-on-standards/view-standards-free-of-charge.html"
+    ],
+    "coverage_limited": true,
+    "coverage_note": "SNV公开页面可验证部分标准与访问方式，但完整标准目录/全文需按SNV授权或商店账号处理。",
+    "requires_registration": true,
+    "registration_url": "https://connect.snv.ch/",
+    "auth_notes": "如需更完整目录/已购标准访问，使用组织授权账号；全文不得超出许可证范围。",
+    "notes": "公开阅读室信息作为兜底；保持metadata_only。"
   },
   "DE-LAW": {
     "alternate_start_urls": [
@@ -17,16 +30,133 @@
     ],
     "notes": "使用已在Stage38走通的ProdSG法规样板作为德国法规深采集兜底入口。"
   },
+  "DE-STD": {
+    "alternate_start_urls": [
+      "https://www.din.de/en/about-standards/buy-standards",
+      "https://www.din.de/en/meta/search/61764!search?pageNum=0"
+    ],
+    "notes": "DIN标准全文受版权保护；只从公开检索/产品元数据页采编号、标题、状态等。"
+  },
+  "ES-LAW": {
+    "alternate_start_urls": [
+      "https://www.boe.es/datosabiertos/api/legislacion-consolidada?limit=20"
+    ],
+    "notes": "网页入口robots受限时改用AEBOE官方OpenData REST API；API提供合并法规检索、元数据和正文接口。"
+  },
+  "ES-STD": {
+    "alternate_start_urls": [
+      "https://www.une.org/encuentra-tu-norma/busca-tu-norma/"
+    ],
+    "notes": "使用UNE官方标准搜索/元数据页；全文保持许可边界。"
+  },
+  "EU-ECHA": {
+    "alternate_start_urls": [
+      "https://echa.europa.eu/regulations/reach/understanding-reach",
+      "https://echa.europa.eu/guidance-documents/guidance-on-reach"
+    ],
+    "notes": "原首页受限时改用ECHA公开REACH说明和Guidance目录；两者均为官方公开内容。"
+  },
   "EU-EURLEX": {
     "alternate_start_urls": [
       "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32014L0035"
     ],
     "notes": "使用稳定CELEX法规正文页作为公开HTML兜底；大规模搜索可另行申请EUR-Lex Webservice账号。"
   },
+  "FR-LAW": {
+    "alternate_start_urls": [
+      "https://echanges.dila.gouv.fr/OPENDATA/LEGI/"
+    ],
+    "requires_registration": true,
+    "registration_url": "https://piste.gouv.fr/",
+    "auth_notes": "Légifrance API通过PISTE OAuth2 Client Credentials接入；注册后将token_url/client_id/client_secret放入FIRST50_AUTH_JSON的FR-LAW.oauth。",
+    "notes": "优先尝试DILA官方LEGI开放数据目录；如需查询型API则走PISTE免费注册/OAuth，不绕过网页反自动化。"
+  },
+  "FR-STD": {
+    "alternate_start_urls": [
+      "https://www.boutique.afnor.org/fr-fr/construction/normes-nationales",
+      "https://www.boutique.afnor.org/fr-fr/normes/ics"
+    ],
+    "notes": "使用AFNOR Editions公开标准检索/ICS目录采元数据；标准正文仍按购买/许可边界处理。"
+  },
+  "IE-LAW": {
+    "alternate_start_urls": [
+      "https://www.irishstatutebook.ie/eli/"
+    ],
+    "notes": "Irish Statute Book网页在部分云运行环境返回403；优先ELI结构化入口，若仍受限需在允许访问的网络执行或联系官方获取数据接口。"
+  },
+  "IE-STD": {
+    "alternate_start_urls": [
+      "https://www.nsai.ie/standards/search-buy-standards/",
+      "https://www.nsai.ie/standards/search-buy-standards/new-irish-standards/"
+    ],
+    "notes": "NSAI明确允许Guest用户浏览标准分类和最新版本信息，保持metadata_only。"
+  },
+  "JP-LAW": {
+    "alternate_start_urls": [
+      "https://elaws.e-gov.go.jp/api/1/lawlists/3"
+    ],
+    "notes": "优先切换日本e-Gov法令XML API。"
+  },
+  "JP-METI-PRODUCT-SAFETY": {
+    "alternate_start_urls": [
+      "https://www.meti.go.jp/english/policy/economy/consumer/index.html",
+      "https://www.meti.go.jp/english/policy/economy/consumer/pse/index.html",
+      "https://www.meti.go.jp/english/policy/economy/consumer/product_safety/index.html"
+    ],
+    "notes": "使用METI公开Product Safety、PSE和四项产品安全法办事指南页面。"
+  },
+  "NL-STD": {
+    "alternate_start_urls": [
+      "https://www.nen.nl/en/managementsystemen/conformiteitsbeoordeling/normen"
+    ],
+    "requires_registration": true,
+    "registration_url": "https://connect.nen.nl/portal/Registreren/Vrij-Beschikbare-Normen/en",
+    "auth_notes": "公开目录只采元数据；如使用NEN Connect免费可读标准需按官方流程注册并遵守许可。",
+    "notes": "优先使用NEN公开目录获取编号、标题、状态、发布日期等元数据；全文不自动采集。"
+  },
+  "NO-LAW": {
+    "alternate_start_urls": [
+      "https://www.regjeringen.no/en/find-document/acts-and-regulations/id438754/",
+      "https://www.regjeringen.no/en/find-document/acts-and-regulations/acts/id438755/"
+    ],
+    "coverage_limited": true,
+    "coverage_note": "Government.no是官方替代入口，但其自身明确说明并非完整现行法规库；完整覆盖仍需Lovdata授权/许可渠道。",
+    "notes": "Lovdata robots禁止时不绕过，使用Norwegian Government公开法规索引作为有限覆盖兜底。"
+  },
+  "NZ-LAW": {
+    "alternate_start_urls": [
+      "https://www.legislation.govt.nz/",
+      "https://www.legislation.govt.nz/learn-more/legislation-data/xml-data/"
+    ],
+    "requires_registration": true,
+    "registration_url": "https://www.legislation.govt.nz/developer-api",
+    "auth_notes": "官方Developer API需要API key，可向Parliamentary Counsel Office申请；取得后以Authorization/API-key头通过FIRST50_AUTH_JSON注入。",
+    "notes": "优先公开HTML/XML；批量程序化检索可申请官方Developer API key。"
+  },
+  "SG-LAW": {
+    "alternate_start_urls": [
+      "https://sso.agc.gov.sg/Browse/Act/Current",
+      "https://sso.agc.gov.sg/SL/"
+    ],
+    "notes": "Singapore Statutes Online公开Browse页提供Current Acts、分页、PDF和修订RSS。"
+  },
   "US-ECFR": {
     "alternate_start_urls": [
       "https://www.ecfr.gov/current/title-16/chapter-II"
     ],
-    "notes": "使用当前可公开访问的eCFR Title 16 / CPSC法规目录作为产品安全领域兜底入口。"
+    "notes": "使用eCFR当前Title 16/CPSC公开法规目录；若GitHub runner仍受挑战，保留为运行环境访问限制并考虑官方开发接口/本地授权网络。"
+  },
+  "US-FEDREG": {
+    "alternate_start_urls": [
+      "https://www.federalregister.gov/api/v1/documents.json?per_page=20&order=newest"
+    ],
+    "notes": "优先切换官方Federal Register API；无需API key。"
+  },
+  "US-STD": {
+    "alternate_start_urls": [
+      "https://webstore.ansi.org/",
+      "https://webstore.ansi.org/standards/pcc/ansicatalog"
+    ],
+    "notes": "只采ANSI Webstore公开标准元数据/目录信息；购买的全文受许可证限制，不自动抓取。"
   }
 }
