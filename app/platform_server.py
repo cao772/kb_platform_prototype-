@@ -145,6 +145,15 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/collection/site-relevance-overview":
+            try:
+                self._send_json(site_extraction.relevance_overview(
+                    source_key=params.get("source_key", [""])[0]
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/collection/runs":
             try:
                 self._send_json(source_collection.list_runs(
@@ -646,6 +655,20 @@ class Handler(BaseHandler):
                     str(payload.get("source_key") or ""),
                     max_pages=int(payload.get("max_pages") or 0) or None,
                     max_items=int(payload.get("max_items") or 0) or None,
+                    auto_ingest=bool(payload.get("auto_ingest", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/site-item/review":
+            try:
+                payload = self._read_json()
+                self._send_json(site_extraction.review_item(
+                    int(payload.get("item_id") or 0),
+                    status=str(payload.get("status") or ""),
+                    operator=str(payload.get("operator") or ""),
+                    note=str(payload.get("note") or ""),
                     auto_ingest=bool(payload.get("auto_ingest", False)),
                 ))
             except Exception as exc:
