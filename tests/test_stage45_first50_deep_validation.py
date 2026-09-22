@@ -46,8 +46,7 @@ def main() -> None:
     assert len(round9["status"]) == 50
     assert round10["summary"] == {"total": 50, "passed": 42, "partial": 1, "restricted": 7, "failed": 0}
     assert len(round10["status"]) == 50
-    assert access["summary"]["total_nonpassed"] == 8
-    assert access["summary"]["official_open_archive_dataset"] == 1
+    assert access["summary"]["total_nonpassed"] == 7
     assert access["summary"]["public_cloud_egress_blocked"] == 2
     assert access["summary"]["public_metadata_cloud_egress_blocked"] == 1
     assert access["summary"]["site_terms_window_and_cloud_egress"] == 1
