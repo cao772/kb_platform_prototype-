@@ -22,6 +22,7 @@ def main() -> None:
         assert overview["summary"]["templates"] == 6
         assert len(overview["templates"]) == 6
         assert len(overview["common_lessons"]) >= 10
+        assert len(overview["access_lessons"]) >= 4
         assert sum(int(x["source_count"]) for x in overview["templates"]) == 50
         assert all(int(x["source_count"]) > 0 for x in overview["templates"])
 
@@ -93,6 +94,7 @@ def main() -> None:
     assert "首批50站采集经验总结与复用" in experience_page
     assert "可复用采集模式" in experience_page
     assert "50站经验矩阵" in experience_page
+    assert "访问受限处置经验" in experience_page
     assert "Stage43 collection experience library tests" in workflow
 
     print("OK: stage43 first50 experience library and reusable archetypes passed")
