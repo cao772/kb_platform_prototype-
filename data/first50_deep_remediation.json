@@ -35,12 +35,11 @@
   },
   "DE-STD": {
     "alternate_start_urls": [
-      "https://www.din.de/en/meta/search/61764!search?query=metadata",
-      "https://www.din.de/en/meta/search/61764!search?query=iso19115",
-      "https://www.din.de/en/getting-involved/standards-committees/nia/publications",
-      "https://www.din.de/en/getting-involved/standards-committees/nid/publications"
+      "https://www.dinmedia.de/en/standard/din-en-iec-60335-1/400775491?indexName=prod_dinmedia_products",
+      "https://www.dinmedia.de/en/standard/din-en-iec-60335-2-40/393101769",
+      "https://www.dinmedia.de/en/standard/din-en-iec-60335-2-7/377897043"
     ],
-    "notes": "使用DIN官网公开Standards Committee Publications列表获取标准编号、Edition、Title和状态类元数据；不采DIN标准全文。",
+    "notes": "使用DIN Media公开标准详情页采集标准号、状态、发布日期、标题、页数和适用范围元数据；不采购买后的标准全文。",
     "direct_content": true
   },
   "ES-LAW": {
@@ -93,7 +92,15 @@
     "alternate_start_urls": [
       "https://www.irishstatutebook.ie/eli/2016/si/345/made/en/print"
     ],
-    "notes": "使用Irish Statute Book公开的EU Low Voltage Electrical Equipment Regulations 2016详情页作为业务相关法规入口。"
+    "notes": "Irish Statute Book网页在GitHub出口受限时，使用Office of the Attorney General公开的S.I. 345/2016官方PDF作为法规正文证据；开放数据仍按官方ELI/XML体系扩展。",
+    "binary_documents": [
+      "https://www.irishstatutebook.ie/eli/2016/si/345/made/en/pdf"
+    ],
+    "binary_keywords": [
+      "Low Voltage Electrical Equipment",
+      "Directive 2014/35/EU",
+      "safety objectives"
+    ]
   },
   "IE-STD": {
     "alternate_start_urls": [
@@ -118,7 +125,17 @@
       "https://www.meti.go.jp/english/policy/economy/consumer/pse/index.html",
       "https://www.meti.go.jp/english/policy/economy/consumer/product_safety/index.html"
     ],
-    "notes": "使用METI公开Product Safety、PSE和四项产品安全法办事指南页面。"
+    "notes": "METI网页入口受限时使用METI公开PSE实施指南及产品安全法修订指南PDF，解析正文后验证业务相关性。",
+    "binary_documents": [
+      "https://www.meti.go.jp/english/policy/economy/consumer/product_safety/pse_procedure/pdf/pse_regulatory-instructions.pdf",
+      "https://www.meti.go.jp/policy/consumer/seian/shouan/contents/guideline_en.pdf"
+    ],
+    "binary_keywords": [
+      "Electrical Appliances and Materials Safety Act",
+      "Product Safety",
+      "PSE",
+      "Safety Act"
+    ]
   },
   "NL-STD": {
     "alternate_start_urls": [
@@ -183,7 +200,15 @@
     "alternate_start_urls": [
       "https://www.ansi.org/american-national-standards/info-for-standards-developers/ans-complete-lists"
     ],
-    "notes": "使用ANSI官方免费Approved/Proposed ANS清单作为公开标准元数据入口，避免webstore反自动化及全文许可问题。"
+    "notes": "使用ANSI官方每周更新Approved ANS公开PDF作为标准元数据批量来源；仅提取标准号、标题、开发者、状态与日期，不采收费标准全文。",
+    "binary_documents": [
+      "https://share.ansi.org/Shared%20Documents/Standards%20Activities/American%20National%20Standards/Approved%20and%20Proposed%20ANS%20Lists/Approved%20ANS.pdf"
+    ],
+    "binary_keywords": [
+      "Approved American National Standards",
+      "ANSI/",
+      "Final Action"
+    ]
   },
   "SE-LAW": {
     "alternate_start_urls": [
