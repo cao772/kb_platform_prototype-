@@ -410,6 +410,23 @@ class SiteExtractionService:
                 );
                 CREATE INDEX IF NOT EXISTS idx_source_extracted_items_source
                     ON source_extracted_items(source_key,id DESC);
+                CREATE TABLE IF NOT EXISTS source_tuning_proposals (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    source_key TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'draft',
+                    base_config_json TEXT NOT NULL,
+                    candidate_config_json TEXT NOT NULL,
+                    rationale_json TEXT DEFAULT '[]',
+                    baseline_metrics_json TEXT DEFAULT '{}',
+                    candidate_metrics_json TEXT DEFAULT '{}',
+                    created_at TEXT NOT NULL,
+                    reviewed_at TEXT DEFAULT '',
+                    reviewer TEXT DEFAULT '',
+                    review_note TEXT DEFAULT '',
+                    applied_at TEXT DEFAULT ''
+                );
+                CREATE INDEX IF NOT EXISTS idx_source_tuning_proposals_source
+                    ON source_tuning_proposals(source_key,id DESC);
                 """
             )
             self.store.conn.commit()
@@ -540,6 +557,11 @@ class SiteExtractionService:
         relevance["inherit_parent_for_attachments"] = bool(
             relevance.get("inherit_parent_for_attachments", True)
         )
+        for key in ("confirmed_include_url_patterns", "confirmed_exclude_url_patterns"):
+            patterns = [str(item) for item in relevance.get(key) or []]
+            for pattern in patterns:
+                re.compile(pattern)
+            relevance[key] = patterns
         config["relevance"] = relevance
         start_urls = [str(item).strip() for item in config.get("start_urls") or [] if str(item).strip()]
         if not start_urls:
@@ -673,6 +695,14 @@ class SiteExtractionService:
         relevance = dict(config.get("relevance") or {})
         if not relevance.get("enabled", True) or item_type == "listing":
             return {"status": "relevant", "reasons": ["listing_or_gate_disabled"]}
+
+        confirmed_exclude = list(relevance.get("confirmed_exclude_url_patterns") or [])
+        if confirmed_exclude and self._pattern_match(confirmed_exclude, url):
+            return {"status": "irrelevant", "reasons": ["human_confirmed_url_exclude"]}
+
+        confirmed_include = list(relevance.get("confirmed_include_url_patterns") or [])
+        if confirmed_include and self._pattern_match(confirmed_include, url):
+            return {"status": "relevant", "reasons": ["human_confirmed_url_include"]}
 
         combined = "\n".join([url, title, link_text, text[:6000]]).lower()
         excluded = [
