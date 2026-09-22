@@ -1,0 +1,78 @@
+name: first50-full-deep-validation
+
+on:
+  pull_request:
+    paths:
+      - "app/site_extraction.py"
+      - "app/source_registry.py"
+      - "data/source_collection_first50.json"
+      - "data/first50_deep_remediation.json"
+      - "scripts/deep_validate_first50.py"
+      - "scripts/aggregate_first50_validation.py"
+      - ".github/workflows/first50_deep_validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deep-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        batch_index: [0, 1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install project dependencies
+        run: pip install -r requirements.txt
+      - name: Install browser fallback
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Deep validate 10 first-wave sources
+        env:
+          FIRST50_AUTH_JSON: ${{ secrets.FIRST50_AUTH_JSON }}
+          SITE_DEEP_TIMEOUT_SECONDS: "210"
+        run: |
+          PYTHONPATH=. python scripts/deep_validate_first50.py \
+            --batch-index ${{ matrix.batch_index }} \
+            --batch-count 5 \
+            --output-dir live-validation
+      - name: Upload batch result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: first50-deep-batch-${{ matrix.batch_index }}
+          path: live-validation/batch-${{ matrix.batch_index }}.json
+          if-no-files-found: error
+          retention-days: 14
+
+  aggregate:
+    if: always()
+    needs: deep-validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download batch results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: first50-deep-batch-*
+          path: validation-parts
+          merge-multiple: true
+      - name: Aggregate 50-site acceptance report
+        run: |
+          python scripts/aggregate_first50_validation.py \
+            --input-dir validation-parts \
+            --output-dir validation-report
+      - name: Upload full acceptance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: first50-deep-validation-report
+          path: validation-report/
+          retention-days: 30
