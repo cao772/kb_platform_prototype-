@@ -59,6 +59,11 @@
   </div>
 
   <div class="card">
+    <div class="head"><div><h2>访问受限处置经验</h2><div class="meta">把50站失败补救过程中沉淀出的访问策略复用到后续新网站：换出口、走官方注册/API、遵守授权和自动抽取时间窗。</div></div></div>
+    <div id="accessLessonGrid" class="lesson-grid"><div class="empty">正在加载…</div></div>
+  </div>
+
+  <div class="card">
     <div class="head">
       <div><h2>50站经验矩阵</h2><div class="meta" id="sourceMeta">逐站查看类型、模板、规则结构、证据级别和运行反馈。</div></div>
     </div>
@@ -122,6 +127,9 @@ function renderTemplates(){
 function renderLessons(){
   $('lessonGrid').innerHTML=(DATA.common_lessons||[]).map(x=>'<div class="lesson"><b>'+esc(x.title)+'</b><p>'+esc(x.principle)+'</p><div class="detail"><b>复用方式：</b>'+esc(x.reuse)+'</div></div>').join('');
 }
+function renderAccessLessons(){
+  $('accessLessonGrid').innerHTML=(DATA.access_lessons||[]).map(x=>'<div class="lesson"><b>'+esc(x.title)+'</b><p>'+esc(x.principle)+'</p><div class="detail"><b>复用方式：</b>'+esc(x.reuse)+'</div></div>').join('')||'<div class="empty">暂无访问受限处置经验。</div>';
+}
 function renderSources(){
   const q=$('q').value.trim().toLowerCase(),tf=$('templateFilter').value,ef=$('evidenceFilter').value;
   const rows=(DATA.sources||[]).filter(x=>{
@@ -144,7 +152,7 @@ function renderMetrics(){
 async function loadAll(){
   try{
     DATA=await api('/api/collection-experience/overview');
-    renderMetrics();renderValidation();renderTemplates();renderLessons();
+    renderMetrics();renderValidation();renderTemplates();renderLessons();renderAccessLessons();
     $('templateFilter').innerHTML='<option value="">全部模板</option>'+(DATA.templates||[]).map(t=>'<option value="'+esc(t.template_id)+'">'+esc(t.name)+' ('+Number(t.source_count||0)+')</option>').join('');
     renderSources();
   }catch(e){
