@@ -1,13 +1,15 @@
 {
-  "generated_from_round": 8,
+  "generated_from_round": 9,
   "summary": {
-    "total_nonpassed": 9,
+    "total_nonpassed": 8,
     "partial": 1,
-    "restricted": 8,
-    "public_cloud_egress_blocked": 4,
+    "restricted": 7,
+    "public_cloud_egress_blocked": 2,
+    "site_terms_window_and_cloud_egress": 1,
+    "public_metadata_retry": 1,
     "registration_or_api_key": 2,
-    "registration_or_authorized_api": 3,
-    "registration_or_authorization_total": 5
+    "registration_or_authorized_api": 2,
+    "registration_or_authorization_total": 4
   },
   "items": [
     {
@@ -17,13 +19,6 @@
       "requirement": "EPREL Public API key + signed declaration",
       "registration_url": "https://eprel.ec.europa.eu/screen/requestpublicapikey",
       "next_action": "申请Public API key后通过FIRST50_AUTH_JSON注入授权信息，复跑完整批量发现。"
-    },
-    {
-      "source_key": "IE-LAW",
-      "current_status": "restricted",
-      "access_lane": "public_cloud_egress_blocked",
-      "requirement": "公开ELI XML/PDF可访问，但GitHub云出口被策略拦截",
-      "next_action": "在本地/自托管Runner使用同一深采集脚本验证官方ELI XML和PDF。"
     },
     {
       "source_key": "NO-LAW",
@@ -44,9 +39,9 @@
     {
       "source_key": "SG-LAW",
       "current_status": "restricted",
-      "access_lane": "public_cloud_egress_blocked",
-      "requirement": "Singapore Statutes Online公开法规正文可浏览，但GitHub云出口受限",
-      "next_action": "转本地/自托管Runner直接采Consumer Protection安全法规正文与附属法规。"
+      "access_lane": "site_terms_window_and_cloud_egress",
+      "requirement": "SSO允许自动抽取，但仅限新加坡时间03:00-07:00；GitHub云出口此前仍受限",
+      "next_action": "仅在03:00-07:00 SGT通过本地/自托管Runner执行；禁止绕过安全措施。"
     },
     {
       "source_key": "DE-STD",
@@ -58,10 +53,9 @@
     {
       "source_key": "NL-STD",
       "current_status": "restricted",
-      "access_lane": "registration_or_authorized_api",
-      "requirement": "NEN Connect注册/许可；公开详情仅元数据",
-      "registration_url": "https://connect.nen.nl/portal/Registreren/Vrij-Beschikbare-Normen/en",
-      "next_action": "按NEN官方注册流程取得合法访问；全文按许可，平台默认metadata_only。"
+      "access_lane": "public_metadata_retry",
+      "requirement": "NEN公开标准详情页可直接读取元数据；全文仍需购买/订阅许可",
+      "next_action": "先按metadata_only抓公开标准编号、状态、日期、委员会、ICS、标题等元数据；不下载收费全文。"
     },
     {
       "source_key": "CH-STD",
