@@ -221,7 +221,18 @@ def _default_plan(source: dict[str, Any]) -> dict[str, Any]:
             "max_excerpt_chars": 4000,
             "keep_headings": True,
         },
-        "notes": "可在来源采集页面逐站调整分页、详情、附件、字段正则和采集上限。",
+        "relevance": {
+            "enabled": True,
+            "exclude_text_keywords": [
+                "privacy policy", "cookie policy", "accessibility", "contact us",
+                "careers", "sitemap", "help center",
+                "隐私政策", "联系我们", "无障碍", "招聘", "网站地图",
+            ],
+            "min_text_chars": 80,
+            "allow_field_match": True,
+            "inherit_parent_for_attachments": True,
+        },
+        "notes": "可在来源采集页面逐站调整分页、详情、附件、字段正则、业务相关性和采集上限。",
     }
 
 
@@ -517,6 +528,19 @@ class SiteExtractionService:
                 re.compile(pattern, re.I)
             fields[str(name)] = values
         config["fields"] = fields
+        relevance = dict(config.get("relevance") or {})
+        relevance["enabled"] = bool(relevance.get("enabled", True))
+        relevance["exclude_text_keywords"] = [
+            str(item).strip().lower()
+            for item in relevance.get("exclude_text_keywords") or []
+            if str(item).strip()
+        ]
+        relevance["min_text_chars"] = max(0, min(int(relevance.get("min_text_chars") or 80), 20000))
+        relevance["allow_field_match"] = bool(relevance.get("allow_field_match", True))
+        relevance["inherit_parent_for_attachments"] = bool(
+            relevance.get("inherit_parent_for_attachments", True)
+        )
+        config["relevance"] = relevance
         start_urls = [str(item).strip() for item in config.get("start_urls") or [] if str(item).strip()]
         if not start_urls:
             raise ValueError("at least one start_url is required")
@@ -633,6 +657,69 @@ class SiteExtractionService:
             if values:
                 output[str(name)] = values
         return output
+
+    def _evaluate_relevance(
+        self,
+        *,
+        url: str,
+        item_type: str,
+        title: str,
+        text: str,
+        fields: dict[str, Any],
+        config: dict[str, Any],
+        parent_relevant: bool,
+        link_text: str,
+    ) -> dict[str, Any]:
+        relevance = dict(config.get("relevance") or {})
+        if not relevance.get("enabled", True) or item_type == "listing":
+            return {"status": "relevant", "reasons": ["listing_or_gate_disabled"]}
+
+        combined = "\n".join([url, title, link_text, text[:6000]]).lower()
+        excluded = [
+            token
+            for token in relevance.get("exclude_text_keywords") or []
+            if token and token in combined
+        ]
+        if excluded:
+            return {
+                "status": "irrelevant",
+                "reasons": [f"excluded_keyword:{excluded[0]}"],
+            }
+
+        discovery = dict(config.get("discovery") or {})
+        signals: list[str] = []
+        include_patterns = list(discovery.get("include_url_patterns") or [])
+        if include_patterns and self._pattern_match(include_patterns, url):
+            signals.append("include_url_pattern")
+
+        detail_keywords = [
+            str(item).lower()
+            for item in discovery.get("detail_text_keywords") or []
+            if str(item).strip()
+        ]
+        if any(token in combined for token in detail_keywords):
+            signals.append("business_keyword")
+
+        if fields and relevance.get("allow_field_match", True):
+            signals.append("structured_field_match")
+
+        if (
+            item_type == "attachment"
+            and parent_relevant
+            and relevance.get("inherit_parent_for_attachments", True)
+        ):
+            signals.append("relevant_parent")
+
+        if signals:
+            return {"status": "relevant", "reasons": signals}
+
+        min_chars = int(relevance.get("min_text_chars") or 0)
+        if item_type == "detail" and len(text.strip()) < min_chars:
+            return {
+                "status": "needs_review",
+                "reasons": [f"thin_content:{len(text.strip())}<{min_chars}"],
+            }
+        return {"status": "needs_review", "reasons": ["no_business_signal"]}
 
     def _classify_links(
         self,
@@ -789,6 +876,18 @@ class SiteExtractionService:
                 "details": sum(1 for item in items if item["item_type"] == "detail"),
                 "attachments": sum(1 for item in items if item["item_type"] == "attachment"),
                 "documents": sum(1 for item in items if item.get("document_id")),
+                "relevant": sum(
+                    1 for item in items
+                    if (item.get("metadata") or {}).get("relevance", {}).get("status") == "relevant"
+                ),
+                "irrelevant": sum(
+                    1 for item in items
+                    if (item.get("metadata") or {}).get("relevance", {}).get("status") == "irrelevant"
+                ),
+                "needs_review": sum(
+                    1 for item in items
+                    if (item.get("metadata") or {}).get("relevance", {}).get("status") == "needs_review"
+                ),
             },
         }
 
@@ -826,8 +925,8 @@ class SiteExtractionService:
             run_id = int(cur.lastrowid)
             self.store.conn.commit()
 
-        queue: list[tuple[str, str, int]] = [
-            (canonical_url(url), "listing", 0)
+        queue: list[tuple[str, str, int, bool, str]] = [
+            (canonical_url(url), "listing", 0, True, "")
             for url in config.get("start_urls") or []
         ]
         visited: set[str] = set()
@@ -843,7 +942,7 @@ class SiteExtractionService:
 
         try:
             while queue and pages_fetched < page_limit and items_discovered < item_limit:
-                url, item_type, depth = queue.pop(0)
+                url, item_type, depth, parent_relevant, link_text = queue.pop(0)
                 url = canonical_url(url)
                 if not url or url in visited:
                     continue
@@ -898,8 +997,21 @@ class SiteExtractionService:
                 if not title:
                     title = Path(urlparse(url).path).name or source.get("source_name") or source_key
 
+                relevance = self._evaluate_relevance(
+                    url=url,
+                    item_type=item_type,
+                    title=title,
+                    text=excerpt,
+                    fields=fields,
+                    config=config,
+                    parent_relevant=parent_relevant,
+                    link_text=link_text,
+                )
+                metadata["relevance"] = relevance
+                current_relevant = relevance.get("status") == "relevant"
+
                 document_id: int | None = None
-                if auto_ingest and (item_type in {"detail", "attachment"}):
+                if auto_ingest and (item_type in {"detail", "attachment"}) and current_relevant:
                     try:
                         document_id = ingest_file(self.store, raw_path)
                         documents_ingested += 1
@@ -933,7 +1045,7 @@ class SiteExtractionService:
                         if pagination_queued >= int(pagination_cfg.get("max_pages") or page_limit) - 1:
                             break
                         if link["url"] not in visited:
-                            queue.append((link["url"], "listing", depth))
+                            queue.append((link["url"], "listing", depth, current_relevant, link.get("text", "")))
                             pagination_queued += 1
 
                 if bool(discovery.get("follow_details", True)):
@@ -941,7 +1053,7 @@ class SiteExtractionService:
                         if details_queued >= detail_limit:
                             break
                         if link["url"] not in visited:
-                            queue.append((link["url"], "detail", depth + 1))
+                            queue.append((link["url"], "detail", depth + 1, current_relevant, link.get("text", "")))
                             details_queued += 1
 
                 if bool(discovery.get("fetch_attachments", False)) and config.get("document_policy") != "metadata_only":
@@ -949,7 +1061,7 @@ class SiteExtractionService:
                         if attachments_queued >= attachment_limit:
                             break
                         if link["url"] not in visited:
-                            queue.append((link["url"], "attachment", depth + 1))
+                            queue.append((link["url"], "attachment", depth + 1, current_relevant, link.get("text", "")))
                             attachments_queued += 1
                             attachments_discovered += 1
 
