@@ -1,10 +1,9 @@
 {
-  "generated_from_round": 10,
+  "generated_from_round": 11,
   "summary": {
-    "total_nonpassed": 8,
+    "total_nonpassed": 7,
     "partial": 1,
-    "restricted": 7,
-    "official_open_archive_dataset": 1,
+    "restricted": 6,
     "public_cloud_egress_blocked": 2,
     "public_metadata_cloud_egress_blocked": 1,
     "site_terms_window_and_cloud_egress": 1,
@@ -20,14 +19,6 @@
       "requirement": "EPREL Public API key + signed declaration",
       "registration_url": "https://eprel.ec.europa.eu/screen/requestpublicapikey",
       "next_action": "申请Public API key后通过FIRST50_AUTH_JSON注入授权信息，复跑完整批量发现。"
-    },
-    {
-      "source_key": "NO-LAW",
-      "current_status": "restricted",
-      "access_lane": "official_open_archive_dataset",
-      "requirement": "Lovdata publicData开放许可XML归档包；应使用归档数据集而非网页逐页采集",
-      "registration_url": "https://lovdata.no/",
-      "next_action": "通过Lovdata publicData /list + /get 获取现行法律与中央法规归档，解包XML、逐条留证并做SHA256增量。"
     },
     {
       "source_key": "NZ-LAW",
