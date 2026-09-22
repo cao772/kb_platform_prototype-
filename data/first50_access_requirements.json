@@ -1,0 +1,87 @@
+{
+  "generated_from_round": 7,
+  "summary": {
+    "total_nonpassed": 10,
+    "partial": 1,
+    "restricted": 9,
+    "public_cloud_egress_blocked": 5,
+    "registration_or_authorized_api": 5
+  },
+  "items": [
+    {
+      "source_key": "EU-EPREL",
+      "current_status": "partial",
+      "access_lane": "registration_or_api_key",
+      "requirement": "EPREL Public API key + signed declaration",
+      "registration_url": "https://eprel.ec.europa.eu/screen/requestpublicapikey",
+      "next_action": "申请Public API key后通过FIRST50_AUTH_JSON注入授权信息，复跑完整批量发现。"
+    },
+    {
+      "source_key": "IE-LAW",
+      "current_status": "restricted",
+      "access_lane": "public_cloud_egress_blocked",
+      "requirement": "公开ELI XML/PDF可访问，但GitHub云出口被策略拦截",
+      "next_action": "在本地/自托管Runner使用同一深采集脚本验证官方ELI XML和PDF。"
+    },
+    {
+      "source_key": "NO-LAW",
+      "current_status": "restricted",
+      "access_lane": "registration_or_authorized_api",
+      "requirement": "完整机器可读现行法规依赖Lovdata授权API",
+      "registration_url": "https://lovdata.no/",
+      "next_action": "采购/申请Lovdata机器可读授权；公共政府索引仅作为有限覆盖证据。"
+    },
+    {
+      "source_key": "NZ-LAW",
+      "current_status": "restricted",
+      "access_lane": "registration_or_api_key",
+      "requirement": "New Zealand Legislation Developer API key",
+      "registration_url": "https://www.legislation.govt.nz/developer-api",
+      "next_action": "申请API key并通过FIRST50_AUTH_JSON注入；公开XML保留为正文结构验证。"
+    },
+    {
+      "source_key": "SG-LAW",
+      "current_status": "restricted",
+      "access_lane": "public_cloud_egress_blocked",
+      "requirement": "Singapore Statutes Online公开法规正文可浏览，但GitHub云出口受限",
+      "next_action": "转本地/自托管Runner直接采Consumer Protection安全法规正文与附属法规。"
+    },
+    {
+      "source_key": "DE-STD",
+      "current_status": "restricted",
+      "access_lane": "public_cloud_egress_blocked",
+      "requirement": "DIN官网公开Products/Publications元数据可浏览，但GitHub云出口触发挑战",
+      "next_action": "本地/自托管Runner抓公开标准元数据；继续保持metadata_only，不采收费全文。"
+    },
+    {
+      "source_key": "NL-STD",
+      "current_status": "restricted",
+      "access_lane": "registration_or_authorized_api",
+      "requirement": "NEN Connect注册/许可；公开详情仅元数据",
+      "registration_url": "https://connect.nen.nl/portal/Registreren/Vrij-Beschikbare-Normen/en",
+      "next_action": "按NEN官方注册流程取得合法访问；全文按许可，平台默认metadata_only。"
+    },
+    {
+      "source_key": "CH-STD",
+      "current_status": "restricted",
+      "access_lane": "registration_or_authorized_api",
+      "requirement": "SNV Connect/标准访问许可",
+      "registration_url": "https://connect.snv.ch/",
+      "next_action": "使用组织授权账号补完整目录/已购标准；公开页只用于元数据验证。"
+    },
+    {
+      "source_key": "US-STD",
+      "current_status": "restricted",
+      "access_lane": "public_cloud_egress_blocked",
+      "requirement": "ANSI官方Approved/Proposed ANS Excel/PDF公开下载，但GitHub云出口触发挑战",
+      "next_action": "本地/自托管Runner优先下载Approved ANS Excel，再解析公开元数据；不采收费全文。"
+    },
+    {
+      "source_key": "CA-ISED",
+      "current_status": "restricted",
+      "access_lane": "public_cloud_egress_blocked",
+      "requirement": "ISED RSS-Gen等官方正文公开可读，但GitHub云出口触发反自动化",
+      "next_action": "本地/自托管Runner直接抓RSS-Gen/RSS目录正文，继续执行相关性和版本留存。"
+    }
+  ]
+}
