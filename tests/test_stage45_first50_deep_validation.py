@@ -18,6 +18,8 @@ def main() -> None:
     round9 = json.loads(Path("data/first50_round9_status.json").read_text(encoding="utf-8"))
     round10 = json.loads(Path("data/first50_round10_status.json").read_text(encoding="utf-8"))
     round11 = json.loads(Path("data/first50_round11_status.json").read_text(encoding="utf-8"))
+    round12 = json.loads(Path("data/first50_round12_status.json").read_text(encoding="utf-8"))
+    round13 = json.loads(Path("data/first50_round13_status.json").read_text(encoding="utf-8"))
     access = json.loads(Path("data/first50_access_requirements.json").read_text(encoding="utf-8"))
     live_workflow = Path(".github/workflows/first50_deep_validation.yml").read_text(encoding="utf-8")
     quality = Path(".github/workflows/quality.yml").read_text(encoding="utf-8")
@@ -49,8 +51,13 @@ def main() -> None:
     assert len(round10["status"]) == 50
     assert round11["summary"] == {"total": 50, "passed": 43, "partial": 1, "restricted": 6, "failed": 0}
     assert len(round11["status"]) == 50
-    assert access["summary"]["total_nonpassed"] == 7
-    assert access["summary"]["public_cloud_egress_blocked"] == 2
+    assert round12["summary"] == {"total": 50, "passed": 43, "partial": 1, "restricted": 6, "failed": 0}
+    assert len(round12["status"]) == 50
+    assert round13["summary"] == {"total": 50, "passed": 44, "partial": 1, "restricted": 5, "failed": 0}
+    assert len(round13["status"]) == 50
+    assert round13["status"]["CA-ISED"] == "passed"
+    assert access["summary"]["total_nonpassed"] == 6
+    assert access["summary"]["public_cloud_egress_blocked"] == 1
     assert access["summary"]["public_metadata_cloud_egress_blocked"] == 1
     assert access["summary"]["site_terms_window_and_cloud_egress"] == 1
     assert access["summary"]["registration_or_authorized_api"] + access["summary"]["registration_or_api_key"] == 3
@@ -65,8 +72,8 @@ def main() -> None:
     assert "FIRST50_AUTH_JSON" in live_workflow
     assert "playwright install --with-deps chromium" in live_workflow
     assert "first50-deep-validation-report" in live_workflow
-    assert "--retry-nonpassed-from data/first50_round11_status.json" in live_workflow
-    assert "first50_round11_status.json" in live_workflow
+    assert "--retry-nonpassed-from data/first50_round13_status.json" in live_workflow
+    assert "first50_round13_status.json" in live_workflow
 
     assert "robots_status" in runner
     assert "BrowserRenderer" in runner
