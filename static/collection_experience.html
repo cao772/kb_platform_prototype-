@@ -62,6 +62,18 @@
 
   <div class="card">
     <div class="head">
+      <div><h2>剩余站点执行动作</h2><div class="meta">把授权、自托管、时窗和定向复跑变成可直接执行的动作清单。</div></div>
+    </div>
+    <div class="metrics" style="margin-bottom:8px">
+      <div class="metric"><span>剩余站点</span><strong id="aRemaining">-</strong></div>
+      <div class="metric"><span>当前可执行</span><strong id="aReady">-</strong></div>
+      <div class="metric"><span>仍有前置条件</span><strong id="aBlocked">-</strong></div>
+    </div>
+    <div id="actionGrid" class="template-grid"><div class="empty">正在生成执行动作…</div></div>
+  </div>
+
+  <div class="card">
+    <div class="head">
       <div><h2>可复用采集模式</h2><div class="meta">从50站配置和已验证经验中提炼少量通用模板。模板不绑定单一国家或单一网站。</div></div>
       <button class="btn secondary" onclick="loadAll()">刷新</button>
     </div>
@@ -107,7 +119,7 @@
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function api(url){const r=await fetch(url);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
-let DATA={sources:[],templates:[],common_lessons:[],summary:{}},PRE={items:[],summary:{},execution:{}};
+let DATA={sources:[],templates:[],common_lessons:[],summary:{}},PRE={items:[],summary:{},execution:{}},ACT={items:[],summary:{}};
 
 function evidenceGroup(level){
   if(['operational_verified','operational_partial','verified_sample','partial_sample'].includes(level))return'verified';
@@ -144,6 +156,22 @@ function renderPreconditions(){
     if(x.time_window_required)checks.push((x.time_window_open?'当前在':'当前不在')+' '+esc(x.time_window));
     return '<div class="template"><div class="head"><h3>'+esc(x.source_key)+'</h3><span class="status '+readinessClass(x.readiness)+'">'+esc(x.readiness_label)+'</span></div><p>'+esc(x.requirement||'')+'</p><div class="chips"><span class="chip">'+esc(accessLabel(x.access_lane||''))+'</span>'+checks.map(v=>'<span class="chip">'+v+'</span>').join('')+'</div><div class="detail">'+esc(x.next_action||'')+'</div>'+(x.registration_url?'<div class="detail"><a class="url" target="_blank" href="'+esc(x.registration_url)+'">官方注册/授权入口</a></div>':'')+'</div>';
   }).join('')||'<div class="empty">当前没有待处理的访问前置条件。</div>';
+}
+async function copyText(value){
+  try{await navigator.clipboard.writeText(String(value||''));alert('已复制');}
+  catch(e){prompt('复制下面内容：',String(value||''));}
+}
+function renderActions(){
+  const s=ACT.summary||{};
+  $('aRemaining').textContent=Number(s.remaining||0);
+  $('aReady').textContent=Number(s.ready_now||0);
+  $('aBlocked').textContent=Number(s.blocked||0);
+  $('actionGrid').innerHTML=(ACT.items||[]).map(x=>{
+    const blockers=(x.blockers||[]).map(v=>'<span class="chip">'+esc(v)+'</span>').join('');
+    const steps=(x.steps||[]).map(v=>'<li>'+esc(v)+'</li>').join('');
+    const reg=x.registration_url?'<a class="btn secondary" style="display:inline-block;text-decoration:none;margin-right:6px" target="_blank" href="'+esc(x.registration_url)+'">官方注册/授权</a>':'';
+    return '<div class="template"><div class="head"><h3>'+esc(x.source_key)+'</h3><span class="status '+(x.can_run_now?'verified':'partial')+'">'+(x.can_run_now?'可执行':'待前置')+'</span></div><p>'+esc(x.requirement||'')+'</p><div class="chips">'+blockers+'</div><ul>'+steps+'</ul><div style="margin-top:9px">'+reg+'<button class="btn secondary" data-command="'+esc(x.local_command||'')+'" onclick="copyText(this.dataset.command)">复制本地复跑命令</button></div><div class="detail">工作流：'+esc(x.workflow?.file||'')+' · lane='+esc(x.workflow?.lane||'')+'</div></div>';
+  }).join('')||'<div class="empty">当前没有待处理动作。</div>';
 }
 function renderValidation(){
   const v=DATA.validation||{},s=v.summary||{},a=v.access_summary||{};
@@ -183,11 +211,12 @@ function renderMetrics(){
 }
 async function loadAll(){
   try{
-    [DATA,PRE]=await Promise.all([
+    [DATA,PRE,ACT]=await Promise.all([
       api('/api/collection-experience/overview'),
-      api('/api/collection-experience/access-preconditions')
+      api('/api/collection-experience/access-preconditions'),
+      api('/api/collection-experience/access-actions')
     ]);
-    renderMetrics();renderValidation();renderPreconditions();renderTemplates();renderLessons();renderAccessLessons();
+    renderMetrics();renderValidation();renderPreconditions();renderActions();renderTemplates();renderLessons();renderAccessLessons();
     $('templateFilter').innerHTML='<option value="">全部模板</option>'+(DATA.templates||[]).map(t=>'<option value="'+esc(t.template_id)+'">'+esc(t.name)+' ('+Number(t.source_count||0)+')</option>').join('');
     renderSources();
   }catch(e){
