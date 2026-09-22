@@ -177,16 +177,28 @@
   },
   "NZ-LAW": {
     "alternate_start_urls": [
-      "https://www.legislation.govt.nz/act/public/1990/109/en/latest.xml",
+      "https://classic.legislation.govt.nz/subscribe/nzpco-rss.xml",
+      "https://www.legislation.govt.nz/act/public/1986/121/en/latest/",
+      "https://www.legislation.govt.nz/act/public/1986/121/en/latest.xml",
       "https://www.legislation.govt.nz/learn-more/legislation-data/xml-data/"
     ],
     "requires_registration": true,
     "registration_url": "https://www.legislation.govt.nz/developer-api",
-    "auth_notes": "官方Developer API需要API key，可向Parliamentary Counsel Office申请；取得后以Authorization/API-key头通过FIRST50_AUTH_JSON注入。",
-    "notes": "先用公开XML验证正文链路，完整批量发现使用官方Developer API。",
+    "auth_notes": "官方Developer API用于完整查询/批量发现，需要向PCO申请API key；凭证通过FIRST50_AUTH_JSON受控注入。",
+    "notes": "先用官方过渡RSS进行增量发现，并以Fair Trading Act 1986公开HTML/XML/PDF验证产品安全正文链；完整批量搜索仍推荐Developer API。",
     "structured_api": true,
     "coverage_limited": true,
-    "coverage_note": "公开XML可验证正文结构；要做完整搜索/批量发现仍需申请New Zealand Legislation API key。"
+    "coverage_note": "公开RSS+正文可以支撑增量发现和关键法规验证，但完整历史/搜索覆盖仍建议使用New Zealand Legislation Developer API key。",
+    "binary_documents": [
+      "https://www.legislation.govt.nz/act/public/1986/121/en/latest.pdf"
+    ],
+    "binary_keywords": [
+      "Fair Trading Act 1986",
+      "Product safety",
+      "Product safety standards"
+    ],
+    "binary_max_bytes": 33554432,
+    "direct_content": true
   },
   "SG-LAW": {
     "alternate_start_urls": [
