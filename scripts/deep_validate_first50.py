@@ -19,6 +19,7 @@ from urllib import robotparser
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from app.parsers import parse_file
 from app.site_extraction import SiteExtractionService
 from app.source_collection import FIRST_WAVE_PATH
 from app.source_registry import SourceRegistryService
@@ -494,6 +495,97 @@ def run_source(
             attempts.append(result)
             return result
 
+        def do_binary_attempt(urls: list[str]) -> dict[str, Any]:
+            keywords = [
+                str(item).lower()
+                for item in remediation.get("binary_keywords") or []
+                if str(item).strip()
+            ]
+            errors: list[str] = []
+            best_text_len = 0
+            for index, candidate in enumerate(urls, 1):
+                status = robots_status(candidate)
+                if status["status"] == "disallowed":
+                    errors.append(f"{candidate}: robots disallowed")
+                    continue
+                try:
+                    body, http_status, content_type = fetcher(
+                        candidate,
+                        fetcher.auth_headers,
+                        int((base_config.get("request") or {}).get("timeout_seconds") or 25),
+                        int((base_config.get("request") or {}).get("max_bytes") or 12 * 1024 * 1024),
+                    )
+                    path_suffix = Path(urlparse(candidate).path).suffix.lower()
+                    suffix = path_suffix if path_suffix in {".pdf", ".xml", ".json", ".xlsx", ".xls"} else ".bin"
+                    target = out_dir / "binary" / source_key / f"official-{index}{suffix}"
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(body)
+                    parsed = parse_file(target)
+                    text_value = str(parsed.full_text or "")
+                    best_text_len = max(best_text_len, len(text_value.strip()))
+                    low = text_value.lower()
+                    matched = [item for item in keywords if item in low]
+                    if len(text_value.strip()) >= 120 and (not keywords or matched):
+                        result = {
+                            "label": "official_binary_document",
+                            "start_urls": [candidate],
+                            "run": {
+                                "status": "completed",
+                                "pages_fetched": 1,
+                                "items_discovered": 1,
+                                "attachments_discovered": 1,
+                                "error": "",
+                            },
+                            "assessment": {
+                                "verdict": "passed",
+                                "evidence_mode": "official_binary_document",
+                                "pages": 1,
+                                "items": 1,
+                                "listing_items": 0,
+                                "details": 0,
+                                "attachments": 1,
+                                "relevant": 1,
+                                "relevant_business": 1,
+                                "relevant_listing": 0,
+                                "needs_review": 0,
+                                "irrelevant": 0,
+                                "reviewed": 0,
+                                "meaningful_items": 1,
+                                "matched_keywords": matched,
+                                "parsed_chars": len(text_value.strip()),
+                                "content_type": content_type,
+                                "http_status": http_status,
+                                "raw_path": str(target),
+                                "error": "",
+                            },
+                        }
+                        attempts.append(result)
+                        return result
+                    errors.append(
+                        f"{candidate}: parsed_chars={len(text_value.strip())}, matched={matched}"
+                    )
+                except Exception as exc:
+                    errors.append(f"{candidate}: {exc}")
+            result = {
+                "label": "official_binary_document",
+                "start_urls": list(urls),
+                "exception": "; ".join(errors)[:3000],
+                "assessment": {
+                    "verdict": "failed",
+                    "evidence_mode": "official_binary_document",
+                    "pages": 0,
+                    "items": 0,
+                    "details": 0,
+                    "attachments": 0,
+                    "relevant": 0,
+                    "meaningful_items": 0,
+                    "parsed_chars": best_text_len,
+                    "error": "; ".join(errors)[:3000],
+                },
+            }
+            attempts.append(result)
+            return result
+
         rank = {"passed": 3, "partial": 2, "failed": 1}
         best: dict[str, Any] | None = None
 
@@ -528,6 +620,12 @@ def run_source(
                     best = second
             except Exception as exc:
                 attempts.append({"label": "official_alternate", "exception": str(exc)[:1000]})
+
+        binary_documents = list(remediation.get("binary_documents") or [])
+        if binary_documents and (best is None or best["assessment"]["verdict"] != "passed"):
+            binary_result = do_binary_attempt(binary_documents)
+            if best is None or rank[binary_result["assessment"]["verdict"]] > rank[best["assessment"]["verdict"]]:
+                best = binary_result
 
         if best is None or best["assessment"]["verdict"] != "passed":
             broad_urls = alternates or primary_urls
