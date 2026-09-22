@@ -620,6 +620,21 @@ def run_source(
                         int(config["request"].get("max_bytes") or 0),
                         min(archive_max_bytes, 100 * 1024 * 1024),
                     )
+                archive_limits = dict(config.get("limits") or {})
+                archive_member_budget = min(
+                    5000,
+                    max(
+                        int(archive_limits.get("max_items") or 120),
+                        int(archive_dataset.get("max_members") or 0)
+                        * max(1, len(archive_dataset.get("urls") or [])),
+                    ),
+                )
+                archive_limits["max_items"] = archive_member_budget
+                archive_limits["max_pages"] = max(
+                    int(archive_limits.get("max_pages") or 6),
+                    min(100, len(archive_dataset.get("urls") or []) + 2),
+                )
+                config["limits"] = archive_limits
             if controlled_broadening:
                 discovery = dict(config.get("discovery") or {})
                 source_type = str(source.get("source_type") or "")
