@@ -25,6 +25,7 @@ from app.store import KnowledgeStore
 
 
 REMEDIATION_PATH = ROOT / "data" / "first50_deep_remediation.json"
+ROUND1_STATUS_PATH = ROOT / "data" / "first50_round1_status.json"
 BROWSER_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -614,6 +615,7 @@ def main() -> None:
     parser.add_argument("--batch-count", type=int, default=5)
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--site-timeout", type=int, default=int(os.getenv("SITE_DEEP_TIMEOUT_SECONDS", "180")))
+    parser.add_argument("--retry-nonpassed-from", default="")
     args = parser.parse_args()
 
     wave = load_json(FIRST_WAVE_PATH, [])
@@ -627,11 +629,37 @@ def main() -> None:
         raise SystemExit("FIRST50_AUTH_JSON is not valid JSON")
 
     selected = [item for idx, item in enumerate(wave) if idx % args.batch_count == args.batch_index]
+    prior_status: dict[str, str] = {}
+    if args.retry_nonpassed_from:
+        prior_payload = load_json(Path(args.retry_nonpassed_from), {})
+        prior_status = dict(prior_payload.get("status") or {})
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     results = []
     for item in selected:
-        print(f"[deep-validate] {item['order']:02d}/50 {item['source_key']}", flush=True)
+        source_key = str(item["source_key"])
+        if prior_status.get(source_key) == "passed":
+            result = {
+                **item,
+                "source_name": "",
+                "base_url": "",
+                "source_type": "",
+                "access_method": "",
+                "final_verdict": "passed",
+                "restriction_reason": "",
+                "recommendation": "",
+                "robots": {"status": "carried_forward"},
+                "used_auth": False,
+                "remediation_notes": "Round1 passed; no new network request in retry round.",
+                "fetch_events": [],
+                "attempts": [],
+                "carried_forward_from_round1": True,
+                "elapsed_seconds": 0.0,
+            }
+            results.append(result)
+            print(f"[deep-validate] {item['order']:02d}/50 {source_key} => passed (carried-forward)", flush=True)
+            continue
+        print(f"[deep-validate] {item['order']:02d}/50 {source_key}", flush=True)
         result = run_source(
             item,
             out_dir=out_dir,
