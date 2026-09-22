@@ -629,7 +629,13 @@ def run_source(
             config = json.loads(json.dumps(base_config))
             candidate_urls = list(start_urls or config.get("start_urls") or [])
             candidate_urls = allowed_start_urls(candidate_urls)
-            if not candidate_urls:
+            archive_dataset = dict(remediation.get("archive_dataset") or {})
+            trusted_archive = bool(
+                archive_dataset.get("enabled")
+                and archive_dataset.get("trusted_scope")
+                and archive_dataset.get("urls")
+            )
+            if not candidate_urls and not trusted_archive:
                 raise PermissionError("all candidate start URLs are disallowed by robots")
             config["start_urls"] = candidate_urls
             request = dict(config.get("request") or {})
@@ -639,7 +645,6 @@ def run_source(
                 **fetcher.auth_headers,
             }
             config["request"] = request
-            archive_dataset = dict(remediation.get("archive_dataset") or {})
             if archive_dataset:
                 config["archives"] = archive_dataset
                 archive_max_bytes = int(archive_dataset.get("max_archive_bytes") or 0)
