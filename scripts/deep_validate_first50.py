@@ -9,8 +9,10 @@ import signal
 import socket
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlparse, urlunparse
 from urllib.request import Request, urlopen
@@ -463,9 +465,51 @@ def classify_restriction(text: str, events: list[dict[str, Any]]) -> str:
     return "unresolved_failure"
 
 
+def automation_window_state(remediation: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
+    window = dict(remediation.get("automation_window") or {})
+    if not window:
+        return {"configured": False, "allowed": True}
+    timezone = str(window.get("timezone") or "UTC")
+    start = str(window.get("start") or "00:00")
+    end = str(window.get("end") or "23:59")
+    current = now or datetime.now(ZoneInfo(timezone))
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=ZoneInfo(timezone))
+    else:
+        current = current.astimezone(ZoneInfo(timezone))
+    start_h, start_m = [int(x) for x in start.split(":", 1)]
+    end_h, end_m = [int(x) for x in end.split(":", 1)]
+    minute = current.hour * 60 + current.minute
+    start_minute = start_h * 60 + start_m
+    end_minute = end_h * 60 + end_m
+    if start_minute <= end_minute:
+        allowed = start_minute <= minute < end_minute
+    else:
+        allowed = minute >= start_minute or minute < end_minute
+    return {
+        "configured": True,
+        "allowed": allowed,
+        "timezone": timezone,
+        "start": start,
+        "end": end,
+        "local_time": current.isoformat(),
+    }
+
+
 def recommendation(reason: str, has_auth: bool, remediation: dict[str, Any]) -> str:
     registration_url = str(remediation.get("registration_url") or "").strip()
     auth_notes = str(remediation.get("auth_notes") or "").strip()
+    if reason == "site_terms_time_window":
+        window = dict(remediation.get("automation_window") or {})
+        return (
+            "遵守站点自动化使用时段；仅在 "
+            + str(window.get("timezone") or "站点当地")
+            + " "
+            + str(window.get("start") or "")
+            + "-"
+            + str(window.get("end") or "")
+            + " 执行自动采集。"
+        )
     if reason == "robots_disallowed":
         return "不绕过 robots 禁止；改用该机构公开API、数据下载、RSS或人工授权渠道。"
     if reason == "captcha_or_bot_challenge":
@@ -501,11 +545,30 @@ def run_source(
     source = registry.by_key(source_key)
     remediation = dict(remediation_catalog.get(source_key) or {})
     auth = dict(auth_map.get(source_key) or {})
+    started = time.time()
+    window_state = automation_window_state(remediation)
+    if window_state.get("configured") and not window_state.get("allowed"):
+        return {
+            **entry,
+            "source_name": source.get("source_name", ""),
+            "base_url": source.get("base_url", ""),
+            "source_type": source.get("source_type", ""),
+            "access_method": source.get("access_method", ""),
+            "final_verdict": "restricted",
+            "restriction_reason": "site_terms_time_window",
+            "recommendation": recommendation("site_terms_time_window", bool(auth), remediation),
+            "robots": {"status": "not_checked_outside_allowed_window"},
+            "used_auth": bool(auth),
+            "remediation_notes": str(remediation.get("notes") or ""),
+            "automation_window": window_state,
+            "fetch_events": [],
+            "attempts": [],
+            "elapsed_seconds": round(time.time() - started, 1),
+        }
     fetcher = ResilientFetcher(source_key, auth)
     service = SiteExtractionService(store, registry, out_dir / "raw" / source_key, fetcher=fetcher)
     robot = robots_status(str(source.get("base_url") or ""))
     attempts: list[dict[str, Any]] = []
-    started = time.time()
     base_plan = service.plan(source_key)
     base_config = json.loads(json.dumps(base_plan.get("config") or {}))
 
