@@ -89,9 +89,11 @@
   },
   "IE-LAW": {
     "alternate_start_urls": [
-      "https://www.irishstatutebook.ie/eli/2016/si/345/made/en/print"
+      "https://www.irishstatutebook.ie/eli/2016/si/345/made/en/xml",
+      "https://www.irishstatutebook.ie/eli/2016/si",
+      "https://www.irishstatutebook.ie/eli/open-data.html"
     ],
-    "notes": "Irish Statute Book网页在GitHub出口受限时，使用Office of the Attorney General公开的S.I. 345/2016官方PDF作为法规正文证据；开放数据仍按官方ELI/XML体系扩展。",
+    "notes": "优先使用Irish Statute Book官方ELI XML开放数据；S.I. 345/2016为低电压设备法规业务样板。网页入口403时不再依赖首页。",
     "binary_documents": [
       "https://www.irishstatutebook.ie/eli/2016/si/345/made/en/pdf"
     ],
@@ -100,7 +102,9 @@
       "Directive 2014/35/EU",
       "safety objectives"
     ],
-    "binary_max_bytes": 33554432
+    "binary_max_bytes": 33554432,
+    "structured_api": true,
+    "direct_content": true
   },
   "IE-STD": {
     "alternate_start_urls": [
@@ -176,10 +180,12 @@
   },
   "SG-LAW": {
     "alternate_start_urls": [
-      "https://sso.agc.gov.sg/Browse/Act/Current/All?PageSize=100",
-      "https://sso.agc.gov.sg/Browse/Act/Current"
+      "https://sso.agc.gov.sg/SL/CPTDSRA1975-RG1",
+      "https://sso.agc.gov.sg/SL/S113-2011",
+      "https://sso.agc.gov.sg/Act/CPTDSRA1975?ViewType=Sl"
     ],
-    "notes": "绕开受限首页，使用SSO官方Current Acts Browse目录，继续发现法案/PDF/RSS。"
+    "notes": "直接使用Singapore Statutes Online公开的Consumer Protection安全法规正文与附属法规目录；不依赖受限首页Browse入口。",
+    "direct_content": true
   },
   "US-ECFR": {
     "alternate_start_urls": [
@@ -198,18 +204,20 @@
   },
   "US-STD": {
     "alternate_start_urls": [
-      "https://www.ansi.org/american-national-standards/info-for-standards-developers/ans-complete-lists"
+      "https://ansi.org/american-national-standards/info-for-standards-developers/ans-complete-lists",
+      "https://ansi.org/resource-center/standards-action"
     ],
-    "notes": "使用ANSI官方每周更新Approved ANS公开PDF作为标准元数据批量来源；仅提取标准号、标题、开发者、状态与日期，不采收费标准全文。",
+    "notes": "ANSI官方公开Approved/Proposed ANS清单和Standards Action；仅采标准编号、标题、开发者、状态和日期等元数据，不采收费标准全文。",
     "binary_documents": [
       "https://share.ansi.org/Shared%20Documents/Standards%20Activities/American%20National%20Standards/Approved%20and%20Proposed%20ANS%20Lists/Approved%20ANS.pdf"
     ],
     "binary_keywords": [
       "Approved American National Standards",
-      "ANSI/",
-      "Final Action"
+      "Final Action",
+      "ANSI"
     ],
-    "binary_max_bytes": 83886080
+    "binary_max_bytes": 83886080,
+    "direct_content": true
   },
   "SE-LAW": {
     "alternate_start_urls": [
