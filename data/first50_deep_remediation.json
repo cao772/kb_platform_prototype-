@@ -35,10 +35,11 @@
   },
   "DE-STD": {
     "alternate_start_urls": [
-      "https://www.din.de/en/meta/search/61764!search?pageNum=9",
-      "https://www.din.de/en/getting-involved/standards-committees/dke/national-committees/68242/wdc-grem%3Adin21%3A54758644%21search-grem-details?masking=true"
+      "https://www.din.de/en/meta/search/61764%21search?query=title",
+      "https://www.din.de/en/getting-involved/standards-committees/nat/publications",
+      "https://www.din.de/en/getting-involved/standards-committees/nid/publications"
     ],
-    "notes": "DIN Media详情被GitHub出口挑战时，改用DIN官网公开Products/Publications列表采标准编号、Edition、Document type和Title元数据；不采标准全文。",
+    "notes": "优先使用DIN官网Products/Publications公开元数据页，直接提取标准编号、Edition、类型和Title；不采DIN Media收费全文。",
     "direct_content": true
   },
   "ES-LAW": {
@@ -204,11 +205,12 @@
   },
   "US-STD": {
     "alternate_start_urls": [
-      "https://ansi.org/american-national-standards/info-for-standards-developers/ans-complete-lists",
-      "https://ansi.org/resource-center/standards-action"
+      "https://www.ansi.org/american-national-standards/info-for-standards-developers/ans-complete-lists",
+      "https://www.ansi.org/resource-center/standards-action"
     ],
-    "notes": "ANSI官方公开Approved/Proposed ANS清单和Standards Action；仅采标准编号、标题、开发者、状态和日期等元数据，不采收费标准全文。",
+    "notes": "ANSI官方每周公开Approved/Proposed ANS清单。优先抓更轻量的Excel元数据，PDF作为兜底；不采收费标准全文。",
     "binary_documents": [
+      "https://share.ansi.org/Shared%20Documents/Standards%20Activities/American%20National%20Standards/Approved%20and%20Proposed%20ANS%20Lists/Approved%20ANS%20Data.xlsx",
       "https://share.ansi.org/Shared%20Documents/Standards%20Activities/American%20National%20Standards/Approved%20and%20Proposed%20ANS%20Lists/Approved%20ANS.pdf"
     ],
     "binary_keywords": [
