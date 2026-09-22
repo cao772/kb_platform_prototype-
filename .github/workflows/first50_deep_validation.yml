@@ -14,6 +14,7 @@ on:
       - "data/first50_round5_status.json"
       - "data/first50_round6_status.json"
       - "data/first50_round7_status.json"
+      - "data/first50_round8_status.json"
       - "data/first50_access_requirements.json"
       - "scripts/deep_validate_first50.py"
       - "scripts/aggregate_first50_validation.py"
@@ -56,7 +57,7 @@ jobs:
             --batch-index ${{ matrix.batch_index }} \
             --batch-count 5 \
             --output-dir live-validation \
-            --retry-nonpassed-from data/first50_round7_status.json
+            --retry-nonpassed-from data/first50_round8_status.json
       - name: Upload batch result
         if: always()
         uses: actions/upload-artifact@v4
