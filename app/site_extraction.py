@@ -957,10 +957,11 @@ class SiteExtractionService:
             with self.store.lock:
                 self.store.conn.execute(
                     """UPDATE source_deep_runs SET
-                         status='completed',finished_at=?,pages_fetched=?,items_discovered=?,
+                         status=?,finished_at=?,pages_fetched=?,items_discovered=?,
                          attachments_discovered=?,documents_ingested=?,changed_items=?,error=?
                        WHERE id=?""",
                     (
+                        'failed' if not pages_fetched else 'partial' if errors else 'completed',
                         finished, pages_fetched, items_discovered, attachments_discovered,
                         documents_ingested, changed_items, "\n".join(errors[:20]), run_id,
                     ),
@@ -1006,6 +1007,7 @@ class SiteExtractionService:
                 "runs": len(items),
                 "success": sum(1 for item in items if item["status"] == "completed"),
                 "failed": sum(1 for item in items if item["status"] == "failed"),
+                "partial": sum(1 for item in items if item["status"] == "partial"),
                 "pages": sum(int(item.get("pages_fetched") or 0) for item in items),
                 "items": sum(int(item.get("items_discovered") or 0) for item in items),
                 "attachments": sum(int(item.get("attachments_discovered") or 0) for item in items),

@@ -11,3 +11,6 @@ data/*.pid
 data/runtime_settings.json
 data/processing_tasks.json
 data/uploads/
+data/local_ocr.json
+data/source_downloads/
+data/live_validation_stage37/

@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from pathlib import Path
@@ -10,6 +11,7 @@ from pathlib import Path
 from app.docx_parser import parse_docx
 from app.model_gateway import call_vision_ocr, current_model_config
 from app.pdf_structure import extract_pdf_structure
+from app.local_ocr import configuration as local_ocr_configuration, recognize as local_ocr_recognize
 from app.runtime_settings import current_parser_settings
 from app.vendor_path import activate_vendor
 
@@ -44,11 +46,29 @@ class _HTMLTextExtractor(HTMLParser):
     def __init__(self) -> None:
         super().__init__()
         self.parts: list[str] = []
+        self.main_parts: list[str] = []
+        self.title_parts: list[str] = []
+        self._stack: list[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag not in {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}:
+            self._stack.append(tag)
+
+    def handle_endtag(self, tag):
+        if tag in self._stack:
+            index = len(self._stack) - 1 - self._stack[::-1].index(tag)
+            del self._stack[index:]
 
     def handle_data(self, data: str) -> None:
         text = data.strip()
+        if "title" in self._stack and text:
+            self.title_parts.append(text)
+        if any(tag in self._stack for tag in ("script", "style", "noscript", "svg", "head", "nav", "footer", "header")):
+            return
         if text:
             self.parts.append(text)
+            if "main" in self._stack:
+                self.main_parts.append(text)
 
 
 def _parser_backend() -> str:
@@ -59,7 +79,13 @@ def _ocr_enabled() -> bool:
     mode = str(current_parser_settings().get("ocr_mode") or "auto").lower()
     if mode == "off":
         return False
-    return current_model_config("vision").configured
+    return (mode == "auto" and bool(local_ocr_configuration())) or current_model_config("vision").configured
+
+
+def recognize_image(image_bytes: bytes, mime_type: str, *, instruction: str | None = None):
+    if current_parser_settings().get("ocr_mode") == "auto" and local_ocr_configuration():
+        return local_ocr_recognize(image_bytes)
+    return call_vision_ocr(image_bytes, mime_type, instruction=instruction)
 
 
 def parse_file(path: str | Path) -> StandardDocument:
@@ -126,7 +152,7 @@ def parse_pdf_standard(path: Path) -> StandardDocument:
     ocr_available = _ocr_enabled()
 
     def _ocr_callback(image_bytes: bytes, page_no: int) -> tuple[str, dict]:
-        return call_vision_ocr(
+        return recognize_image(
             image_bytes,
             "image/png",
             instruction=(
@@ -162,6 +188,8 @@ def parse_pdf_standard(path: Path) -> StandardDocument:
     if not blocks:
         blocks = [StandardBlock("page_unreadable", "[PDF未识别到可索引内容]", metadata={"source": "unreadable"})]
     parser_name = "pymupdf-layout+vision" if summary.get("ocr_pages") else "pymupdf-layout"
+    if summary.get("ocr_pages") and any("local_ocr" in page.get("strategy", "") for page in parse_report.get("pages", [])):
+        parser_name = "pymupdf-layout+paddleocr"
     return StandardDocument(
         str(path.resolve()), path.name, path.stem, "application/pdf", parser_name,
         blocks,
@@ -252,9 +280,9 @@ def parse_json_standard(path: Path) -> StandardDocument:
 def parse_xml_standard(path: Path) -> StandardDocument:
     import xml.etree.ElementTree as ET
 
-    raw = path.read_text(encoding="utf-8", errors="ignore")
+    raw = path.read_text(encoding="utf-8", errors="replace")
     try:
-        root = ET.fromstring(raw)
+        root = ET.fromstring(path.read_bytes())
     except ET.ParseError:
         return StandardDocument(
             str(path.resolve()), path.name, path.stem, "application/xml", "xml-raw",
@@ -263,16 +291,11 @@ def parse_xml_standard(path: Path) -> StandardDocument:
         )
 
     lines: list[str] = []
-    for elem in root.iter():
-        text = " ".join("".join(elem.itertext()).split())
+    for fragment in root.itertext():
+        text = " ".join(fragment.split())
         if not text:
             continue
-        tag = str(elem.tag).split("}")[-1]
-        if text not in lines[-20:]:
-            lines.append(f"{tag}: {text}" if tag else text)
-        if len(lines) >= 5000:
-            lines.append("[XML内容过长，已截断]")
-            break
+        lines.append(text)
     return StandardDocument(
         str(path.resolve()), path.name, path.stem, "application/xml", "xml-etree",
         [StandardBlock("xml_text", "\n".join(lines))],
@@ -282,10 +305,18 @@ def parse_xml_standard(path: Path) -> StandardDocument:
 
 def parse_html_standard(path: Path) -> StandardDocument:
     parser = _HTMLTextExtractor()
-    parser.feed(path.read_text(encoding="utf-8", errors="ignore"))
+    raw = path.read_bytes()
+    charset = re.search(br'charset\s*=\s*["\x27]?([A-Za-z0-9_-]+)', raw[:8192], re.I)
+    encoding = charset.group(1).decode('ascii') if charset else 'utf-8'
+    try:
+        text = raw.decode(encoding, errors='replace')
+    except LookupError:
+        text = raw.decode('utf-8', errors='replace')
+    parser.feed(text)
     return StandardDocument(
-        str(path.resolve()), path.name, path.stem, "text/html", "html-parser",
-        [StandardBlock("html_text", "\n".join(parser.parts))],
+        str(path.resolve()), path.name, " ".join(parser.title_parts) or path.stem, "text/html", "html-parser",
+        [StandardBlock("html_text", "\n".join(parser.main_parts or parser.parts))],
+        {"encoding": encoding, "main_content_selected": bool(parser.main_parts)},
     )
 
 
@@ -301,7 +332,7 @@ def parse_image_standard(path: Path) -> StandardDocument:
     }
     if _ocr_enabled():
         raw = path.read_bytes()
-        recognized, trace = call_vision_ocr(raw, mime_type)
+        recognized, trace = recognize_image(raw, mime_type)
         if recognized:
             metadata.update({"ocr_status": "completed", "ocr_trace": trace})
             return StandardDocument(

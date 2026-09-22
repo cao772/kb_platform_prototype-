@@ -310,6 +310,8 @@ def extract_pdf_structure(
                 if ocr_text:
                     ocr_pages += 1
                     strategy = "vision_ocr" if page_type == "scan" else "layout_text+vision_review"
+                    if ocr_trace.get("mode") == "local_ocr":
+                        strategy = "local_ocr" if page_type == "scan" else "layout_text+local_ocr"
                     if page_type == "scan":
                         page_blocks = [{
                             "type": "ocr_text",
@@ -378,8 +380,8 @@ def extract_pdf_structure(
         "scan_pages": sum(1 for page in pages if page["page_type"] == "scan"),
         "table_pages": sum(1 for page in pages if page["table_count"] > 0),
         "complex_layout_pages": sum(1 for page in pages if page["page_type"] == "complex_layout"),
-        "ocr_pages": sum(1 for page in pages if "vision_ocr" in page["strategy"]),
-        "unreadable_pages": sum(1 for page in pages if "ocr_required" in page["issues"]),
+        "ocr_pages": ocr_pages,
+        "unreadable_pages": sum(1 for page in pages if any(issue in page["issues"] for issue in ("ocr_required", "ocr_failed"))),
         "high_quality_pages": sum(1 for page in pages if page["quality_band"] == "high"),
         "medium_quality_pages": sum(1 for page in pages if page["quality_band"] == "medium"),
         "low_quality_pages": sum(1 for page in pages if page["quality_band"] == "low"),

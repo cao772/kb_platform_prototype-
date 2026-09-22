@@ -5,6 +5,8 @@ from typing import Any
 
 import fitz
 
+from app.pdf_structure import extract_pdf_structure
+
 
 class ParserReviewService:
     def __init__(self, store):
@@ -14,6 +16,8 @@ class ParserReviewService:
         document = self.store.document_detail(document_id)
         metadata = document.get("metadata") or {}
         parse_report = metadata.get("parse_report") or {"summary": {}, "pages": []}
+        if not parse_report.get("pages"):
+            parse_report = self._backfill_pdf_report(document, metadata) or parse_report
         return {
             "document": {
                 "id": document["id"],
@@ -27,6 +31,17 @@ class ParserReviewService:
             "summary": parse_report.get("summary") or metadata.get("parse_summary") or {},
             "pages": parse_report.get("pages") or [],
         }
+
+    def _backfill_pdf_report(self, document: dict[str, Any], metadata: dict[str, Any]) -> dict[str, Any] | None:
+        """Add Stage33 page diagnostics to legacy PDFs without re-indexing their content."""
+        source = Path(str(document.get("source_path") or ""))
+        if document.get("mime_type") != "application/pdf" or not source.exists():
+            return None
+        _, parse_report = extract_pdf_structure(source, ocr_enabled=False)
+        metadata["parse_summary"] = dict(parse_report.get("summary") or {})
+        metadata["parse_report"] = parse_report
+        self.store.update_document_metadata(int(document["id"]), metadata)
+        return parse_report
 
     def page_image(self, document_id: int, page_no: int, *, scale: float = 1.35) -> bytes:
         document = self.store.document_detail(document_id)

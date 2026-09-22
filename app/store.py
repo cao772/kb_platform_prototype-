@@ -157,6 +157,17 @@ class KnowledgeStore:
         item["metadata"] = json.loads(item.get("metadata") or "{}")
         return item
 
+    def update_document_metadata(self, document_id: int, metadata: dict[str, Any]) -> None:
+        """Persist derived document metadata without changing indexed content or reviews."""
+        with self.lock:
+            cursor = self.conn.execute(
+                "UPDATE documents SET metadata=? WHERE id=?",
+                (json.dumps(metadata, ensure_ascii=False), int(document_id)),
+            )
+            if cursor.rowcount != 1:
+                raise ValueError("document not found")
+            self.conn.commit()
+
     def document_chunks(self, document_id: int) -> list[dict[str, Any]]:
         with self.lock:
             rows = self.conn.execute("SELECT id,document_id,chunk_index,text,metadata FROM chunks WHERE document_id=? ORDER BY chunk_index,id", (document_id,)).fetchall()

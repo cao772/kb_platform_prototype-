@@ -64,8 +64,12 @@ def seed(store: KnowledgeStore) -> None:
 
 def main() -> None:
     old_backend = os.environ.pop("KB_GRAPH_BACKEND", None)
+    old_settings = os.environ.get("KB_SETTINGS_PATH")
     try:
         with tempfile.TemporaryDirectory() as tmp:
+            # Keep the graph fallback assertion deterministic when a developer
+            # has a real QA model configured in the local runtime settings.
+            os.environ["KB_SETTINGS_PATH"] = str(Path(tmp) / "runtime_settings.json")
             store = KnowledgeStore(Path(tmp) / "knowledge.db")
             seed(store)
             graph = GraphGovernanceService(store)
@@ -111,6 +115,10 @@ def main() -> None:
     finally:
         if old_backend is not None:
             os.environ["KB_GRAPH_BACKEND"] = old_backend
+        if old_settings is None:
+            os.environ.pop("KB_SETTINGS_PATH", None)
+        else:
+            os.environ["KB_SETTINGS_PATH"] = old_settings
 
 
 if __name__ == "__main__":

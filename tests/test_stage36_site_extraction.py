@@ -115,6 +115,19 @@ def main() -> None:
         recent = service.list_runs(source_key="EU-EURLEX", limit=10)
         assert recent["summary"]["success"] == 2
 
+        def blocked(*args):
+            raise ValueError("HTTP 403")
+        service.fetcher = blocked
+        failed = service.run("EU-EURLEX")
+        assert failed["status"] == "failed" and failed["pages_fetched"] == 0
+        def partially_blocked(url, *args):
+            if "/detail/1" in url:
+                raise ValueError("HTTP 403")
+            return fetcher(url, *args)
+        service.fetcher = partially_blocked
+        partial = service.run("EU-EURLEX")
+        assert partial["status"] == "partial" and partial["pages_fetched"] == 5
+
     page = Path("static/collection.html").read_text(encoding="utf-8")
     runtime = Path("app/platform_server.py").read_text(encoding="utf-8")
     workflow = Path(".github/workflows/quality.yml").read_text(encoding="utf-8")

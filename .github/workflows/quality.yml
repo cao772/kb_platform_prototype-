@@ -95,3 +95,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage36_site_extraction.py
       - name: Stage37 expanded product access taxonomy tests
         run: PYTHONPATH=. python tests/test_stage37_product_taxonomy_expansion.py
+      - name: Stage38 live parser and local OCR routing tests
+        run: PYTHONPATH=. python tests/test_live_parser_regression.py

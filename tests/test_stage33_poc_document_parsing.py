@@ -98,6 +98,17 @@ def main() -> None:
         assert image_bytes.startswith(b"\x89PNG")
         assert len(image_bytes) > 1000
 
+        # Files indexed before Stage33 receive only the missing page diagnostics;
+        # their indexed text, chunks and review state are left intact.
+        legacy_metadata = dict(detail["metadata"])
+        legacy_metadata.pop("parse_summary", None)
+        legacy_metadata.pop("parse_report", None)
+        store.update_document_metadata(document_id, legacy_metadata)
+        legacy_payload = review.report(document_id)
+        assert legacy_payload["summary"]["page_count"] == 3
+        assert len(legacy_payload["pages"]) == 3
+        assert store.document_detail(document_id)["metadata"]["parse_report"]["pages"][1]["table_count"] >= 1
+
     page = Path("static/parse_review.html").read_text(encoding="utf-8")
     admin = Path("static/admin.html").read_text(encoding="utf-8")
     server = Path("app/server.py").read_text(encoding="utf-8")
