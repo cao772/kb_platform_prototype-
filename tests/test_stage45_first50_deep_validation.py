@@ -13,6 +13,8 @@ def main() -> None:
     round4 = json.loads(Path("data/first50_round4_status.json").read_text(encoding="utf-8"))
     round5 = json.loads(Path("data/first50_round5_status.json").read_text(encoding="utf-8"))
     round6 = json.loads(Path("data/first50_round6_status.json").read_text(encoding="utf-8"))
+    round7 = json.loads(Path("data/first50_round7_status.json").read_text(encoding="utf-8"))
+    access = json.loads(Path("data/first50_access_requirements.json").read_text(encoding="utf-8"))
     live_workflow = Path(".github/workflows/first50_deep_validation.yml").read_text(encoding="utf-8")
     quality = Path(".github/workflows/quality.yml").read_text(encoding="utf-8")
     runner = Path("scripts/deep_validate_first50.py").read_text(encoding="utf-8")
@@ -33,6 +35,11 @@ def main() -> None:
     assert len(round5["status"]) == 50
     assert round6["summary"] == {"total": 50, "passed": 39, "partial": 1, "restricted": 10, "failed": 0}
     assert len(round6["status"]) == 50
+    assert round7["summary"] == {"total": 50, "passed": 40, "partial": 1, "restricted": 9, "failed": 0}
+    assert len(round7["status"]) == 50
+    assert access["summary"]["total_nonpassed"] == 10
+    assert access["summary"]["public_cloud_egress_blocked"] == 5
+    assert access["summary"]["registration_or_authorized_api"] + access["summary"]["registration_or_api_key"] == 5
 
     for key in ("US-FEDREG", "JP-LAW", "DE-LAW", "EU-EURLEX", "US-ECFR"):
         assert key in remediation
@@ -44,7 +51,8 @@ def main() -> None:
     assert "FIRST50_AUTH_JSON" in live_workflow
     assert "playwright install --with-deps chromium" in live_workflow
     assert "first50-deep-validation-report" in live_workflow
-    assert "--retry-nonpassed-from data/first50_round6_status.json" in live_workflow
+    assert "--retry-nonpassed-from data/first50_round7_status.json" in live_workflow
+    assert "first50_round7_status.json" in live_workflow
 
     assert "robots_status" in runner
     assert "BrowserRenderer" in runner
@@ -69,6 +77,13 @@ def main() -> None:
     assert "parse_file" in runner
     assert "browser_download" in runner
     assert "fetch_binary" in runner
+    assert "--source-keys" in runner
+    selfhosted = Path(".github/workflows/first50_selfhosted_access.yml").read_text(encoding="utf-8")
+    assert "runs-on: [self-hosted, linux]" in selfhosted
+    assert "FIRST50_AUTH_JSON" in selfhosted
+    experience = Path("static/collection_experience.html").read_text(encoding="utf-8")
+    assert "50站深采集验收" in experience
+    assert "公开内容 / 云出口受限" in experience
 
     assert "expected 50 source results" in aggregate
     assert "失败/受限处置原则" in aggregate
