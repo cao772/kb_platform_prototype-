@@ -109,6 +109,8 @@ def main() -> None:
     assert "browser_download" in runner
     assert "fetch_binary" in runner
     assert "--source-keys" in runner
+    assert "retained_prior_status" in runner
+    assert "rank[current] < rank[prior]" in runner
     assert "automation_window_state" in runner
     assert "site_terms_time_window" in runner
     assert "ZoneInfo" in runner
