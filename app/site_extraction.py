@@ -1017,6 +1017,198 @@ class SiteExtractionService:
             },
         }
 
+    def tuning_queue(self) -> dict[str, Any]:
+        wave = []
+        if FIRST_WAVE_PATH.exists():
+            try:
+                payload = json.loads(FIRST_WAVE_PATH.read_text(encoding="utf-8"))
+                wave = [dict(item) for item in payload if isinstance(item, dict)]
+            except (OSError, ValueError, TypeError):
+                wave = []
+
+        ordered = {
+            str(item.get("source_key") or ""): {
+                "order": int(item.get("order") or 999),
+                "source_key": str(item.get("source_key") or ""),
+                "purpose": str(item.get("purpose") or ""),
+            }
+            for item in wave
+            if str(item.get("source_key") or "").strip()
+        }
+        with self.store.lock:
+            rows = self.store.conn.execute(
+                """SELECT source_key,metadata_json,document_id
+                   FROM source_extracted_items
+                   WHERE item_type IN ('detail','attachment')
+                   ORDER BY source_key,id"""
+            ).fetchall()
+            run_rows = self.store.conn.execute(
+                """SELECT r.*
+                   FROM source_deep_runs r
+                   JOIN (
+                       SELECT source_key,MAX(id) AS id
+                       FROM source_deep_runs
+                       GROUP BY source_key
+                   ) latest ON latest.id=r.id"""
+            ).fetchall()
+
+        latest_runs = {str(row["source_key"] or ""): dict(row) for row in run_rows}
+        metrics: dict[str, dict[str, Any]] = {}
+        for key, seed in ordered.items():
+            metrics[key] = {
+                **seed,
+                "items": 0,
+                "relevant": 0,
+                "needs_review": 0,
+                "irrelevant": 0,
+                "reviewed": 0,
+                "documents": 0,
+                "disagreements": 0,
+                "over_capture": 0,
+                "under_capture": 0,
+            }
+
+        for row in rows:
+            key = str(row["source_key"] or "")
+            bucket = metrics.setdefault(key, {
+                "order": 999,
+                "source_key": key,
+                "purpose": "",
+                "items": 0,
+                "relevant": 0,
+                "needs_review": 0,
+                "irrelevant": 0,
+                "reviewed": 0,
+                "documents": 0,
+                "disagreements": 0,
+                "over_capture": 0,
+                "under_capture": 0,
+            })
+            try:
+                metadata = json.loads(row["metadata_json"] or "{}")
+            except (TypeError, ValueError):
+                metadata = {}
+            automatic = dict(metadata.get("relevance") or {})
+            review = dict(metadata.get("relevance_review") or {})
+            automatic_status = automatic.get("status") or "needs_review"
+            review_status = review.get("status")
+            effective = self._effective_relevance(metadata)
+
+            bucket["items"] += 1
+            bucket[effective["status"]] += 1
+            bucket["documents"] += 1 if row["document_id"] else 0
+            if review_status in {"relevant", "needs_review", "irrelevant"}:
+                bucket["reviewed"] += 1
+                if review_status != automatic_status:
+                    bucket["disagreements"] += 1
+                if automatic_status == "relevant" and review_status == "irrelevant":
+                    bucket["over_capture"] += 1
+                if automatic_status in {"needs_review", "irrelevant"} and review_status == "relevant":
+                    bucket["under_capture"] += 1
+
+        items: list[dict[str, Any]] = []
+        for key, bucket in metrics.items():
+            total = int(bucket["items"] or 0)
+            reviewed = int(bucket["reviewed"] or 0)
+            run = latest_runs.get(key) or {}
+            run_status = str(run.get("status") or "not_run")
+            suggestions: list[str] = []
+            reasons: list[str] = []
+            score = 0
+
+            if run_status == "not_run":
+                score += 100
+                reasons.append("尚未执行深采集")
+                suggestions.append("先执行一次受限深采集，建立详情/附件样本和相关性分布")
+            elif run_status == "failed":
+                score += 85
+                reasons.append("最近深采集失败")
+                suggestions.append("先检查入口地址、访问限制、动态页面或请求参数，再调整详情规则")
+            elif run_status == "partial":
+                score += 25
+                reasons.append("最近深采集部分完成")
+                suggestions.append("查看最近失败原因，优先修复超时、受限页面或解析异常")
+
+            if total == 0 and run_status != "not_run":
+                score += 60
+                reasons.append("未形成详情或附件样本")
+                suggestions.append("检查详情发现关键词、include URL、分页和附件发现规则")
+
+            needs_review = int(bucket["needs_review"] or 0)
+            if needs_review:
+                score += min(50, needs_review * 4)
+                reasons.append(f"待复核 {needs_review} 条")
+                suggestions.append("优先复核待复核样本，先形成可用于调规则的人工反馈")
+
+            if int(bucket["over_capture"] or 0):
+                score += min(40, int(bucket["over_capture"]) * 12)
+                reasons.append(f"发现过采 {bucket['over_capture']} 条")
+                suggestions.append("收紧 include URL / 详情关键词，并把已确认噪声补入 exclude 规则")
+
+            if int(bucket["under_capture"] or 0):
+                score += min(40, int(bucket["under_capture"]) * 12)
+                reasons.append(f"发现漏采 {bucket['under_capture']} 条")
+                suggestions.append("扩展 include URL、业务关键词或字段正则，覆盖人工确认的相关页面")
+
+            if reviewed:
+                disagreement_rate = round(int(bucket["disagreements"]) / reviewed * 100, 1)
+                if disagreement_rate >= 30:
+                    score += 20
+                    reasons.append(f"规则与人工分歧率 {disagreement_rate:.1f}%")
+            else:
+                disagreement_rate = 0.0
+
+            irrelevant_rate = round(int(bucket["irrelevant"]) / total * 100, 1) if total else 0.0
+            relevant_rate = round(int(bucket["relevant"]) / total * 100, 1) if total else 0.0
+            review_rate = round(reviewed / total * 100, 1) if total else 0.0
+            if total >= 4 and irrelevant_rate >= 50:
+                score += 15
+                reasons.append(f"已排除占比 {irrelevant_rate:.1f}%")
+                suggestions.append("减少导航/帮助/通用栏目进入详情队列，优先收紧 discovery 规则")
+
+            if (
+                total
+                and relevant_rate >= 70
+                and needs_review == 0
+                and int(bucket["disagreements"] or 0) == 0
+            ):
+                suggestions.append("当前样本较稳定；可保持规则并逐步扩大分页/附件验证范围")
+
+            if not suggestions:
+                suggestions.append("继续积累样本；有人工反馈后再决定是否调整规则")
+
+            priority = "high" if score >= 80 else "medium" if score >= 35 else "low"
+            bucket.update({
+                "latest_run_status": run_status,
+                "latest_run_id": run.get("id"),
+                "latest_run_error": str(run.get("error") or "")[:500],
+                "latest_pages": int(run.get("pages_fetched") or 0),
+                "relevant_rate": relevant_rate,
+                "review_rate": review_rate,
+                "disagreement_rate": disagreement_rate,
+                "priority": priority,
+                "priority_score": score,
+                "priority_reasons": reasons,
+                "suggestions": list(dict.fromkeys(suggestions)),
+            })
+            items.append(bucket)
+
+        items.sort(key=lambda item: (-int(item["priority_score"]), int(item["order"]), item["source_key"]))
+        return {
+            "items": items,
+            "summary": {
+                "sources": len(items),
+                "high": sum(1 for item in items if item["priority"] == "high"),
+                "medium": sum(1 for item in items if item["priority"] == "medium"),
+                "low": sum(1 for item in items if item["priority"] == "low"),
+                "not_run": sum(1 for item in items if item["latest_run_status"] == "not_run"),
+                "failed": sum(1 for item in items if item["latest_run_status"] == "failed"),
+                "partial": sum(1 for item in items if item["latest_run_status"] == "partial"),
+                "needs_review": sum(int(item["needs_review"] or 0) for item in items),
+                "disagreements": sum(int(item["disagreements"] or 0) for item in items),
+            },
+        }
+
     def run(
         self,
         source_key: str,
