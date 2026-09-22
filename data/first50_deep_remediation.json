@@ -35,11 +35,11 @@
   },
   "DE-STD": {
     "alternate_start_urls": [
-      "https://www.din.de/en/meta/search/61764%21search?query=title",
-      "https://www.din.de/en/getting-involved/standards-committees/nat/publications",
-      "https://www.din.de/en/getting-involved/standards-committees/nid/publications"
+      "https://www.din.de/en/getting-involved/standards-committees/dke/publications",
+      "https://www.din.de/en/getting-involved/standards-committees/dke",
+      "https://www.din.de/en/meta/search/61764%21search?query=title"
     ],
-    "notes": "优先使用DIN官网Products/Publications公开元数据页，直接提取标准编号、Edition、类型和Title；不采DIN Media收费全文。",
+    "notes": "优先使用DIN/DKE官方Publications公开元数据页。DKE负责德国电气、电子与信息技术标准，页面直接公开标准号、Edition、Procedure和Title；平台保持metadata_only，不采DIN Media收费全文。",
     "direct_content": true
   },
   "ES-LAW": {
