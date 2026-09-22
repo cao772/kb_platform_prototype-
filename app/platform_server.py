@@ -183,10 +183,40 @@ class Handler(BaseHandler):
 
         if parsed.path == "/api/collection-experience/templates":
             try:
+                templates = collection_experience.templates()
                 self._send_json({
-                    "items": collection_experience.templates(),
-                    "summary": {"templates": len(collection_experience.templates())},
+                    "items": templates,
+                    "summary": {"templates": len(templates)},
                 })
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection-experience/recommend":
+            try:
+                self._send_json(collection_experience.recommend(
+                    params.get("source_key", [""])[0]
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection-experience/template-preview":
+            try:
+                self._send_json(collection_experience.preview_template(
+                    params.get("source_key", [""])[0],
+                    params.get("template_id", [""])[0],
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection-experience/applications":
+            try:
+                self._send_json(collection_experience.list_applications(
+                    source_key=params.get("source_key", [""])[0],
+                    limit=min(int(params.get("limit", ["100"])[0] or 100), 500),
+                ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
@@ -451,6 +481,10 @@ class Handler(BaseHandler):
             self._send_file(STATIC_DIR / "collection_experience.html")
             return
 
+        if parsed.path in {"/collection-onboarding", "/collection-onboarding.html"}:
+            self._send_file(STATIC_DIR / "collection_onboarding.html")
+            return
+
         if parsed.path in {"/sources", "/sources.html"}:
             self._send_file(STATIC_DIR / "sources.html")
             return
@@ -472,6 +506,7 @@ class Handler(BaseHandler):
                 '<a class="top-link" href="/sources">来源台账</a>'
                 '<a class="top-link" href="/collection">采集执行</a>'
                 '<a class="top-link" href="/collection-experience">采集经验</a>'
+                '<a class="top-link" href="/collection-onboarding">新站接入</a>'
                 '<a class="top-link" href="/ontology">知识本体</a>'
                 '<a class="top-link" href="/gma-path">GMA准入路径</a>'
                 '<a class="top-link" href="/map">法规认证地图</a>'
@@ -733,6 +768,20 @@ class Handler(BaseHandler):
                 self._send_json(site_extraction.decide_tuning_proposal(
                     int(payload.get("proposal_id") or 0),
                     action=str(payload.get("action") or ""),
+                    operator=str(payload.get("operator") or ""),
+                    note=str(payload.get("note") or ""),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection-experience/template-apply":
+            try:
+                payload = self._read_json()
+                self._send_json(collection_experience.apply_template(
+                    str(payload.get("source_key") or ""),
+                    str(payload.get("template_id") or ""),
+                    expected_base_hash=str(payload.get("expected_base_hash") or ""),
                     operator=str(payload.get("operator") or ""),
                     note=str(payload.get("note") or ""),
                 ))
