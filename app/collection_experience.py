@@ -215,6 +215,29 @@ TEMPLATE_CATALOG: tuple[dict[str, Any], ...] = (
 )
 
 
+COMMON_ACCESS_LESSONS: tuple[dict[str, str], ...] = (
+    {
+        "title": "公开内容但云出口被拦截",
+        "principle": "若官方页面在人类浏览器/公共索引可访问，但 GitHub Runner 反复触发挑战，不应把站点误判为不可采。",
+        "reuse": "切换本地或自托管 Runner，保持同一抓取规则和证据口径；禁止通过绕过安全措施来解决。",
+    },
+    {
+        "title": "官方 API Key / 注册前置",
+        "principle": "EPREL、NZ Legislation 等官方接口明确要求 API Key 或注册时，应把注册/授权视为采集前置条件，而不是技术失败。",
+        "reuse": "凭证仅通过受控 Secret 注入；站点配置、凭证状态和采集结果分开管理。",
+    },
+    {
+        "title": "标准站默认只采公开元数据",
+        "principle": "DIN、NEN、SNV、ANSI 等标准机构的收费全文与公开元数据必须分离。",
+        "reuse": "优先采标准号、标题、版本、状态、委员会、ICS等公开字段；全文只有在取得许可后才进入处理链。",
+    },
+    {
+        "title": "遵守站点自动抽取时间窗",
+        "principle": "部分官方站允许自动抽取但规定时段，例如 Singapore Statutes Online 仅允许特定时间窗。",
+        "reuse": "把站点条款转成调度约束并自动校验，超出时间窗不执行，而不是人工记忆规则。",
+    },
+)
+
 COMMON_LESSONS: tuple[dict[str, str], ...] = (
     {
         "title": "先判断站点形态，再决定采集方式",
@@ -678,6 +701,7 @@ class CollectionExperienceService:
             "sources": experiences,
             "templates": templates,
             "common_lessons": [dict(item) for item in COMMON_LESSONS],
+            "access_lessons": [dict(item) for item in COMMON_ACCESS_LESSONS],
             "validation": {
                 "run_id": validation_payload.get("run_id"),
                 "run_number": validation_payload.get("run_number"),
