@@ -1038,6 +1038,28 @@ def main() -> None:
             f"({result.get('restriction_reason') or 'ok'})",
             flush=True,
         )
+        if result["final_verdict"] != "passed":
+            diagnostic = {
+                "source_key": source_key,
+                "final_verdict": result.get("final_verdict"),
+                "restriction_reason": result.get("restriction_reason"),
+                "recommendation": result.get("recommendation"),
+                "attempts": [
+                    {
+                        "label": attempt.get("label"),
+                        "start_urls": attempt.get("start_urls"),
+                        "assessment": attempt.get("assessment"),
+                        "exception": attempt.get("exception"),
+                        "robots": attempt.get("robots"),
+                    }
+                    for attempt in (result.get("attempts") or [])
+                ],
+                "fetch_events": result.get("fetch_events") or [],
+            }
+            print(
+                "[deep-diagnostic] " + json.dumps(diagnostic, ensure_ascii=False),
+                flush=True,
+            )
 
     payload = {
         "batch_index": args.batch_index,
