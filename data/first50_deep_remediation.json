@@ -35,11 +35,10 @@
   },
   "DE-STD": {
     "alternate_start_urls": [
-      "https://www.dinmedia.de/en/standard/din-en-iec-60335-1/400775491?indexName=prod_dinmedia_products",
-      "https://www.dinmedia.de/en/standard/din-en-iec-60335-2-40/393101769",
-      "https://www.dinmedia.de/en/standard/din-en-iec-60335-2-7/377897043"
+      "https://www.din.de/en/meta/search/61764!search?pageNum=9",
+      "https://www.din.de/en/getting-involved/standards-committees/dke/national-committees/68242/wdc-grem%3Adin21%3A54758644%21search-grem-details?masking=true"
     ],
-    "notes": "使用DIN Media公开标准详情页采集标准号、状态、发布日期、标题、页数和适用范围元数据；不采购买后的标准全文。",
+    "notes": "DIN Media详情被GitHub出口挑战时，改用DIN官网公开Products/Publications列表采标准编号、Edition、Document type和Title元数据；不采标准全文。",
     "direct_content": true
   },
   "ES-LAW": {
@@ -100,7 +99,8 @@
       "Low Voltage Electrical Equipment",
       "Directive 2014/35/EU",
       "safety objectives"
-    ]
+    ],
+    "binary_max_bytes": 33554432
   },
   "IE-STD": {
     "alternate_start_urls": [
@@ -121,11 +121,9 @@
   },
   "JP-METI-PRODUCT-SAFETY": {
     "alternate_start_urls": [
-      "https://www.meti.go.jp/english/policy/economy/consumer/index.html",
-      "https://www.meti.go.jp/english/policy/economy/consumer/pse/index.html",
-      "https://www.meti.go.jp/english/policy/economy/consumer/product_safety/index.html"
+      "https://www.kyushu.meti.go.jp/seisaku/seian/index.html"
     ],
-    "notes": "METI网页入口受限时使用METI公开PSE实施指南及产品安全法修订指南PDF，解析正文后验证业务相关性。",
+    "notes": "METI本省英文入口在GitHub出口受限时，使用九州经济产业局（METI地方机构）公开产品安全页面作官方业务入口，并继续尝试本省公开PSE/产品安全PDF。",
     "binary_documents": [
       "https://www.meti.go.jp/english/policy/economy/consumer/product_safety/pse_procedure/pdf/pse_regulatory-instructions.pdf",
       "https://www.meti.go.jp/policy/consumer/seian/shouan/contents/guideline_en.pdf"
@@ -135,7 +133,9 @@
       "Product Safety",
       "PSE",
       "Safety Act"
-    ]
+    ],
+    "binary_max_bytes": 33554432,
+    "direct_content": true
   },
   "NL-STD": {
     "alternate_start_urls": [
@@ -208,7 +208,8 @@
       "Approved American National Standards",
       "ANSI/",
       "Final Action"
-    ]
+    ],
+    "binary_max_bytes": 83886080
   },
   "SE-LAW": {
     "alternate_start_urls": [
