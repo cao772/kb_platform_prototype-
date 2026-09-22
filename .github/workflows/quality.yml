@@ -107,3 +107,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage42_tuning_proposal_validation.py
       - name: Stage43 collection experience library tests
         run: PYTHONPATH=. python tests/test_stage43_collection_experience_library.py
+      - name: Stage44 new-site experience reuse tests
+        run: PYTHONPATH=. python tests/test_stage44_new_site_experience_reuse.py
