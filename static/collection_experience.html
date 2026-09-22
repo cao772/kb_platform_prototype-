@@ -170,7 +170,7 @@ function renderActions(){
     const blockers=(x.blockers||[]).map(v=>'<span class="chip">'+esc(v)+'</span>').join('');
     const steps=(x.steps||[]).map(v=>'<li>'+esc(v)+'</li>').join('');
     const reg=x.registration_url?'<a class="btn secondary" style="display:inline-block;text-decoration:none;margin-right:6px" target="_blank" href="'+esc(x.registration_url)+'">官方注册/授权</a>':'';
-    return '<div class="template"><div class="head"><h3>'+esc(x.source_key)+'</h3><span class="status '+(x.can_run_now?'verified':'partial')+'">'+(x.can_run_now?'可执行':'待前置')+'</span></div><p>'+esc(x.requirement||'')+'</p><div class="chips">'+blockers+'</div><ul>'+steps+'</ul><div style="margin-top:9px">'+reg+'<button class="btn secondary" onclick="copyText('+JSON.stringify(x.local_command||'')+')">复制本地复跑命令</button></div><div class="detail">工作流：'+esc(x.workflow?.file||'')+' · lane='+esc(x.workflow?.lane||'')+'</div></div>';
+    return '<div class="template"><div class="head"><h3>'+esc(x.source_key)+'</h3><span class="status '+(x.can_run_now?'verified':'partial')+'">'+(x.can_run_now?'可执行':'待前置')+'</span></div><p>'+esc(x.requirement||'')+'</p><div class="chips">'+blockers+'</div><ul>'+steps+'</ul><div style="margin-top:9px">'+reg+'<button class="btn secondary" data-command="'+esc(x.local_command||'')+'" onclick="copyText(this.dataset.command)">复制本地复跑命令</button></div><div class="detail">工作流：'+esc(x.workflow?.file||'')+' · lane='+esc(x.workflow?.lane||'')+'</div></div>';
   }).join('')||'<div class="empty">当前没有待处理动作。</div>';
 }
 function renderValidation(){
