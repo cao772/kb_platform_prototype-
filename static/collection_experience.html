@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>采集经验中心 · 法规认证知识平台</title>
+<style>
+:root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#17243a;background:#f3f6fa}
+*{box-sizing:border-box}body{margin:0}.top{height:64px;background:#0a2e5e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.brand{font-size:19px;font-weight:700}.nav{display:flex;gap:8px}.nav a{color:#dce8f5;text-decoration:none;font-size:12px;border:1px solid #6f8daf;border-radius:8px;padding:7px 10px}.wrap{max-width:1500px;margin:18px auto;padding:0 20px}.hero,.card,.metric{background:#fff;border:1px solid #e1e7ef;border-radius:12px}.hero{padding:22px 24px}.hero h1{font-size:25px;margin:0 0 8px;color:#113f72}.hero p{margin:0;color:#66758a;line-height:1.75}.callout{margin-top:12px;background:#fff7df;border:1px solid #f0ddb2;border-radius:9px;padding:11px 13px;color:#775d24;font-size:12px;line-height:1.7}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}.metric{padding:14px}.metric span{font-size:11px;color:#8190a3}.metric strong{display:block;font-size:22px;color:#123e6e;margin-top:4px}.card{padding:16px;margin-bottom:14px}.head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.card h2{font-size:17px;margin:0}.meta{font-size:11px;color:#8190a3;margin-top:5px;line-height:1.5}.template-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.template{border:1px solid #dfe6ef;border-radius:10px;padding:14px;background:#fff}.template h3{font-size:14px;color:#173f68;margin:0}.template p{font-size:11px;color:#637287;line-height:1.65;margin:7px 0}.chips{display:flex;gap:5px;flex-wrap:wrap}.chip{font-size:10px;padding:3px 7px;border-radius:999px;background:#eef3f8;color:#56697f}.template ul,.lesson ul{padding-left:18px;margin:8px 0 0;color:#607084;font-size:11px;line-height:1.65}.lesson-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.lesson{border:1px solid #e0e6ed;border-radius:10px;padding:13px;background:#fbfcfe}.lesson b{font-size:12px;color:#183f68}.lesson p{font-size:11px;color:#65758a;line-height:1.65;margin:6px 0}.filters{display:grid;grid-template-columns:1.2fr .8fr .8fr auto;gap:8px;margin-top:12px}.filters input,.filters select{width:100%;border:1px solid #cdd8e4;border-radius:8px;padding:8px;background:#fff;font:inherit}.btn{border:0;background:#0d4f91;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font:inherit}.btn.secondary{background:#edf4fb;color:#0d4f91}.table-wrap{overflow:auto;margin-top:10px}.table{width:100%;border-collapse:collapse;font-size:11px;min-width:1180px}.table th,.table td{border-bottom:1px solid #e7ecf2;padding:8px 6px;text-align:left;vertical-align:top}.table th{font-size:10px;color:#718095;font-weight:600;background:#f8fafc;position:sticky;top:0}.url{color:#0d4f91;text-decoration:none;word-break:break-all}.status{display:inline-block;font-size:10px;padding:3px 7px;border-radius:999px;background:#edf2f7;color:#617083}.status.verified{background:#e9f8ef;color:#2e7350}.status.partial{background:#fff4dc;color:#8a641f}.status.restricted{background:#fcecec;color:#9e3e3e}.status.configured{background:#eef3f8;color:#56697f}.detail{font-size:10px;color:#748397;line-height:1.5;margin-top:4px}.empty{padding:28px;text-align:center;color:#8491a2;font-size:12px}.bar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:#e9edf2;margin-top:9px}.bar span{height:100%}.bar .v{background:#62a675}.bar .p{background:#d6a64b}.bar .r{background:#c96a65}.bar .c{background:#8191a4}
+@media(max-width:1050px){.template-grid,.lesson-grid{grid-template-columns:1fr 1fr}.metrics{grid-template-columns:repeat(3,1fr)}}@media(max-width:700px){.template-grid,.lesson-grid,.metrics{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.top{padding:0 14px}.wrap{padding:0 12px}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">法规认证知识平台 · 采集经验中心</div>
+  <div class="nav"><a href="/collection">采集执行</a><a href="/sources">来源台账</a><a href="/">工作台</a></div>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>首批50站采集经验总结与复用</h1>
+    <p>把首批网站的站点结构、采集配置、实网验证、相关性复核和调优结果沉淀成可复用经验。后续新网站接入时，先匹配“网站类型模板”，再进行少量可视化试采与调优，而不是从零编写规则。</p>
+    <div class="callout"><b>证据口径：</b>这里严格区分“已形成采集规则”和“已实网深采集验证”。当前 Stage38 记录是有边界实网抽样，并不等于 50 站都已完整爬取。后续真实复跑完成后，本页会自动按运行数据把站点经验升级为“运行数据已验证”。</div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><span>首批来源</span><strong id="mSources">-</strong></div>
+    <div class="metric"><span>通用经验模板</span><strong id="mTemplates">-</strong></div>
+    <div class="metric"><span>已验证/部分验证</span><strong id="mVerified">-</strong></div>
+    <div class="metric"><span>待实网验证</span><strong id="mConfigured">-</strong></div>
+    <div class="metric"><span>受限/失败样板</span><strong id="mRestricted">-</strong></div>
+  </div>
+
+  <div class="card">
+    <div class="head">
+      <div><h2>可复用采集模式</h2><div class="meta">从50站配置和已验证经验中提炼少量通用模板。模板不绑定单一国家或单一网站。</div></div>
+      <button class="btn secondary" onclick="loadAll()">刷新</button>
+    </div>
+    <div id="templateGrid" class="template-grid"><div class="empty">正在归纳经验模板…</div></div>
+  </div>
+
+  <div class="card">
+    <div class="head"><div><h2>跨站通用经验</h2><div class="meta">这些经验将直接进入后续“新网站接入向导”的默认判断和操作流程。</div></div></div>
+    <div id="lessonGrid" class="lesson-grid"><div class="empty">正在加载…</div></div>
+  </div>
+
+  <div class="card">
+    <div class="head">
+      <div><h2>50站经验矩阵</h2><div class="meta" id="sourceMeta">逐站查看类型、模板、规则结构、证据级别和运行反馈。</div></div>
+    </div>
+    <div class="filters">
+      <input id="q" placeholder="搜索来源编码、名称、用途…" oninput="renderSources()">
+      <select id="templateFilter" onchange="renderSources()"><option value="">全部模板</option></select>
+      <select id="evidenceFilter" onchange="renderSources()">
+        <option value="">全部证据级别</option>
+        <option value="verified">已验证/部分验证</option>
+        <option value="configured">已配置待验证</option>
+        <option value="restricted">受限/失败</option>
+      </select>
+      <button class="btn secondary" onclick="resetFilters()">重置</button>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr>
+          <th>#</th><th>来源</th><th>用途</th><th>接入形态</th><th>经验模板</th><th>规则摘要</th><th>证据级别</th><th>运行/复核</th>
+        </tr></thead>
+        <tbody id="sourceRows"><tr><td colspan="8" class="empty">正在加载50站经验…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url){const r=await fetch(url);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
+let DATA={sources:[],templates:[],common_lessons:[],summary:{}};
+
+function evidenceGroup(level){
+  if(['operational_verified','operational_partial','verified_sample','partial_sample'].includes(level))return'verified';
+  if(['restricted_sample','operational_failed'].includes(level))return'restricted';
+  return'configured';
+}
+function evidenceClass(level){
+  const g=evidenceGroup(level);return g==='verified'?(level.includes('partial')?'partial':'verified'):g==='restricted'?'restricted':'configured';
+}
+function resetFilters(){$('q').value='';$('templateFilter').value='';$('evidenceFilter').value='';renderSources()}
+function renderTemplates(){
+  $('templateGrid').innerHTML=(DATA.templates||[]).map(t=>'<div class="template"><div class="head"><h3>'+esc(t.name)+'</h3><span class="status configured">'+Number(t.source_count||0)+'站</span></div><p>'+esc(t.summary)+'</p><div class="chips">'+(t.fit_signals||[]).map(x=>'<span class="chip">'+esc(x)+'</span>').join('')+'</div><ul>'+(t.lessons||[]).slice(0,4).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><div class="detail">覆盖来源：'+esc((t.source_keys||[]).join('、'))+'</div></div>').join('');
+}
+function renderLessons(){
+  $('lessonGrid').innerHTML=(DATA.common_lessons||[]).map(x=>'<div class="lesson"><b>'+esc(x.title)+'</b><p>'+esc(x.principle)+'</p><div class="detail"><b>复用方式：</b>'+esc(x.reuse)+'</div></div>').join('');
+}
+function renderSources(){
+  const q=$('q').value.trim().toLowerCase(),tf=$('templateFilter').value,ef=$('evidenceFilter').value;
+  const rows=(DATA.sources||[]).filter(x=>{
+    const text=[x.source_key,x.source_name,x.purpose,x.region_code,x.template_name].join(' ').toLowerCase();
+    return(!q||text.includes(q))&&(!tf||x.template_id===tf)&&(!ef||evidenceGroup(x.evidence?.level)===ef);
+  });
+  $('sourceMeta').textContent='当前显示 '+rows.length+' / '+Number(DATA.summary?.sources||0)+' 站';
+  $('sourceRows').innerHTML=rows.map(x=>{
+    const rp=x.rule_profile||{},ev=x.evidence||{},rt=x.runtime||{},rel=x.relevance||{};
+    const rule='详情 '+(rp.follow_details?'开':'关')+' · 附件 '+(rp.fetch_attachments?'开':'关')+' · 页上限 '+Number(rp.max_pages||0)+' · URL包含 '+Number(rp.include_patterns||0)+' · 排除 '+Number(rp.exclude_patterns||0)+' · 字段 '+esc((rp.field_groups||[]).join('/'));
+    const runtime=rt.status==='not_run'?'暂无本地深采集运行记录':('运行 '+esc(rt.status)+' · '+Number(rt.pages||0)+'页 · '+Number(rt.items||0)+'条');
+    const review='相关 '+Number(rel.relevant||0)+' / 待复核 '+Number(rel.needs_review||0)+' / 排除 '+Number(rel.irrelevant||0)+' / 人工 '+Number(rel.reviewed||0);
+    return '<tr><td>'+Number(x.order||0)+'</td><td><b>'+esc(x.source_key)+'</b><div class="detail">'+esc(x.region_code)+' · '+esc(x.source_name)+'</div><div class="detail"><a class="url" href="'+esc(x.base_url)+'" target="_blank">'+esc(x.base_url)+'</a></div></td><td>'+esc(x.purpose)+'</td><td>'+esc(x.source_type)+' · '+esc(x.access_method)+'<div class="detail">'+esc((x.file_types||[]).join(' / '))+' · '+esc(x.document_policy)+'</div></td><td><span class="status configured">'+esc(x.template_name)+'</span></td><td>'+rule+'</td><td><span class="status '+evidenceClass(ev.level)+'">'+esc(ev.label)+'</span><div class="detail">'+esc(ev.note)+'</div></td><td>'+runtime+'<div class="detail">'+review+'</div></td></tr>';
+  }).join('')||'<tr><td colspan="8" class="empty">没有符合筛选条件的站点。</td></tr>';
+}
+function renderMetrics(){
+  const s=DATA.summary||{};$('mSources').textContent=s.sources||0;$('mTemplates').textContent=s.templates||0;$('mVerified').textContent=s.verified_or_partial||0;$('mConfigured').textContent=s.configured_only||0;$('mRestricted').textContent=s.restricted_or_failed||0;
+}
+async function loadAll(){
+  try{
+    DATA=await api('/api/collection-experience/overview');
+    renderMetrics();renderTemplates();renderLessons();
+    $('templateFilter').innerHTML='<option value="">全部模板</option>'+(DATA.templates||[]).map(t=>'<option value="'+esc(t.template_id)+'">'+esc(t.name)+' ('+Number(t.source_count||0)+')</option>').join('');
+    renderSources();
+  }catch(e){
+    $('sourceRows').innerHTML='<tr><td colspan="8" class="empty">'+esc(e.message)+'</td></tr>';
+    $('templateGrid').innerHTML='<div class="empty">'+esc(e.message)+'</div>';
+  }
+}
+loadAll();
+</script>
+</body>
+</html>

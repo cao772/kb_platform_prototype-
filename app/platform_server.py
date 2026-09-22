@@ -13,6 +13,7 @@ from app.source_registry import SourceRegistryService
 from app.source_verification import SourceVerificationService
 from app.source_collection import SourceCollectionService
 from app.site_extraction import SiteExtractionService
+from app.collection_experience import CollectionExperienceService
 from app.source_diff import SourceDifferenceService
 from app.source_impact import SourceImpactService
 from app.document_translation import DocumentTranslationService
@@ -30,6 +31,7 @@ source_registry = SourceRegistryService(store)
 source_verification = SourceVerificationService(source_registry)
 source_collection = SourceCollectionService(store, source_registry, ROOT / "data" / "source_downloads", change_monitor=change_monitor)
 site_extraction = SiteExtractionService(store, source_registry, ROOT / "data" / "source_downloads")
+collection_experience = CollectionExperienceService(source_registry, site_extraction)
 source_diff = SourceDifferenceService(store)
 source_impact = SourceImpactService(store, source_diff, graph_service)
 document_translation = DocumentTranslationService(store)
@@ -168,6 +170,23 @@ class Handler(BaseHandler):
                     status=params.get("status", [""])[0],
                     limit=min(int(params.get("limit", ["100"])[0] or 100), 500),
                 ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection-experience/overview":
+            try:
+                self._send_json(collection_experience.overview())
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection-experience/templates":
+            try:
+                self._send_json({
+                    "items": collection_experience.templates(),
+                    "summary": {"templates": len(collection_experience.templates())},
+                })
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
@@ -428,6 +447,10 @@ class Handler(BaseHandler):
             self._send_file(STATIC_DIR / "collection.html")
             return
 
+        if parsed.path in {"/collection-experience", "/collection-experience.html"}:
+            self._send_file(STATIC_DIR / "collection_experience.html")
+            return
+
         if parsed.path in {"/sources", "/sources.html"}:
             self._send_file(STATIC_DIR / "sources.html")
             return
@@ -448,6 +471,7 @@ class Handler(BaseHandler):
             links = (
                 '<a class="top-link" href="/sources">来源台账</a>'
                 '<a class="top-link" href="/collection">采集执行</a>'
+                '<a class="top-link" href="/collection-experience">采集经验</a>'
                 '<a class="top-link" href="/ontology">知识本体</a>'
                 '<a class="top-link" href="/gma-path">GMA准入路径</a>'
                 '<a class="top-link" href="/map">法规认证地图</a>'
