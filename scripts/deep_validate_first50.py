@@ -107,6 +107,69 @@ class BrowserRenderer:
         finally:
             context.close()
 
+    def download_binary(
+        self,
+        url: str,
+        headers: dict[str, str],
+        max_bytes: int,
+    ) -> tuple[bytes, int, str]:
+        self._ensure()
+        extra = {k: v for k, v in headers.items() if k.lower() != "cookie"}
+        context = self._browser.new_context(
+            accept_downloads=True,
+            user_agent=extra.get("User-Agent", BROWSER_HEADERS["User-Agent"]),
+            extra_http_headers={k: v for k, v in extra.items() if k.lower() != "user-agent"},
+        )
+        cookie = str(self.auth.get("cookie") or "").strip()
+        if cookie:
+            parsed = urlparse(url)
+            cookies = []
+            for part in cookie.split(";"):
+                if "=" not in part:
+                    continue
+                name, value = part.strip().split("=", 1)
+                cookies.append({
+                    "name": name.strip(),
+                    "value": value.strip(),
+                    "domain": parsed.hostname or "",
+                    "path": "/",
+                })
+            if cookies:
+                context.add_cookies(cookies)
+        page = context.new_page()
+        try:
+            with page.expect_download(timeout=35000) as download_info:
+                try:
+                    page.goto(url, wait_until="commit", timeout=35000)
+                except Exception as exc:
+                    if "Download is starting" not in str(exc):
+                        raise
+            download = download_info.value
+            path = download.path()
+            if not path:
+                raise RuntimeError("browser download has no local path")
+            data = Path(path).read_bytes()
+            if not data:
+                raise RuntimeError("browser download is empty")
+            if len(data) > max_bytes:
+                raise ValueError(f"browser download exceeds max_bytes: {max_bytes}")
+            name = str(download.suggested_filename or "").lower()
+            content_type = (
+                "application/pdf" if name.endswith(".pdf") or urlparse(url).path.lower().endswith(".pdf")
+                else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                if name.endswith(".xlsx") or urlparse(url).path.lower().endswith(".xlsx")
+                else "application/octet-stream"
+            )
+            self.events.append({
+                "strategy": "browser_download",
+                "url": url,
+                "bytes": len(data),
+                "suggested_filename": download.suggested_filename,
+            })
+            return data, 200, content_type
+        finally:
+            context.close()
+
     def close(self) -> None:
         try:
             if self._browser is not None:
@@ -243,6 +306,49 @@ class ResilientFetcher:
                     "url": url,
                     "error": str(browser_exc)[:300],
                 })
+            raise
+
+    def fetch_binary(
+        self,
+        url: str,
+        *,
+        timeout: int = 35,
+        max_bytes: int = 64 * 1024 * 1024,
+    ) -> tuple[bytes, int, str]:
+        if not self._robots_allowed(url):
+            self.events.append({"strategy": "robots_disallowed", "url": url})
+            raise PermissionError(f"robots disallowed: {url}")
+        merged = dict(BROWSER_HEADERS)
+        merged.update(self.auth_headers)
+        cookie = str(self.auth.get("cookie") or "").strip()
+        if cookie:
+            merged["Cookie"] = cookie
+        req = Request(url, headers=merged, method="GET")
+        try:
+            with urlopen(req, timeout=timeout) as response:
+                status = int(getattr(response, "status", 200) or 200)
+                content_type = str(response.headers.get("Content-Type") or "")
+                data = response.read(max_bytes + 1)
+            if len(data) > max_bytes:
+                raise ValueError(f"download exceeds max_bytes: {max_bytes}")
+            suffix = Path(urlparse(url).path).suffix.lower()
+            binary_expected = suffix in {".pdf", ".xlsx", ".xls", ".zip"}
+            looks_html = "html" in content_type.lower() or data[:80].lstrip().lower().startswith(b"<!doctype")
+            if binary_expected and (looks_html or status == 202 or len(data) < 1024):
+                self.events.append({
+                    "strategy": "binary_placeholder_detected",
+                    "url": url,
+                    "status": status,
+                    "content_type": content_type,
+                    "bytes": len(data),
+                })
+                return self.renderer.download_binary(url, merged, max_bytes)
+            self.events.append({"strategy": "direct_binary", "url": url, "status": status, "bytes": len(data)})
+            return data, status, content_type
+        except HTTPError as exc:
+            self.events.append({"strategy": "binary_http_error", "url": url, "status": int(exc.code)})
+            if int(exc.code) in {401, 403, 429}:
+                return self.renderer.download_binary(url, merged, max_bytes)
             raise
 
     def close(self) -> None:
@@ -509,11 +615,13 @@ def run_source(
                     errors.append(f"{candidate}: robots disallowed")
                     continue
                 try:
-                    body, http_status, content_type = fetcher(
+                    body, http_status, content_type = fetcher.fetch_binary(
                         candidate,
-                        fetcher.auth_headers,
-                        int((base_config.get("request") or {}).get("timeout_seconds") or 25),
-                        int((base_config.get("request") or {}).get("max_bytes") or 12 * 1024 * 1024),
+                        timeout=max(
+                            int((base_config.get("request") or {}).get("timeout_seconds") or 25),
+                            35,
+                        ),
+                        max_bytes=int(remediation.get("binary_max_bytes") or 64 * 1024 * 1024),
                     )
                     path_suffix = Path(urlparse(candidate).path).suffix.lower()
                     suffix = path_suffix if path_suffix in {".pdf", ".xml", ".json", ".xlsx", ".xls"} else ".bin"
