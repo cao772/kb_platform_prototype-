@@ -8,6 +8,7 @@ def main() -> None:
     wave = json.loads(Path("data/source_collection_first50.json").read_text(encoding="utf-8"))
     remediation = json.loads(Path("data/first50_deep_remediation.json").read_text(encoding="utf-8"))
     round1 = json.loads(Path("data/first50_round1_status.json").read_text(encoding="utf-8"))
+    round2 = json.loads(Path("data/first50_round2_status.json").read_text(encoding="utf-8"))
     live_workflow = Path(".github/workflows/first50_deep_validation.yml").read_text(encoding="utf-8")
     quality = Path(".github/workflows/quality.yml").read_text(encoding="utf-8")
     runner = Path("scripts/deep_validate_first50.py").read_text(encoding="utf-8")
@@ -18,6 +19,8 @@ def main() -> None:
     assert [int(item["order"]) for item in wave] == list(range(1, 51))
     assert round1["summary"] == {"total": 50, "passed": 17, "partial": 14, "restricted": 17, "failed": 2}
     assert len(round1["status"]) == 50
+    assert round2["summary"] == {"total": 50, "passed": 29, "partial": 8, "restricted": 13, "failed": 0}
+    assert len(round2["status"]) == 50
 
     for key in ("US-FEDREG", "JP-LAW", "DE-LAW", "EU-EURLEX", "US-ECFR"):
         assert key in remediation
@@ -29,7 +32,7 @@ def main() -> None:
     assert "FIRST50_AUTH_JSON" in live_workflow
     assert "playwright install --with-deps chromium" in live_workflow
     assert "first50-deep-validation-report" in live_workflow
-    assert "--retry-nonpassed-from data/first50_round1_status.json" in live_workflow
+    assert "--retry-nonpassed-from data/first50_round2_status.json" in live_workflow
 
     assert "robots_status" in runner
     assert "BrowserRenderer" in runner
