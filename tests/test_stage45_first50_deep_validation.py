@@ -17,6 +17,7 @@ def main() -> None:
     round8 = json.loads(Path("data/first50_round8_status.json").read_text(encoding="utf-8"))
     round9 = json.loads(Path("data/first50_round9_status.json").read_text(encoding="utf-8"))
     round10 = json.loads(Path("data/first50_round10_status.json").read_text(encoding="utf-8"))
+    round11 = json.loads(Path("data/first50_round11_status.json").read_text(encoding="utf-8"))
     access = json.loads(Path("data/first50_access_requirements.json").read_text(encoding="utf-8"))
     live_workflow = Path(".github/workflows/first50_deep_validation.yml").read_text(encoding="utf-8")
     quality = Path(".github/workflows/quality.yml").read_text(encoding="utf-8")
@@ -46,6 +47,8 @@ def main() -> None:
     assert len(round9["status"]) == 50
     assert round10["summary"] == {"total": 50, "passed": 42, "partial": 1, "restricted": 7, "failed": 0}
     assert len(round10["status"]) == 50
+    assert round11["summary"] == {"total": 50, "passed": 43, "partial": 1, "restricted": 6, "failed": 0}
+    assert len(round11["status"]) == 50
     assert access["summary"]["total_nonpassed"] == 7
     assert access["summary"]["public_cloud_egress_blocked"] == 2
     assert access["summary"]["public_metadata_cloud_egress_blocked"] == 1
@@ -62,8 +65,8 @@ def main() -> None:
     assert "FIRST50_AUTH_JSON" in live_workflow
     assert "playwright install --with-deps chromium" in live_workflow
     assert "first50-deep-validation-report" in live_workflow
-    assert "--retry-nonpassed-from data/first50_round10_status.json" in live_workflow
-    assert "first50_round10_status.json" in live_workflow
+    assert "--retry-nonpassed-from data/first50_round11_status.json" in live_workflow
+    assert "first50_round11_status.json" in live_workflow
 
     assert "robots_status" in runner
     assert "BrowserRenderer" in runner
