@@ -13,7 +13,7 @@ ROOT = FIRST_WAVE_PATH.parent.parent
 ACCESS_REQUIREMENTS_PATH = ROOT / "data" / "first50_access_requirements.json"
 VALIDATION_STATUS_PATHS = [
     ROOT / "data" / f"first50_round{round_no}_status.json"
-    for round_no in range(12, 0, -1)
+    for round_no in range(99, 0, -1)
 ]
 
 
