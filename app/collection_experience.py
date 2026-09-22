@@ -487,6 +487,76 @@ class CollectionExperienceService:
         }
 
 
+    def access_actions(self) -> dict[str, Any]:
+        preconditions = self.access_preconditions()
+        actions: list[dict[str, Any]] = []
+        for item in preconditions.get("items") or []:
+            source_key = str(item.get("source_key") or "")
+            lane = str(item.get("access_lane") or "")
+            blockers: list[str] = []
+            steps: list[str] = []
+            if item.get("credential_required") and not item.get("credential_configured"):
+                blockers.append("credentials")
+                steps.append("从官方注册/授权入口取得合法账号、API Key 或授权。")
+                steps.append(
+                    "把凭证放入 FIRST50_AUTH_JSON 对应来源节点；支持 headers / cookie / oauth，Secret 值不写入仓库。"
+                )
+            if item.get("selfhosted_required"):
+                blockers.append("self_hosted_runner")
+                steps.append("在本地或自托管 Linux Runner 执行，避免 GitHub 公共云出口触发站点反自动化策略。")
+            if item.get("time_window_required") and not item.get("time_window_open"):
+                blockers.append("time_window")
+                steps.append("等待站点允许的自动抽取时间窗：03:00-07:00 Asia/Singapore。")
+            if not blockers:
+                steps.append("当前前置条件已满足，可执行定向深采集复跑。")
+            steps.append("复跑结果仍需经过相关性闸门、原始证据留存和人工复核；不能直接晋升正式知识。")
+
+            local_command = (
+                "PYTHONPATH=. python scripts/deep_validate_first50.py "
+                "--batch-index 0 --batch-count 1 "
+                f'--source-keys "{source_key}" '
+                "--output-dir access-validation"
+            )
+            workflow_lane = lane or "all_nonpassed"
+            actions.append({
+                **dict(item),
+                "blockers": blockers,
+                "can_run_now": not blockers,
+                "steps": steps,
+                "local_command": local_command,
+                "workflow": {
+                    "file": ".github/workflows/first50_selfhosted_access.yml",
+                    "lane": workflow_lane,
+                    "runner": "self-hosted linux" if item.get("selfhosted_required") else "authorized execution environment",
+                },
+                "credential_contract": {
+                    "env": "FIRST50_AUTH_JSON",
+                    "source_key": source_key,
+                    "supported_shapes": ["headers", "cookie", "oauth"],
+                    "secret_values_exposed": False,
+                } if item.get("credential_required") else None,
+            })
+
+        counts = Counter(
+            "ready" if item["can_run_now"] else "+".join(item["blockers"])
+            for item in actions
+        )
+        return {
+            "items": actions,
+            "summary": {
+                "remaining": len(actions),
+                "ready_now": sum(1 for item in actions if item["can_run_now"]),
+                "blocked": sum(1 for item in actions if not item["can_run_now"]),
+                "by_blocker": dict(counts),
+            },
+            "safety": {
+                "secrets_returned": False,
+                "bypass_access_controls": False,
+                "formal_knowledge_auto_promotion": False,
+            },
+        }
+
+
     @staticmethod
     def _deep_merge(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:
         result = json.loads(json.dumps(base))
