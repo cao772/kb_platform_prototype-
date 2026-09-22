@@ -1,6 +1,8 @@
 name: first50-selfhosted-access-validation
 
 on:
+  schedule:
+    - cron: "30 19 * * *"
   workflow_dispatch:
     inputs:
       lane:
@@ -12,6 +14,8 @@ on:
           - public_cloud_egress_blocked
           - registration_or_api_key
           - registration_or_authorized_api
+          - public_metadata_retry
+          - site_terms_window_and_cloud_egress
           - all_nonpassed
 
 permissions:
@@ -35,7 +39,7 @@ jobs:
         id: resolve
         shell: bash
         env:
-          ACCESS_LANE: ${{ inputs.lane }}
+          ACCESS_LANE: ${{ github.event_name == 'schedule' && 'site_terms_window_and_cloud_egress' || inputs.lane }}
         run: |
           KEYS="$(python - <<'PY'
           import json, os
@@ -51,6 +55,7 @@ jobs:
           PY
           )"
           echo "keys=$KEYS" >> "$GITHUB_OUTPUT"
+          echo "lane=$ACCESS_LANE" >> "$GITHUB_OUTPUT"
           echo "Sources: $KEYS"
       - name: Run targeted deep validation
         if: steps.resolve.outputs.keys != ''
@@ -67,7 +72,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: first50-selfhosted-${{ inputs.lane }}
+          name: first50-selfhosted-${{ steps.resolve.outputs.lane }}
           path: selfhosted-validation/batch-0.json
           if-no-files-found: warn
           retention-days: 30
