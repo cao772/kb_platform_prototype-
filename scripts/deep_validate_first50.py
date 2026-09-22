@@ -232,6 +232,14 @@ class ResilientFetcher:
             raise
         except (URLError, socket.timeout) as exc:
             self.events.append({"strategy": "network_error", "url": url, "error": str(exc)[:300]})
+            try:
+                return self.renderer.render(url, merged)
+            except Exception as browser_exc:
+                self.events.append({
+                    "strategy": "browser_network_fallback_failed",
+                    "url": url,
+                    "error": str(browser_exc)[:300],
+                })
             raise
 
     def close(self) -> None:
@@ -260,7 +268,13 @@ def robots_status(url: str) -> dict[str, Any]:
         return {"status": "unknown", "robots_url": robots_url, "error": str(exc)[:300]}
 
 
-def assessment(service: SiteExtractionService, source_key: str, run: dict[str, Any]) -> dict[str, Any]:
+def assessment(
+    service: SiteExtractionService,
+    source_key: str,
+    run: dict[str, Any],
+    *,
+    structured_api: bool = False,
+) -> dict[str, Any]:
     listing = service.list_items(source_key=source_key, limit=5000)
     summary = dict(listing.get("summary") or {})
     items = listing.get("items") or []
@@ -279,7 +293,9 @@ def assessment(service: SiteExtractionService, source_key: str, run: dict[str, A
         and (item.get("effective_relevance") or {}).get("status") == "relevant"
     )
     errors = str(run.get("error") or "")
-    if pages >= 2 and (details + attachments >= 1) and meaningful >= 1 and relevant_business >= 1:
+    if structured_api and pages >= 1 and meaningful >= 1 and relevant >= 1:
+        verdict = "passed"
+    elif pages >= 2 and (details + attachments >= 1) and meaningful >= 1 and relevant_business >= 1:
         verdict = "passed"
     elif pages >= 1 and int(run.get("items_discovered") or 0) >= 1:
         verdict = "partial"
@@ -390,6 +406,7 @@ def run_source(
             start_urls: list[str] | None = None,
             *,
             controlled_broadening: bool = False,
+            structured_api: bool = False,
         ) -> dict[str, Any]:
             config = json.loads(json.dumps(base_config))
             candidate_urls = list(start_urls or config.get("start_urls") or [])
@@ -441,7 +458,12 @@ def run_source(
                 "label": label,
                 "start_urls": list(config.get("start_urls") or []),
                 "run": run,
-                "assessment": assessment(service, source_key, run),
+                "assessment": assessment(
+                    service,
+                    source_key,
+                    run,
+                    structured_api=structured_api,
+                ),
             }
             attempts.append(result)
             return result
@@ -470,7 +492,11 @@ def run_source(
             alternates.append(final_url)
         if alternates and (best is None or best["assessment"]["verdict"] != "passed"):
             try:
-                second = do_attempt("official_alternate", alternates)
+                second = do_attempt(
+                    "official_alternate",
+                    alternates,
+                    structured_api=bool(remediation.get("structured_api")),
+                )
                 if best is None or rank[second["assessment"]["verdict"]] > rank[best["assessment"]["verdict"]]:
                     best = second
             except Exception as exc:
