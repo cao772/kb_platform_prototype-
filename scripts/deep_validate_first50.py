@@ -191,9 +191,20 @@ def visible_text_len(data: bytes) -> int:
 
 
 class ResilientFetcher:
-    def __init__(self, source_key: str, auth: dict[str, Any]):
+    def __init__(
+        self,
+        source_key: str,
+        auth: dict[str, Any],
+        *,
+        official_dataset_urls: list[str] | None = None,
+    ):
         self.source_key = source_key
         self.auth = auth
+        self.official_dataset_urls = {
+            str(url).strip()
+            for url in (official_dataset_urls or [])
+            if str(url).strip()
+        }
         self.events: list[dict[str, Any]] = []
         self.renderer = BrowserRenderer(auth, self.events)
         self._robots_cache: dict[str, robotparser.RobotFileParser | None] = {}
@@ -255,7 +266,14 @@ class ResilientFetcher:
         return True if parser is None else bool(parser.can_fetch("KnowledgePlatformDeepCollector/1.0", url))
 
     def __call__(self, url: str, headers: dict[str, str], timeout: int, max_bytes: int):
-        if not self._robots_allowed(url):
+        is_official_dataset = url in self.official_dataset_urls
+        if is_official_dataset:
+            self.events.append({
+                "strategy": "official_bulk_dataset",
+                "url": url,
+                "robots_policy": "not_applicable_to_explicit_bulk_api_endpoint",
+            })
+        elif not self._robots_allowed(url):
             self.events.append({"strategy": "robots_disallowed", "url": url})
             raise PermissionError(f"robots disallowed: {url}")
 
@@ -565,7 +583,17 @@ def run_source(
             "attempts": [],
             "elapsed_seconds": round(time.time() - started, 1),
         }
-    fetcher = ResilientFetcher(source_key, auth)
+    archive_dataset = dict(remediation.get("archive_dataset") or {})
+    official_dataset_urls = (
+        list(archive_dataset.get("urls") or [])
+        if archive_dataset.get("trusted_scope")
+        else []
+    )
+    fetcher = ResilientFetcher(
+        source_key,
+        auth,
+        official_dataset_urls=official_dataset_urls,
+    )
     service = SiteExtractionService(store, registry, out_dir / "raw" / source_key, fetcher=fetcher)
     robot = robots_status(str(source.get("base_url") or ""))
     attempts: list[dict[str, Any]] = []
