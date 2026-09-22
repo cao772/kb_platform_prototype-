@@ -87,6 +87,8 @@ def main() -> None:
     assert remediation["NO-LAW"]["archive_dataset"]["trusted_scope"] is True
     assert len(remediation["NO-LAW"]["archive_dataset"]["urls"]) == 2
     assert "archive_dataset" in runner
+    assert "official_bulk_dataset" in runner
+    assert "not_applicable_to_explicit_bulk_api_endpoint" in runner
     assert "carried-forward" in runner
     assert "official_binary_document" in runner
     assert "binary_documents" in runner
