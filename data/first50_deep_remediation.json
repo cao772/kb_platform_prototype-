@@ -1,0 +1,32 @@
+{
+  "US-FEDREG": {
+    "alternate_start_urls": [
+      "https://www.federalregister.gov/api/v1/documents.json?per_page=20&order=newest"
+    ],
+    "notes": "优先切换官方Federal Register API；无需API key。"
+  },
+  "JP-LAW": {
+    "alternate_start_urls": [
+      "https://elaws.e-gov.go.jp/api/1/lawlists/3"
+    ],
+    "notes": "优先切换日本e-Gov法令XML API。"
+  },
+  "DE-LAW": {
+    "alternate_start_urls": [
+      "https://www.gesetze-im-internet.de/prodsg_2021/"
+    ],
+    "notes": "使用已在Stage38走通的ProdSG法规样板作为德国法规深采集兜底入口。"
+  },
+  "EU-EURLEX": {
+    "alternate_start_urls": [
+      "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32014L0035"
+    ],
+    "notes": "使用稳定CELEX法规正文页作为公开HTML兜底；大规模搜索可另行申请EUR-Lex Webservice账号。"
+  },
+  "US-ECFR": {
+    "alternate_start_urls": [
+      "https://www.ecfr.gov/current/title-16/chapter-II"
+    ],
+    "notes": "使用当前可公开访问的eCFR Title 16 / CPSC法规目录作为产品安全领域兜底入口。"
+  }
+}
