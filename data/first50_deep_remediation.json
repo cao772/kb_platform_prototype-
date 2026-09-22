@@ -32,17 +32,20 @@
   },
   "DE-STD": {
     "alternate_start_urls": [
-      "https://www.din.de/en/about-standards/buy-standards",
-      "https://www.din.de/en/meta/search/61764!search?pageNum=0"
+      "https://www.din.de/en/meta/search/61764!search?query=metadata",
+      "https://www.din.de/en/meta/search/61764!search?query=iso19115"
     ],
-    "notes": "DIN标准全文受版权保护；只从公开检索/产品元数据页采编号、标题、状态等。"
+    "notes": "使用DIN官网公开标准搜索结果采集编号、名称、版本和状态元数据，不采受许可全文。"
   },
   "ES-LAW": {
     "alternate_start_urls": [
       "https://www.boe.es/datosabiertos/api/legislacion-consolidada?offset=0&limit=50"
     ],
-    "notes": "网页入口robots受限时改用AEBOE官方OpenData API；显式传offset/limit避免无效请求；不绕过robots。",
-    "structured_api": true
+    "notes": "网页入口robots受限时仅改用AEBOE官方OpenData API；显式Accept application/json和分页参数，不绕过robots。",
+    "structured_api": true,
+    "request_headers": {
+      "Accept": "application/json"
+    }
   },
   "ES-STD": {
     "alternate_start_urls": [
@@ -52,10 +55,11 @@
   },
   "EU-ECHA": {
     "alternate_start_urls": [
-      "https://echa.europa.eu/regulations/reach/understanding-reach",
-      "https://echa.europa.eu/guidance-documents/guidance-on-reach"
+      "https://chem.echa.europa.eu/",
+      "https://echa.europa.eu/authorisation-list"
     ],
-    "notes": "原首页受限时改用ECHA公开REACH说明和Guidance目录；两者均为官方公开内容。"
+    "notes": "优先尝试ECHA CHEM公开化学品数据库与Authorisation List；仍遵守ECHA legal notice及第三方数据使用边界。",
+    "direct_content": true
   },
   "EU-EURLEX": {
     "alternate_start_urls": [
@@ -165,10 +169,9 @@
   },
   "US-STD": {
     "alternate_start_urls": [
-      "https://webstore.ansi.org/",
-      "https://webstore.ansi.org/standards/pcc/ansicatalog"
+      "https://www.ansi.org/american-national-standards/info-for-standards-developers/ans-complete-lists"
     ],
-    "notes": "只采ANSI Webstore公开标准元数据/目录信息；购买的全文受许可证限制，不自动抓取。"
+    "notes": "使用ANSI官方免费Approved/Proposed ANS清单作为公开标准元数据入口，避免webstore反自动化及全文许可问题。"
   },
   "SE-LAW": {
     "alternate_start_urls": [
@@ -213,7 +216,8 @@
       "https://wetten.overheid.nl/BWBR0001969/",
       "https://wetten.overheid.nl/BWBR0019074/"
     ],
-    "notes": "使用Wetten.nl公开Warenwet及一般产品安全法规作为业务相关深采集入口；KOOP同时提供法规XML开放数据。"
+    "notes": "Wetten.nl直达Warenwet及一般产品安全法规；直达法规正文可作为fulltext证据，不要求再从其自身发现子详情。",
+    "direct_content": true
   },
   "AU-STD": {
     "alternate_start_urls": [
@@ -234,5 +238,20 @@
       "https://api.tech.ec.europa.eu/nando-prod/files?download=true&group=NOTIFICATION_PROCEDURE&id=1eb19323beba3451bc9734da2e79b274829ef411&repo=nando"
     ],
     "notes": "使用欧委会Notified Bodies官方页面与NANDO公开API文件入口，验证机构/notification元数据链。"
+  },
+  "IT-LAW": {
+    "alternate_start_urls": [
+      "https://www.normattiva.it/eli/id/2026/05/15/26G00093/CONSOLIDATED/20260727",
+      "https://www.normattiva.it/eli/id/2004/07/16/004G0202/ORIGINAL"
+    ],
+    "direct_content": true,
+    "notes": "使用Normattiva官方产品安全法规直达正文，避免首页无法发现详情。"
+  },
+  "CH-LAW": {
+    "alternate_start_urls": [
+      "https://www.fedlex.admin.ch/eli/cc/2010/347/en"
+    ],
+    "direct_content": true,
+    "notes": "使用Fedlex ELI直达联邦产品安全法规页面；动态站点由浏览器渲染兜底。"
   }
 }
