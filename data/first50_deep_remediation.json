@@ -1,0 +1,331 @@
+{
+  "BE-STD": {
+    "alternate_start_urls": [
+      "https://app.nbn.be/data/r/platform/frontend/latest-standards",
+      "https://www.nbn.be/en/buying-standards/latest-standards"
+    ],
+    "notes": "使用NBN公开Latest Standards元数据页；全文继续遵守授权边界。"
+  },
+  "CA-ISED": {
+    "alternate_start_urls": [
+      "https://gazette.gc.ca/rp-pr/p1/2026/2026-08-15/html/notice-avis-eng.html",
+      "https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/devices-and-equipment/radio-equipment-standards/radio-standards-specifications-rss/rss-gen-general-requirements-compliance-radio-apparatus",
+      "https://ised-isde.canada.ca/site/certification-engineering-bureau/en/wireless-equipment-standards-knowledge-center/radio-standards-specifications"
+    ],
+    "notes": "优先加拿大公报官方ISED公告（SMSE-011-26）验证RSS-Gen Issue 6/RSS-310 Issue 6发布，再回到ISED RSS正文/目录获取认证与测试要求；均为加拿大政府官方公开内容。",
+    "direct_content": true
+  },
+  "CH-STD": {
+    "alternate_start_urls": [
+      "https://www.snv.ch/en/information-on-standards/view-standards-free-of-charge.html"
+    ],
+    "coverage_limited": true,
+    "coverage_note": "SNV公开页面可验证部分标准与访问方式，但完整标准目录/全文需按SNV授权或商店账号处理。",
+    "requires_registration": true,
+    "registration_url": "https://connect.snv.ch/",
+    "auth_notes": "如需更完整目录/已购标准访问，使用组织授权账号；全文不得超出许可证范围。",
+    "notes": "公开阅读室信息作为兜底；保持metadata_only。"
+  },
+  "DE-LAW": {
+    "alternate_start_urls": [
+      "https://www.gesetze-im-internet.de/prodsg_2021/"
+    ],
+    "notes": "使用已在Stage38走通的ProdSG法规样板作为德国法规深采集兜底入口。"
+  },
+  "DE-STD": {
+    "alternate_start_urls": [
+      "https://www.din.de/en/getting-involved/standards-committees/dke/publications",
+      "https://www.din.de/en/getting-involved/standards-committees/dke/national-committees/68242/wdc-grem%3Adin21%3A54758707%21search-grem-details?masking=true",
+      "https://www.din.de/en/getting-involved/standards-committees/dke"
+    ],
+    "notes": "使用DIN/DKE官方公开电工标准Publications页面，采标准编号、Edition、Procedure/Document type、Title等公开元数据；不跟随DIN Media收费全文。",
+    "direct_content": true
+  },
+  "ES-LAW": {
+    "alternate_start_urls": [
+      "https://www.boe.es/datosabiertos/api/legislacion-consolidada?offset=0&limit=50"
+    ],
+    "notes": "网页入口robots受限时仅改用AEBOE官方OpenData API；显式Accept application/json和分页参数，不绕过robots。",
+    "structured_api": true,
+    "request_headers": {
+      "Accept": "application/json"
+    }
+  },
+  "ES-STD": {
+    "alternate_start_urls": [
+      "https://www.une.org/encuentra-tu-norma/busca-tu-norma/"
+    ],
+    "notes": "使用UNE官方标准搜索/元数据页；全文保持许可边界。"
+  },
+  "EU-ECHA": {
+    "alternate_start_urls": [
+      "https://chem.echa.europa.eu/",
+      "https://echa.europa.eu/authorisation-list"
+    ],
+    "notes": "优先尝试ECHA CHEM公开化学品数据库与Authorisation List；仍遵守ECHA legal notice及第三方数据使用边界。",
+    "direct_content": true
+  },
+  "EU-EURLEX": {
+    "alternate_start_urls": [
+      "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32014L0035"
+    ],
+    "notes": "使用稳定CELEX法规正文页作为公开HTML兜底；大规模搜索可另行申请EUR-Lex Webservice账号。"
+  },
+  "FR-LAW": {
+    "alternate_start_urls": [
+      "https://echanges.dila.gouv.fr/OPENDATA/LEGI/"
+    ],
+    "requires_registration": true,
+    "registration_url": "https://piste.gouv.fr/",
+    "auth_notes": "Légifrance API通过PISTE OAuth2 Client Credentials接入；注册后将token_url/client_id/client_secret放入FIRST50_AUTH_JSON的FR-LAW.oauth。",
+    "notes": "优先尝试DILA官方LEGI开放数据目录；如需查询型API则走PISTE免费注册/OAuth，不绕过网页反自动化。"
+  },
+  "FR-STD": {
+    "alternate_start_urls": [
+      "https://www.boutique.afnor.org/fr-fr/construction/normes-nationales",
+      "https://www.boutique.afnor.org/fr-fr/normes/ics"
+    ],
+    "notes": "使用AFNOR Editions公开标准检索/ICS目录采元数据；标准正文仍按购买/许可边界处理。"
+  },
+  "IE-LAW": {
+    "alternate_start_urls": [
+      "https://api.oireachtas.ie/v1/legislation?limit=20",
+      "https://www.irishstatutebook.ie/eli/2016/si/345/made/en/xml",
+      "https://www.irishstatutebook.ie/eli/open-data.html"
+    ],
+    "notes": "优先尝试Houses of the Oireachtas官方Open Data legislation API；如需法规正文再回落Irish Statute Book ELI XML/PDF。两个官方域分开验证，避免把单一云出口策略误判为爱尔兰法规不可采。",
+    "binary_documents": [
+      "https://www.irishstatutebook.ie/eli/2016/si/345/made/en/pdf"
+    ],
+    "binary_keywords": [
+      "Low Voltage Electrical Equipment",
+      "Directive 2014/35/EU",
+      "safety objectives"
+    ],
+    "binary_max_bytes": 33554432,
+    "structured_api": true,
+    "direct_content": true
+  },
+  "IE-STD": {
+    "alternate_start_urls": [
+      "https://www.nsai.ie/standards/search-buy-standards/",
+      "https://www.nsai.ie/standards/search-buy-standards/new-irish-standards/",
+      "https://shop.standards.ie/en-ie/standards/i-s-en-iec-63000-2018-1139939_saig_nsai_nsai_2699514/",
+      "https://shop.standards.ie/en-ie/standards/i-s-en-iso-iec-17024-2026-857248_saig_nsai_nsai_4013167/"
+    ],
+    "notes": "使用NSAI官方标准商店公开详情页获取标准号、状态、发布日期、Publisher、等同关系等元数据；不下载受许可全文。",
+    "direct_content": true
+  },
+  "JP-LAW": {
+    "alternate_start_urls": [
+      "https://elaws.e-gov.go.jp/api/1/lawlists/3"
+    ],
+    "notes": "优先日本e-Gov法令XML API；结构化API响应作为深采集证据。",
+    "structured_api": true
+  },
+  "JP-METI-PRODUCT-SAFETY": {
+    "alternate_start_urls": [
+      "https://www.kyushu.meti.go.jp/seisaku/seian/index.html"
+    ],
+    "notes": "METI本省英文入口在GitHub出口受限时，使用九州经济产业局（METI地方机构）公开产品安全页面作官方业务入口，并继续尝试本省公开PSE/产品安全PDF。",
+    "binary_documents": [
+      "https://www.meti.go.jp/english/policy/economy/consumer/product_safety/pse_procedure/pdf/pse_regulatory-instructions.pdf",
+      "https://www.meti.go.jp/policy/consumer/seian/shouan/contents/guideline_en.pdf"
+    ],
+    "binary_keywords": [
+      "Electrical Appliances and Materials Safety Act",
+      "Product Safety",
+      "PSE",
+      "Safety Act"
+    ],
+    "binary_max_bytes": 33554432,
+    "direct_content": true
+  },
+  "NL-STD": {
+    "alternate_start_urls": [
+      "https://www.nen.nl/en/nen-en-iec-60335-1-2024-a11-2024-en-319532",
+      "https://www.nen.nl/en/nen-en-iec-60335-2-62-2026-en-fr-356308",
+      "https://www.nen.nl/en/consumentenzaken/normen"
+    ],
+    "direct_content": true,
+    "notes": "使用NEN官方公开标准详情页采Status、Publication date、Standards commission、ICS、Base number、Origin等元数据；PDF正文仍受版权/购买许可，保持metadata_only。",
+    "requires_registration": false
+  },
+  "NO-LAW": {
+    "alternate_start_urls": [
+      "https://api.lovdata.no/publicData"
+    ],
+    "archive_dataset": {
+      "enabled": true,
+      "urls": [
+        "https://api.lovdata.no/v1/publicData/get/gjeldende-lover.tar.bz2",
+        "https://api.lovdata.no/v1/publicData/get/gjeldende-sentrale-forskrifter.tar.bz2"
+      ],
+      "member_extensions": [
+        ".xml"
+      ],
+      "max_archives": 2,
+      "max_members": 5000,
+      "max_member_bytes": 8388608,
+      "max_total_member_bytes": 536870912,
+      "max_archive_bytes": 104857600,
+      "trusted_scope": true
+    },
+    "structured_api": true,
+    "direct_content": true,
+    "notes": "使用Lovdata publicData官方开放数据归档：现行法律 + 中央法规。归档与XML成员分别保留SHA256和原始证据；数据按NLOD开放许可使用，不再依赖网页逐页采集。"
+  },
+  "NZ-LAW": {
+    "alternate_start_urls": [
+      "https://classic.legislation.govt.nz/subscribe/nzpco-rss.xml",
+      "https://www.legislation.govt.nz/act/public/1986/121/en/latest/",
+      "https://www.legislation.govt.nz/act/public/1986/121/en/latest.xml",
+      "https://www.legislation.govt.nz/learn-more/legislation-data/xml-data/"
+    ],
+    "requires_registration": true,
+    "registration_url": "https://www.legislation.govt.nz/developer-api",
+    "auth_notes": "官方Developer API用于完整查询/批量发现，需要向PCO申请API key；凭证通过FIRST50_AUTH_JSON受控注入。",
+    "notes": "先用官方过渡RSS进行增量发现，并以Fair Trading Act 1986公开HTML/XML/PDF验证产品安全正文链；完整批量搜索仍推荐Developer API。",
+    "structured_api": true,
+    "coverage_limited": true,
+    "coverage_note": "公开RSS+正文可以支撑增量发现和关键法规验证，但完整历史/搜索覆盖仍建议使用New Zealand Legislation Developer API key。",
+    "binary_documents": [
+      "https://www.legislation.govt.nz/act/public/1986/121/en/latest.pdf"
+    ],
+    "binary_keywords": [
+      "Fair Trading Act 1986",
+      "Product safety",
+      "Product safety standards"
+    ],
+    "binary_max_bytes": 33554432,
+    "direct_content": true
+  },
+  "SG-LAW": {
+    "alternate_start_urls": [
+      "https://sso.agc.gov.sg/SL/CPTDSRA1975-RG1",
+      "https://sso.agc.gov.sg/SL/S113-2011",
+      "https://sso.agc.gov.sg/Act/CPTDSRA1975?ViewType=Sl"
+    ],
+    "notes": "Singapore Statutes Online允许自动抽取，但仅限新加坡时间03:00-07:00且不得绕过安全措施；执行应优先使用自托管Runner并遵守该时间窗。",
+    "direct_content": true,
+    "automation_window": {
+      "timezone": "Asia/Singapore",
+      "start": "03:00",
+      "end": "07:00"
+    }
+  },
+  "US-ECFR": {
+    "alternate_start_urls": [
+      "https://www.ecfr.gov/api/versioner/v1/titles.json",
+      "https://www.ecfr.gov/api/versioner/v1/structure/2026-09-18/title-16.json"
+    ],
+    "notes": "网页挑战时切换eCFR官方结构化API；优先Title 16/CPSC相关法规。",
+    "structured_api": true
+  },
+  "US-FEDREG": {
+    "alternate_start_urls": [
+      "https://www.federalregister.gov/api/v1/documents.json?per_page=20&order=newest"
+    ],
+    "notes": "Federal Register网页受挑战时使用官方JSON API；API响应本身作为结构化深采集证据。",
+    "structured_api": true
+  },
+  "US-STD": {
+    "alternate_start_urls": [
+      "https://www.ansi.org/american-national-standards/info-for-standards-developers/ans-complete-lists",
+      "https://www.ansi.org/resource-center/standards-action"
+    ],
+    "notes": "ANSI官方每周公开Approved/Proposed ANS清单。优先抓更轻量的Excel元数据，PDF作为兜底；不采收费标准全文。",
+    "binary_documents": [
+      "https://share.ansi.org/Shared%20Documents/Standards%20Activities/American%20National%20Standards/Approved%20and%20Proposed%20ANS%20Lists/Approved%20ANS%20Data.xlsx",
+      "https://share.ansi.org/Shared%20Documents/Standards%20Activities/American%20National%20Standards/Approved%20and%20Proposed%20ANS%20Lists/Approved%20ANS.pdf"
+    ],
+    "binary_keywords": [
+      "Approved American National Standards",
+      "Final Action",
+      "ANSI"
+    ],
+    "binary_max_bytes": 83886080,
+    "direct_content": true
+  },
+  "SE-LAW": {
+    "alternate_start_urls": [
+      "https://data.riksdagen.se/dokumentlista/?doktyp=sfs&utformat=json"
+    ],
+    "structured_api": true,
+    "notes": "使用Sveriges riksdag官方Open Data API作为法规文档结构化入口。"
+  },
+  "DK-LAW": {
+    "alternate_start_urls": [
+      "https://api.retsinformation.dk/v1/Documents"
+    ],
+    "structured_api": true,
+    "notes": "使用Retsinformation官方开放REST API/ELI服务，不依赖动态网页入口。"
+  },
+  "CA-LAW": {
+    "alternate_start_urls": [
+      "https://laws-lois.justice.gc.ca/eng/acts/C-1.68/",
+      "https://laws-lois.justice.gc.ca/eng/XML/C-1.68.xml"
+    ],
+    "structured_api": true,
+    "notes": "使用Justice Laws官方Canada Consumer Product Safety Act业务相关正文与XML；替换第一轮返回404的旧ActsRegsList地址。"
+  },
+  "KR-LAW": {
+    "alternate_start_urls": [
+      "https://www.law.go.kr/DRF/lawSearch.do?OC=test&target=law&type=XML&display=20"
+    ],
+    "structured_api": true,
+    "requires_registration": true,
+    "registration_url": "https://open.law.go.kr/LSO/openApi/guideResult.do",
+    "auth_notes": "官方Open API正式使用需要申请OC认证值；当前documented test OC仅用于接口连通和结构验证。",
+    "notes": "优先国家法令信息中心Open API，生产环境需申请OC。"
+  },
+  "EU-EPREL": {
+    "requires_registration": true,
+    "registration_url": "https://eprel.ec.europa.eu/screen/requestpublicapikey",
+    "auth_notes": "EPREL Public API需要API key，并需提交签署/盖章的Declaration。",
+    "notes": "公开网页可浏览；批量深采集建议申请EPREL Public API key。"
+  },
+  "NL-LAW": {
+    "alternate_start_urls": [
+      "https://wetten.overheid.nl/BWBR0001969/",
+      "https://wetten.overheid.nl/BWBR0019074/"
+    ],
+    "notes": "Wetten.nl直达Warenwet及一般产品安全法规；直达法规正文可作为fulltext证据，不要求再从其自身发现子详情。",
+    "direct_content": true
+  },
+  "AU-STD": {
+    "alternate_start_urls": [
+      "https://www.standards.org.au/search-for-a-standard",
+      "https://www.standards.org.au/standards-catalogue/sa-snz/electrotechnology/el-042/as-slash-nzs--5033-colon-2014"
+    ],
+    "notes": "使用Standards Australia公开Search for a Standard与具体标准目录详情，仅采公开元数据，全文保持许可边界。"
+  },
+  "GB-STD": {
+    "alternate_start_urls": [
+      "https://www.bsigroup.com/en-GB/about-bsi/national-standards-body/"
+    ],
+    "notes": "继续metadata_only；对已发现的标准目录/详情页按标准编号、title、catalogue信号判定相关。"
+  },
+  "EU-NANDO": {
+    "alternate_start_urls": [
+      "https://single-market-economy.ec.europa.eu/single-market/goods/building-blocks/notified-bodies_en",
+      "https://api.tech.ec.europa.eu/nando-prod/files?download=true&group=NOTIFICATION_PROCEDURE&id=1eb19323beba3451bc9734da2e79b274829ef411&repo=nando"
+    ],
+    "notes": "使用欧委会Notified Bodies官方页面与NANDO公开API文件入口，验证机构/notification元数据链。"
+  },
+  "IT-LAW": {
+    "alternate_start_urls": [
+      "https://www.normattiva.it/eli/id/2026/05/15/26G00093/CONSOLIDATED/20260727",
+      "https://www.normattiva.it/eli/id/2004/07/16/004G0202/ORIGINAL"
+    ],
+    "direct_content": true,
+    "notes": "使用Normattiva官方产品安全法规直达正文，避免首页无法发现详情。"
+  },
+  "CH-LAW": {
+    "alternate_start_urls": [
+      "https://www.fedlex.admin.ch/eli/cc/2010/347/en"
+    ],
+    "direct_content": true,
+    "notes": "使用Fedlex ELI直达联邦产品安全法规页面；动态站点由浏览器渲染兜底。"
+  }
+}

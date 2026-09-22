@@ -19,7 +19,7 @@
   <div class="hero">
     <h1>首批50站采集经验总结与复用</h1>
     <p>把首批网站的站点结构、采集配置、实网验证、相关性复核和调优结果沉淀成可复用经验。后续新网站接入时，先匹配“网站类型模板”，再进行少量可视化试采与调优，而不是从零编写规则。</p>
-    <div class="callout"><b>证据口径：</b>这里严格区分“已形成采集规则”和“已实网深采集验证”。当前 Stage38 记录是有边界实网抽样，并不等于 50 站都已完整爬取。后续真实复跑完成后，本页会自动按运行数据把站点经验升级为“运行数据已验证”。</div>
+    <div class="callout"><b>证据口径：</b>首批50站现在已经全部至少执行过一次真实深采集，并进行了多轮失败补救。页面单独展示“深采集通过 / 部分通过 / 访问受限”和剩余站点的处理通道；通过只代表当前采集验收口径，不代表未经人工审核即可成为正式知识。</div>
   </div>
 
   <div class="metrics">
@@ -28,6 +28,21 @@
     <div class="metric"><span>已验证/部分验证</span><strong id="mVerified">-</strong></div>
     <div class="metric"><span>待实网验证</span><strong id="mConfigured">-</strong></div>
     <div class="metric"><span>受限/失败样板</span><strong id="mRestricted">-</strong></div>
+  </div>
+
+  <div class="card">
+    <div class="head">
+      <div><h2>50站深采集验收</h2><div class="meta" id="validationMeta">正在加载最新一轮实网验收结果…</div></div>
+    </div>
+    <div class="metrics" style="margin-bottom:8px">
+      <div class="metric"><span>深采集通过</span><strong id="vPassed">-</strong></div>
+      <div class="metric"><span>部分通过</span><strong id="vPartial">-</strong></div>
+      <div class="metric"><span>访问受限</span><strong id="vRestricted">-</strong></div>
+      <div class="metric"><span>硬失败</span><strong id="vFailed">-</strong></div>
+      <div class="metric"><span>已实跑来源</span><strong id="vTotal">-</strong></div>
+    </div>
+    <div class="note" style="font-size:11px;color:#637287;line-height:1.7">剩余站点不再统一叫“失败”：公开内容但GitHub云出口被拦截的，转本地/自托管采集；需要API Key、账号或许可的，走官方注册/授权通道。</div>
+    <div id="accessGrid" class="template-grid"></div>
   </div>
 
   <div class="card">
@@ -41,6 +56,11 @@
   <div class="card">
     <div class="head"><div><h2>跨站通用经验</h2><div class="meta">这些经验将直接进入后续“新网站接入向导”的默认判断和操作流程。</div></div></div>
     <div id="lessonGrid" class="lesson-grid"><div class="empty">正在加载…</div></div>
+  </div>
+
+  <div class="card">
+    <div class="head"><div><h2>访问受限处置经验</h2><div class="meta">把50站失败补救过程中沉淀出的访问策略复用到后续新网站：换出口、走官方注册/API、遵守授权和自动抽取时间窗。</div></div></div>
+    <div id="accessLessonGrid" class="lesson-grid"><div class="empty">正在加载…</div></div>
   </div>
 
   <div class="card">
@@ -61,7 +81,7 @@
     <div class="table-wrap">
       <table class="table">
         <thead><tr>
-          <th>#</th><th>来源</th><th>用途</th><th>接入形态</th><th>经验模板</th><th>规则摘要</th><th>证据级别</th><th>运行/复核</th>
+          <th>#</th><th>来源</th><th>用途</th><th>接入形态</th><th>经验模板</th><th>规则摘要</th><th>深采集验收</th><th>运行/复核</th>
         </tr></thead>
         <tbody id="sourceRows"><tr><td colspan="8" class="empty">正在加载50站经验…</td></tr></tbody>
       </table>
@@ -82,12 +102,33 @@ function evidenceGroup(level){
 function evidenceClass(level){
   const g=evidenceGroup(level);return g==='verified'?(level.includes('partial')?'partial':'verified'):g==='restricted'?'restricted':'configured';
 }
+function validationClass(status){return status==='passed'?'verified':status==='partial'?'partial':status==='restricted'?'restricted':'configured'}
+function validationLabel(status){return({passed:'通过',partial:'部分通过',restricted:'受限',failed:'失败',not_recorded:'未记录'})[status]||status}
+function accessLabel(lane){return({
+  public_cloud_egress_blocked:'公开内容 / 云出口受限',
+  public_metadata_cloud_egress_blocked:'公开元数据 / 云出口受限',
+  public_metadata_retry:'公开元数据重试',
+  official_open_archive_dataset:'官方开放归档数据集',
+  site_terms_window_and_cloud_egress:'站点限定采集时窗 / 云出口受限',
+  registration_or_api_key:'需注册 / API Key',
+  registration_or_authorized_api:'需授权API'
+})[lane]||lane}
+function renderValidation(){
+  const v=DATA.validation||{},s=v.summary||{},a=v.access_summary||{};
+  $('vPassed').textContent=Number(s.passed||0);$('vPartial').textContent=Number(s.partial||0);$('vRestricted').textContent=Number(s.restricted||0);$('vFailed').textContent=Number(s.failed||0);$('vTotal').textContent=Number(s.total||0);
+  $('validationMeta').textContent='当前记录：实网深采集 run #'+(v.run_number||'-')+' · 50站逐站验收 + 多轮补救';
+  $('accessGrid').innerHTML=(v.remaining||[]).map(x=>'<div class="template"><div class="head"><h3>'+esc(x.source_key)+'</h3><span class="status '+validationClass(x.current_status)+'">'+esc(validationLabel(x.current_status))+'</span></div><p>'+esc(x.requirement||'')+'</p><div class="chips"><span class="chip">'+esc(accessLabel(x.access_lane||''))+'</span></div><div class="detail">'+esc(x.next_action||'')+'</div>'+(x.registration_url?'<div class="detail"><a class="url" target="_blank" href="'+esc(x.registration_url)+'">官方注册/授权入口</a></div>':'')+'</div>').join('')||'<div class="empty">当前没有待处理站点。</div>';
+}
+
 function resetFilters(){$('q').value='';$('templateFilter').value='';$('evidenceFilter').value='';renderSources()}
 function renderTemplates(){
   $('templateGrid').innerHTML=(DATA.templates||[]).map(t=>'<div class="template"><div class="head"><h3>'+esc(t.name)+'</h3><span class="status configured">'+Number(t.source_count||0)+'站</span></div><p>'+esc(t.summary)+'</p><div class="chips">'+(t.fit_signals||[]).map(x=>'<span class="chip">'+esc(x)+'</span>').join('')+'</div><ul>'+(t.lessons||[]).slice(0,4).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><div class="detail">覆盖来源：'+esc((t.source_keys||[]).join('、'))+'</div></div>').join('');
 }
 function renderLessons(){
   $('lessonGrid').innerHTML=(DATA.common_lessons||[]).map(x=>'<div class="lesson"><b>'+esc(x.title)+'</b><p>'+esc(x.principle)+'</p><div class="detail"><b>复用方式：</b>'+esc(x.reuse)+'</div></div>').join('');
+}
+function renderAccessLessons(){
+  $('accessLessonGrid').innerHTML=(DATA.access_lessons||[]).map(x=>'<div class="lesson"><b>'+esc(x.title)+'</b><p>'+esc(x.principle)+'</p><div class="detail"><b>复用方式：</b>'+esc(x.reuse)+'</div></div>').join('')||'<div class="empty">暂无访问受限处置经验。</div>';
 }
 function renderSources(){
   const q=$('q').value.trim().toLowerCase(),tf=$('templateFilter').value,ef=$('evidenceFilter').value;
@@ -97,11 +138,12 @@ function renderSources(){
   });
   $('sourceMeta').textContent='当前显示 '+rows.length+' / '+Number(DATA.summary?.sources||0)+' 站';
   $('sourceRows').innerHTML=rows.map(x=>{
-    const rp=x.rule_profile||{},ev=x.evidence||{},rt=x.runtime||{},rel=x.relevance||{};
+    const rp=x.rule_profile||{},ev=x.evidence||{},rt=x.runtime||{},rel=x.relevance||{},val=x.validation||{},acc=val.access||{};
     const rule='详情 '+(rp.follow_details?'开':'关')+' · 附件 '+(rp.fetch_attachments?'开':'关')+' · 页上限 '+Number(rp.max_pages||0)+' · URL包含 '+Number(rp.include_patterns||0)+' · 排除 '+Number(rp.exclude_patterns||0)+' · 字段 '+esc((rp.field_groups||[]).join('/'));
     const runtime=rt.status==='not_run'?'暂无本地深采集运行记录':('运行 '+esc(rt.status)+' · '+Number(rt.pages||0)+'页 · '+Number(rt.items||0)+'条');
     const review='相关 '+Number(rel.relevant||0)+' / 待复核 '+Number(rel.needs_review||0)+' / 排除 '+Number(rel.irrelevant||0)+' / 人工 '+Number(rel.reviewed||0);
-    return '<tr><td>'+Number(x.order||0)+'</td><td><b>'+esc(x.source_key)+'</b><div class="detail">'+esc(x.region_code)+' · '+esc(x.source_name)+'</div><div class="detail"><a class="url" href="'+esc(x.base_url)+'" target="_blank">'+esc(x.base_url)+'</a></div></td><td>'+esc(x.purpose)+'</td><td>'+esc(x.source_type)+' · '+esc(x.access_method)+'<div class="detail">'+esc((x.file_types||[]).join(' / '))+' · '+esc(x.document_policy)+'</div></td><td><span class="status configured">'+esc(x.template_name)+'</span></td><td>'+rule+'</td><td><span class="status '+evidenceClass(ev.level)+'">'+esc(ev.label)+'</span><div class="detail">'+esc(ev.note)+'</div></td><td>'+runtime+'<div class="detail">'+review+'</div></td></tr>';
+    const validation='<span class="status '+validationClass(val.status)+'">'+esc(validationLabel(val.status))+'</span>'+(acc.access_lane?'<div class="detail">'+esc(accessLabel(acc.access_lane))+' · '+esc(acc.next_action||'')+'</div>':'');
+    return '<tr><td>'+Number(x.order||0)+'</td><td><b>'+esc(x.source_key)+'</b><div class="detail">'+esc(x.region_code)+' · '+esc(x.source_name)+'</div><div class="detail"><a class="url" href="'+esc(x.base_url)+'" target="_blank">'+esc(x.base_url)+'</a></div></td><td>'+esc(x.purpose)+'</td><td>'+esc(x.source_type)+' · '+esc(x.access_method)+'<div class="detail">'+esc((x.file_types||[]).join(' / '))+' · '+esc(x.document_policy)+'</div></td><td><span class="status configured">'+esc(x.template_name)+'</span></td><td>'+rule+'</td><td>'+validation+'</td><td>'+runtime+'<div class="detail">'+review+'</div></td></tr>';
   }).join('')||'<tr><td colspan="8" class="empty">没有符合筛选条件的站点。</td></tr>';
 }
 function renderMetrics(){
@@ -110,7 +152,7 @@ function renderMetrics(){
 async function loadAll(){
   try{
     DATA=await api('/api/collection-experience/overview');
-    renderMetrics();renderTemplates();renderLessons();
+    renderMetrics();renderValidation();renderTemplates();renderLessons();renderAccessLessons();
     $('templateFilter').innerHTML='<option value="">全部模板</option>'+(DATA.templates||[]).map(t=>'<option value="'+esc(t.template_id)+'">'+esc(t.name)+' ('+Number(t.source_count||0)+')</option>').join('');
     renderSources();
   }catch(e){

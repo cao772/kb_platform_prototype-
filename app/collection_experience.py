@@ -9,6 +9,14 @@ from app.source_collection import FIRST_WAVE_PATH
 from app.source_registry import SourceRegistryService
 from app.site_extraction import SiteExtractionService
 
+ROOT = FIRST_WAVE_PATH.parent.parent
+ACCESS_REQUIREMENTS_PATH = ROOT / "data" / "first50_access_requirements.json"
+VALIDATION_STATUS_PATHS = [
+    ROOT / "data" / f"first50_round{round_no}_status.json"
+    for round_no in range(99, 0, -1)
+]
+
+
 
 DOCUMENTED_EVIDENCE: dict[str, dict[str, str]] = {
     "DE-LAW": {
@@ -207,6 +215,29 @@ TEMPLATE_CATALOG: tuple[dict[str, Any], ...] = (
 )
 
 
+COMMON_ACCESS_LESSONS: tuple[dict[str, str], ...] = (
+    {
+        "title": "公开内容但云出口被拦截",
+        "principle": "若官方页面在人类浏览器/公共索引可访问，但 GitHub Runner 反复触发挑战，不应把站点误判为不可采。",
+        "reuse": "切换本地或自托管 Runner，保持同一抓取规则和证据口径；禁止通过绕过安全措施来解决。",
+    },
+    {
+        "title": "官方 API Key / 注册前置",
+        "principle": "EPREL、NZ Legislation 等官方接口明确要求 API Key 或注册时，应把注册/授权视为采集前置条件，而不是技术失败。",
+        "reuse": "凭证仅通过受控 Secret 注入；站点配置、凭证状态和采集结果分开管理。",
+    },
+    {
+        "title": "标准站默认只采公开元数据",
+        "principle": "DIN、NEN、SNV、ANSI 等标准机构的收费全文与公开元数据必须分离。",
+        "reuse": "优先采标准号、标题、版本、状态、委员会、ICS等公开字段；全文只有在取得许可后才进入处理链。",
+    },
+    {
+        "title": "遵守站点自动抽取时间窗",
+        "principle": "部分官方站允许自动抽取但规定时段，例如 Singapore Statutes Online 仅允许特定时间窗。",
+        "reuse": "把站点条款转成调度约束并自动校验，超出时间窗不执行，而不是人工记忆规则。",
+    },
+)
+
 COMMON_LESSONS: tuple[dict[str, str], ...] = (
     {
         "title": "先判断站点形态，再决定采集方式",
@@ -341,6 +372,28 @@ class CollectionExperienceService:
     @staticmethod
     def _template_map() -> dict[str, dict[str, Any]]:
         return {str(item["template_id"]): dict(item) for item in TEMPLATE_CATALOG}
+
+    @staticmethod
+    def _latest_validation_status() -> dict[str, Any]:
+        for path in VALIDATION_STATUS_PATHS:
+            if not path.exists():
+                continue
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(payload, dict) and len(payload.get("status") or {}) == 50:
+                return payload
+        return {"summary": {"total": 0, "passed": 0, "partial": 0, "restricted": 0, "failed": 0}, "status": {}}
+
+    @staticmethod
+    def _access_requirements() -> dict[str, dict[str, Any]]:
+        if not ACCESS_REQUIREMENTS_PATH.exists():
+            return {}
+        payload = json.loads(ACCESS_REQUIREMENTS_PATH.read_text(encoding="utf-8"))
+        return {
+            str(item.get("source_key") or ""): dict(item)
+            for item in payload.get("items") or []
+            if str(item.get("source_key") or "").strip()
+        }
+
 
     @staticmethod
     def _deep_merge(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:
@@ -511,6 +564,10 @@ class CollectionExperienceService:
 
     def source_experiences(self) -> list[dict[str, Any]]:
         templates = self._template_map()
+        validation_payload = self._latest_validation_status()
+        validation_status = dict(validation_payload.get("status") or {})
+        validation_round = int(validation_payload.get("run_number") or 0)
+        access_requirements = self._access_requirements()
         output: list[dict[str, Any]] = []
         for entry in self._load_wave():
             key = str(entry.get("source_key") or "")
@@ -603,6 +660,11 @@ class CollectionExperienceService:
                     "irrelevant": int(item_summary.get("irrelevant") or 0),
                     "reviewed": int(item_summary.get("reviewed") or 0),
                 },
+                "validation": {
+                    "round": validation_round,
+                    "status": str(validation_status.get(key) or "not_recorded"),
+                    "access": access_requirements.get(key) or {},
+                },
             })
         return output
 
@@ -624,6 +686,13 @@ class CollectionExperienceService:
     def overview(self) -> dict[str, Any]:
         experiences = self.source_experiences()
         templates = self.templates()
+        validation_payload = self._latest_validation_status()
+        validation_summary = dict(validation_payload.get("summary") or {})
+        access_requirements = self._access_requirements()
+        access_counts = Counter(
+            str(item.get("access_lane") or "unclassified")
+            for item in access_requirements.values()
+        )
         evidence_counts = Counter(item["evidence"]["level"] for item in experiences)
         type_counts = Counter(item["source_type"] for item in experiences)
         access_counts = Counter(item["access_method"] for item in experiences)
@@ -632,6 +701,14 @@ class CollectionExperienceService:
             "sources": experiences,
             "templates": templates,
             "common_lessons": [dict(item) for item in COMMON_LESSONS],
+            "access_lessons": [dict(item) for item in COMMON_ACCESS_LESSONS],
+            "validation": {
+                "run_id": validation_payload.get("run_id"),
+                "run_number": validation_payload.get("run_number"),
+                "summary": validation_summary,
+                "access_summary": dict(access_counts),
+                "remaining": [dict(item) for item in access_requirements.values()],
+            },
             "summary": {
                 "sources": len(experiences),
                 "templates": len(templates),
