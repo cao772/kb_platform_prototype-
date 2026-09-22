@@ -1239,6 +1239,288 @@ class SiteExtractionService:
             },
         }
 
+    @staticmethod
+    def _proposal_row_to_dict(row: Any) -> dict[str, Any]:
+        item = dict(row)
+        for field, target in (
+            ("base_config_json", "base_config"),
+            ("candidate_config_json", "candidate_config"),
+            ("rationale_json", "rationale"),
+            ("baseline_metrics_json", "baseline_metrics"),
+            ("candidate_metrics_json", "candidate_metrics"),
+        ):
+            raw = item.pop(field, "") or ("[]" if field == "rationale_json" else "{}")
+            try:
+                item[target] = json.loads(raw)
+            except (TypeError, ValueError):
+                item[target] = [] if field == "rationale_json" else {}
+        return item
+
+    def _review_sample_rows(self, source_key: str) -> list[dict[str, Any]]:
+        with self.store.lock:
+            rows = self.store.conn.execute(
+                """SELECT id,source_key,source_url,item_type,title,fields_json,metadata_json,text_excerpt
+                   FROM source_extracted_items
+                   WHERE source_key=? AND item_type IN ('detail','attachment')
+                   ORDER BY id""",
+                (source_key,),
+            ).fetchall()
+        output: list[dict[str, Any]] = []
+        for row in rows:
+            item = dict(row)
+            try:
+                item["fields"] = json.loads(item.pop("fields_json") or "{}")
+            except (TypeError, ValueError):
+                item["fields"] = {}
+            try:
+                item["metadata"] = json.loads(item.pop("metadata_json") or "{}")
+            except (TypeError, ValueError):
+                item["metadata"] = {}
+            review_status = (item["metadata"].get("relevance_review") or {}).get("status")
+            if review_status in {"relevant", "irrelevant"}:
+                output.append(item)
+        return output
+
+    def _review_metrics(
+        self,
+        rows: list[dict[str, Any]],
+        config: dict[str, Any],
+        *,
+        use_stored_automatic: bool,
+    ) -> dict[str, Any]:
+        considered = matches = over_capture = under_capture = unresolved = 0
+        for item in rows:
+            metadata = dict(item.get("metadata") or {})
+            target = str((metadata.get("relevance_review") or {}).get("status") or "")
+            if target not in {"relevant", "irrelevant"}:
+                continue
+            considered += 1
+            if use_stored_automatic:
+                predicted = str((metadata.get("relevance") or {}).get("status") or "needs_review")
+            else:
+                automatic = dict(metadata.get("relevance") or {})
+                parent_relevant = "relevant_parent" in list(automatic.get("reasons") or [])
+                predicted = self._evaluate_relevance(
+                    url=str(item.get("source_url") or ""),
+                    item_type=str(item.get("item_type") or "detail"),
+                    title=str(item.get("title") or ""),
+                    text=str(item.get("text_excerpt") or ""),
+                    fields=dict(item.get("fields") or {}),
+                    config=config,
+                    parent_relevant=parent_relevant,
+                    link_text="",
+                ).get("status") or "needs_review"
+            if predicted == target:
+                matches += 1
+            elif target == "irrelevant" and predicted == "relevant":
+                over_capture += 1
+            elif target == "relevant" and predicted != "relevant":
+                under_capture += 1
+            else:
+                unresolved += 1
+        agreement_rate = round(matches / considered * 100, 1) if considered else 0.0
+        return {
+            "reviewed_samples": considered,
+            "matches": matches,
+            "agreement_rate": agreement_rate,
+            "over_capture": over_capture,
+            "under_capture": under_capture,
+            "unresolved": unresolved,
+        }
+
+    def generate_tuning_proposal(self, source_key: str) -> dict[str, Any]:
+        self.source_registry.by_key(source_key)
+        plan = self.plan(source_key)
+        base_config = self._validate_config(json.loads(json.dumps(plan.get("config") or {})))
+        candidate = self._validate_config(json.loads(json.dumps(base_config)))
+        rows = self._review_sample_rows(source_key)
+        if not rows:
+            raise ValueError("no reviewed relevance samples available")
+
+        discovery = dict(candidate.get("discovery") or {})
+        relevance = dict(candidate.get("relevance") or {})
+        include_patterns = list(discovery.get("include_url_patterns") or [])
+        exclude_patterns = list(discovery.get("exclude_url_patterns") or [])
+        confirmed_include = list(relevance.get("confirmed_include_url_patterns") or [])
+        confirmed_exclude = list(relevance.get("confirmed_exclude_url_patterns") or [])
+        rationale: list[dict[str, Any]] = []
+        changed = False
+
+        for item in rows:
+            metadata = dict(item.get("metadata") or {})
+            automatic = str((metadata.get("relevance") or {}).get("status") or "needs_review")
+            human = str((metadata.get("relevance_review") or {}).get("status") or "")
+            if automatic == human:
+                continue
+            url = canonical_url(str(item.get("source_url") or ""))
+            if not url:
+                continue
+            exact = "^" + re.escape(url) + "$"
+            if automatic == "relevant" and human == "irrelevant":
+                if exact not in exclude_patterns:
+                    exclude_patterns.append(exact)
+                if exact not in confirmed_exclude:
+                    confirmed_exclude.append(exact)
+                rationale.append({
+                    "kind": "over_capture",
+                    "url": url,
+                    "action": "exclude_exact_url",
+                    "reason": "规则判为相关，但人工确认应排除",
+                })
+                changed = True
+            elif human == "relevant" and automatic in {"needs_review", "irrelevant"}:
+                if exact not in include_patterns:
+                    include_patterns.append(exact)
+                if exact not in confirmed_include:
+                    confirmed_include.append(exact)
+                rationale.append({
+                    "kind": "under_capture",
+                    "url": url,
+                    "action": "include_exact_url",
+                    "reason": "规则未确认相关，但人工确认应纳入",
+                })
+                changed = True
+
+        if not changed:
+            raise ValueError("no reviewed rule disagreements available")
+
+        discovery["include_url_patterns"] = include_patterns
+        discovery["exclude_url_patterns"] = exclude_patterns
+        relevance["confirmed_include_url_patterns"] = confirmed_include
+        relevance["confirmed_exclude_url_patterns"] = confirmed_exclude
+        candidate["discovery"] = discovery
+        candidate["relevance"] = relevance
+        candidate = self._validate_config(candidate)
+
+        baseline = self._review_metrics(rows, base_config, use_stored_automatic=True)
+        candidate_metrics = self._review_metrics(rows, candidate, use_stored_automatic=False)
+        now = _now()
+        with self.store.lock:
+            cur = self.store.conn.execute(
+                """INSERT INTO source_tuning_proposals(
+                       source_key,status,base_config_json,candidate_config_json,rationale_json,
+                       baseline_metrics_json,candidate_metrics_json,created_at
+                   ) VALUES(?,?,?,?,?,?,?,?)""",
+                (
+                    source_key,
+                    "draft",
+                    json.dumps(base_config, ensure_ascii=False),
+                    json.dumps(candidate, ensure_ascii=False),
+                    json.dumps(rationale, ensure_ascii=False),
+                    json.dumps(baseline, ensure_ascii=False),
+                    json.dumps(candidate_metrics, ensure_ascii=False),
+                    now,
+                ),
+            )
+            proposal_id = int(cur.lastrowid)
+            self.store.conn.commit()
+        return self.tuning_proposal(proposal_id)
+
+    def tuning_proposal(self, proposal_id: int) -> dict[str, Any]:
+        with self.store.lock:
+            row = self.store.conn.execute(
+                "SELECT * FROM source_tuning_proposals WHERE id=?",
+                (int(proposal_id),),
+            ).fetchone()
+        if not row:
+            raise ValueError("tuning proposal not found")
+        return self._proposal_row_to_dict(row)
+
+    def list_tuning_proposals(
+        self,
+        *,
+        source_key: str = "",
+        status: str = "",
+        limit: int = 100,
+    ) -> dict[str, Any]:
+        where: list[str] = []
+        params: list[Any] = []
+        if source_key:
+            where.append("source_key=?")
+            params.append(source_key)
+        if status:
+            where.append("status=?")
+            params.append(status)
+        clause = ("WHERE " + " AND ".join(where)) if where else ""
+        params.append(max(1, min(int(limit), 500)))
+        with self.store.lock:
+            rows = self.store.conn.execute(
+                f"SELECT * FROM source_tuning_proposals {clause} ORDER BY id DESC LIMIT ?",
+                params,
+            ).fetchall()
+        items = [self._proposal_row_to_dict(row) for row in rows]
+        return {
+            "items": items,
+            "summary": {
+                "proposals": len(items),
+                "draft": sum(1 for item in items if item["status"] == "draft"),
+                "applied": sum(1 for item in items if item["status"] == "applied"),
+                "rejected": sum(1 for item in items if item["status"] == "rejected"),
+            },
+        }
+
+    def decide_tuning_proposal(
+        self,
+        proposal_id: int,
+        *,
+        action: str,
+        operator: str = "",
+        note: str = "",
+    ) -> dict[str, Any]:
+        action = str(action or "").strip().lower()
+        if action not in {"apply", "reject"}:
+            raise ValueError("unsupported proposal action")
+        proposal = self.tuning_proposal(proposal_id)
+        if proposal.get("status") != "draft":
+            raise ValueError("proposal is no longer draft")
+
+        now = _now()
+        if action == "reject":
+            with self.store.lock:
+                self.store.conn.execute(
+                    """UPDATE source_tuning_proposals
+                       SET status='rejected',reviewed_at=?,reviewer=?,review_note=?
+                       WHERE id=?""",
+                    (now, str(operator or "").strip(), str(note or "").strip(), int(proposal_id)),
+                )
+                self.store.conn.commit()
+            return self.tuning_proposal(proposal_id)
+
+        current = self.plan(str(proposal["source_key"]))
+        current_config = self._validate_config(json.loads(json.dumps(current.get("config") or {})))
+        if json.dumps(current_config, ensure_ascii=False, sort_keys=True) != json.dumps(
+            proposal.get("base_config") or {}, ensure_ascii=False, sort_keys=True
+        ):
+            raise ValueError("site plan changed after proposal generation; regenerate proposal")
+
+        baseline = dict(proposal.get("baseline_metrics") or {})
+        candidate_metrics = dict(proposal.get("candidate_metrics") or {})
+        if int(candidate_metrics.get("reviewed_samples") or 0) < 1:
+            raise ValueError("proposal has no reviewed validation samples")
+        if float(candidate_metrics.get("agreement_rate") or 0) < float(baseline.get("agreement_rate") or 0):
+            raise ValueError("candidate performs worse than current rule on reviewed samples")
+
+        self.update_plan(
+            str(proposal["source_key"]),
+            config=dict(proposal.get("candidate_config") or {}),
+            enabled=bool(current.get("enabled", True)),
+        )
+        with self.store.lock:
+            self.store.conn.execute(
+                """UPDATE source_tuning_proposals
+                   SET status='applied',reviewed_at=?,reviewer=?,review_note=?,applied_at=?
+                   WHERE id=?""",
+                (
+                    now,
+                    str(operator or "").strip(),
+                    str(note or "").strip(),
+                    now,
+                    int(proposal_id),
+                ),
+            )
+            self.store.conn.commit()
+        return self.tuning_proposal(proposal_id)
+
     def run(
         self,
         source_key: str,
