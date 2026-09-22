@@ -1,1 +1,38 @@
-import tempfile\nfrom pathlib import Path\n\nfrom app.site_extraction import SiteExtractionService\nfrom app.source_registry import SourceRegistryService\nfrom app.store import KnowledgeStore\n\n\ndef main():\n    with tempfile.TemporaryDirectory() as tmp:\n        root = Path(tmp)\n        store = KnowledgeStore(root / 'stage39.db')\n        service = SiteExtractionService(store, SourceRegistryService(store), root / 'downloads')\n        config = service.plan('EU-EURLEX')['config']\n        relevant = service._evaluate_relevance(\n            url='https://example.test/legal-content/100', item_type='detail',\n            title='Regulation 2026/100', text='Current product safety rule',\n            fields={'code': ['Regulation 2026/100']}, config=config,\n            parent_relevant=True, link_text='Regulation 2026/100',\n        )\n        assert relevant['status'] == 'relevant'\n        noise = service._evaluate_relevance(\n            url='https://example.test/help', item_type='detail',\n            title='Accessibility', text='Accessibility help center', fields={},\n            config=config, parent_relevant=True, link_text='help',\n        )\n        assert noise['status'] == 'irrelevant'\n        review = service._evaluate_relevance(\n            url='https://example.test/misc', item_type='detail',\n            title='General information', text='x' * 200, fields={},\n            config=config, parent_relevant=False, link_text='general',\n        )\n        assert review['status'] == 'needs_review'\n    print('OK: stage39 business relevance classification passed')\n\n\nif __name__ == '__main__':\n    main()\n
+import tempfile
+from pathlib import Path
+
+from app.site_extraction import SiteExtractionService
+from app.source_registry import SourceRegistryService
+from app.store import KnowledgeStore
+
+
+def main():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        store = KnowledgeStore(root / 'stage39.db')
+        service = SiteExtractionService(store, SourceRegistryService(store), root / 'downloads')
+        config = service.plan('EU-EURLEX')['config']
+        relevant = service._evaluate_relevance(
+            url='https://example.test/legal-content/100', item_type='detail',
+            title='Regulation 2026/100', text='Current product safety rule',
+            fields={'code': ['Regulation 2026/100']}, config=config,
+            parent_relevant=True, link_text='Regulation 2026/100',
+        )
+        assert relevant['status'] == 'relevant'
+        noise = service._evaluate_relevance(
+            url='https://example.test/help', item_type='detail',
+            title='Accessibility', text='Accessibility help center', fields={},
+            config=config, parent_relevant=True, link_text='help',
+        )
+        assert noise['status'] == 'irrelevant'
+        review = service._evaluate_relevance(
+            url='https://example.test/misc', item_type='detail',
+            title='General information', text='x' * 200, fields={},
+            config=config, parent_relevant=False, link_text='general',
+        )
+        assert review['status'] == 'needs_review'
+    print('OK: stage39 business relevance classification passed')
+
+
+if __name__ == '__main__':
+    main()
