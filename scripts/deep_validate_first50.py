@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlencode, urlparse, urlunparse
 from urllib.request import Request, urlopen
 from urllib import robotparser
 
@@ -128,11 +128,72 @@ class ResilientFetcher:
         self.auth = auth
         self.events: list[dict[str, Any]] = []
         self.renderer = BrowserRenderer(auth, self.events)
+        self._robots_cache: dict[str, robotparser.RobotFileParser | None] = {}
+        self.auth_headers = self._resolve_auth_headers()
+
+    def _resolve_auth_headers(self) -> dict[str, str]:
+        headers = {str(k): str(v) for k, v in (self.auth.get("headers") or {}).items()}
+        oauth = dict(self.auth.get("oauth") or {})
+        if not oauth:
+            return headers
+        token_url = str(oauth.get("token_url") or "").strip()
+        client_id = str(oauth.get("client_id") or "").strip()
+        client_secret = str(oauth.get("client_secret") or "").strip()
+        if not token_url or not client_id or not client_secret:
+            self.events.append({"strategy": "oauth_skipped", "error": "missing token_url/client_id/client_secret"})
+            return headers
+        form = {
+            "grant_type": str(oauth.get("grant_type") or "client_credentials"),
+            "client_id": client_id,
+            "client_secret": client_secret,
+        }
+        scope = str(oauth.get("scope") or "").strip()
+        if scope:
+            form["scope"] = scope
+        try:
+            request = Request(
+                token_url,
+                data=urlencode(form).encode("utf-8"),
+                headers={"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"},
+                method="POST",
+            )
+            with urlopen(request, timeout=25) as response:
+                payload = json.loads(response.read(1024 * 1024).decode("utf-8"))
+            token = str(payload.get("access_token") or "").strip()
+            if not token:
+                raise ValueError("OAuth response missing access_token")
+            headers["Authorization"] = f"Bearer {token}"
+            self.events.append({"strategy": "oauth_client_credentials", "status": "token_acquired"})
+        except Exception as exc:
+            self.events.append({"strategy": "oauth_failed", "error": str(exc)[:500]})
+        return headers
+
+    def _robots_allowed(self, url: str) -> bool:
+        parsed = urlparse(url)
+        host_key = f"{parsed.scheme}://{parsed.netloc}"
+        if host_key not in self._robots_cache:
+            robots_url = urlunparse((parsed.scheme, parsed.netloc, "/robots.txt", "", "", ""))
+            try:
+                req = Request(robots_url, headers=BROWSER_HEADERS, method="GET")
+                with urlopen(req, timeout=12) as response:
+                    raw = response.read(512 * 1024).decode("utf-8", errors="ignore")
+                rp = robotparser.RobotFileParser()
+                rp.set_url(robots_url)
+                rp.parse(raw.splitlines())
+                self._robots_cache[host_key] = rp
+            except Exception:
+                self._robots_cache[host_key] = None
+        parser = self._robots_cache[host_key]
+        return True if parser is None else bool(parser.can_fetch("KnowledgePlatformDeepCollector/1.0", url))
 
     def __call__(self, url: str, headers: dict[str, str], timeout: int, max_bytes: int):
+        if not self._robots_allowed(url):
+            self.events.append({"strategy": "robots_disallowed", "url": url})
+            raise PermissionError(f"robots disallowed: {url}")
+
         merged = dict(BROWSER_HEADERS)
         merged.update(headers or {})
-        merged.update({str(k): str(v) for k, v in (self.auth.get("headers") or {}).items()})
+        merged.update(self.auth_headers)
         cookie = str(self.auth.get("cookie") or "").strip()
         if cookie:
             merged["Cookie"] = cookie
@@ -212,8 +273,13 @@ def assessment(service: SiteExtractionService, source_key: str, run: dict[str, A
     )
     pages = int(run.get("pages_fetched") or 0)
     relevant = int(summary.get("relevant") or 0)
+    relevant_business = sum(
+        1 for item in items
+        if item.get("item_type") in {"detail", "attachment"}
+        and (item.get("effective_relevance") or {}).get("status") == "relevant"
+    )
     errors = str(run.get("error") or "")
-    if pages >= 2 and (details + attachments >= 1) and meaningful >= 1:
+    if pages >= 2 and (details + attachments >= 1) and meaningful >= 1 and relevant_business >= 1:
         verdict = "passed"
     elif pages >= 1 and int(run.get("items_discovered") or 0) >= 1:
         verdict = "partial"
@@ -227,6 +293,7 @@ def assessment(service: SiteExtractionService, source_key: str, run: dict[str, A
         "details": details,
         "attachments": attachments,
         "relevant": relevant,
+        "relevant_business": relevant_business,
         "needs_review": int(summary.get("needs_review") or 0),
         "irrelevant": int(summary.get("irrelevant") or 0),
         "reviewed": int(summary.get("reviewed") or 0),
@@ -255,6 +322,8 @@ def classify_restriction(text: str, events: list[dict[str, Any]]) -> str:
 
 
 def recommendation(reason: str, has_auth: bool, remediation: dict[str, Any]) -> str:
+    registration_url = str(remediation.get("registration_url") or "").strip()
+    auth_notes = str(remediation.get("auth_notes") or "").strip()
     if reason == "robots_disallowed":
         return "不绕过 robots 禁止；改用该机构公开API、数据下载、RSS或人工授权渠道。"
     if reason == "captcha_or_bot_challenge":
@@ -262,7 +331,9 @@ def recommendation(reason: str, has_auth: bool, remediation: dict[str, Any]) -> 
     if reason == "requires_registration_or_login":
         if has_auth:
             return "已配置登录会话仍失败；检查账号权限、会话有效期和站点许可。"
-        return "尝试官方免费注册/登录；完成后将授权Cookie或请求头作为受控Secret注入，再复跑。"
+        suffix = f" 注册入口：{registration_url}" if registration_url else ""
+        detail = f" {auth_notes}" if auth_notes else ""
+        return "尝试官方免费注册/登录；完成后将授权Cookie、请求头或OAuth客户端凭证作为受控Secret注入，再复跑。" + suffix + detail
     if reason == "access_restricted":
         if remediation.get("alternate_start_urls"):
             return "继续优先使用已配置的官方API/备用网址；必要时申请官方数据服务权限。"
@@ -293,34 +364,77 @@ def run_source(
     robot = robots_status(str(source.get("base_url") or ""))
     attempts: list[dict[str, Any]] = []
     started = time.time()
-
-    if robot["status"] == "disallowed":
-        fetcher.close()
-        return {
-            **entry,
-            "source_name": source.get("source_name", ""),
-            "base_url": source.get("base_url", ""),
-            "source_type": source.get("source_type", ""),
-            "access_method": source.get("access_method", ""),
-            "final_verdict": "restricted",
-            "restriction_reason": "robots_disallowed",
-            "recommendation": recommendation("robots_disallowed", bool(auth), remediation),
-            "robots": robot,
-            "attempts": [],
-            "elapsed_seconds": round(time.time() - started, 1),
-        }
+    base_plan = service.plan(source_key)
+    base_config = json.loads(json.dumps(base_plan.get("config") or {}))
 
     previous_handler = signal.signal(signal.SIGALRM, _alarm_handler)
-    signal.alarm(site_timeout)
+    signal.alarm(max(site_timeout, 60))
     try:
-        def do_attempt(label: str, start_urls: list[str] | None = None) -> dict[str, Any]:
-            plan = service.plan(source_key)
-            config = json.loads(json.dumps(plan.get("config") or {}))
-            if start_urls:
-                config["start_urls"] = start_urls
+        def allowed_start_urls(urls: list[str]) -> list[str]:
+            accepted: list[str] = []
+            for candidate in urls:
+                status = robots_status(candidate)
+                if status["status"] == "disallowed":
+                    attempts.append({
+                        "label": "robots_skip",
+                        "start_urls": [candidate],
+                        "exception": "robots disallowed",
+                        "robots": status,
+                    })
+                    continue
+                accepted.append(candidate)
+            return accepted
+
+        def do_attempt(
+            label: str,
+            start_urls: list[str] | None = None,
+            *,
+            controlled_broadening: bool = False,
+        ) -> dict[str, Any]:
+            config = json.loads(json.dumps(base_config))
+            candidate_urls = list(start_urls or config.get("start_urls") or [])
+            candidate_urls = allowed_start_urls(candidate_urls)
+            if not candidate_urls:
+                raise PermissionError("all candidate start URLs are disallowed by robots")
+            config["start_urls"] = candidate_urls
             request = dict(config.get("request") or {})
-            request["headers"] = {**dict(request.get("headers") or {}), **dict(auth.get("headers") or {})}
+            request["headers"] = {**dict(request.get("headers") or {}), **fetcher.auth_headers}
             config["request"] = request
+            if controlled_broadening:
+                discovery = dict(config.get("discovery") or {})
+                source_type = str(source.get("source_type") or "")
+                generic_patterns = {
+                    "regulation": [
+                        r"/(?:law|laws|act|acts|legislation|regulation|regulations|statute|statutes|legal|eli|document|documents|norm|wetten|lov|lag|laki|retsinformation)/",
+                    ],
+                    "standard": [
+                        r"/(?:standard|standards|norm|norme|normen|catalog|catalogue|search|shop|product)/",
+                    ],
+                    "certification": [
+                        r"/(?:certification|certificate|notified|body|bodies|accreditation|scope)/",
+                    ],
+                    "gma": [
+                        r"/(?:product|safety|recall|energy|label|compliance|requirement|guidance|regulation|market)/",
+                    ],
+                }
+                merged_patterns = list(discovery.get("include_url_patterns") or [])
+                for pattern in generic_patterns.get(source_type, generic_patterns["gma"]):
+                    if pattern not in merged_patterns:
+                        merged_patterns.append(pattern)
+                discovery["include_url_patterns"] = merged_patterns
+                discovery["follow_details"] = True
+                if config.get("document_policy") != "metadata_only":
+                    discovery["fetch_attachments"] = True
+                config["discovery"] = discovery
+                limits = dict(config.get("limits") or {})
+                limits["max_pages"] = min(max(int(limits.get("max_pages") or 6), 8), 12)
+                limits["max_details"] = min(max(int(limits.get("max_details") or 0), 16), 30)
+                limits["max_attachments"] = min(max(int(limits.get("max_attachments") or 0), 8), 20)
+                limits["max_items"] = min(max(int(limits.get("max_items") or 0), 160), 300)
+                config["limits"] = limits
+                pagination = dict(config.get("pagination") or {})
+                pagination["max_pages"] = min(max(int(pagination.get("max_pages") or 6), 8), 12)
+                config["pagination"] = pagination
             service.update_plan(source_key, config=config, enabled=True)
             run = service.run(source_key, auto_ingest=False)
             result = {
@@ -332,29 +446,60 @@ def run_source(
             attempts.append(result)
             return result
 
-        first = do_attempt("primary")
-        best = first
-        if first["assessment"]["verdict"] != "passed":
-            alternates = list(remediation.get("alternate_start_urls") or [])
-            final_url = str(source.get("last_final_url") or "").strip()
-            if final_url and final_url not in alternates and final_url != source.get("base_url"):
-                alternates.append(final_url)
-            if alternates:
-                try:
-                    second = do_attempt("official_alternate", alternates)
-                    rank = {"passed": 3, "partial": 2, "failed": 1}
-                    if rank[second["assessment"]["verdict"]] > rank[best["assessment"]["verdict"]]:
-                        best = second
-                except Exception as exc:
-                    attempts.append({"label": "official_alternate", "exception": str(exc)[:1000]})
+        rank = {"passed": 3, "partial": 2, "failed": 1}
+        best: dict[str, Any] | None = None
 
-        verdict = best["assessment"]["verdict"]
+        primary_urls = list(base_config.get("start_urls") or [])
+        if robot["status"] != "disallowed":
+            try:
+                first = do_attempt("primary", primary_urls)
+                best = first
+            except Exception as exc:
+                attempts.append({"label": "primary", "exception": str(exc)[:1000]})
+        else:
+            attempts.append({
+                "label": "primary",
+                "start_urls": primary_urls,
+                "exception": "base source robots disallowed; trying official alternatives instead",
+                "robots": robot,
+            })
+
+        alternates = list(remediation.get("alternate_start_urls") or [])
+        final_url = str(source.get("last_final_url") or "").strip()
+        if final_url and final_url not in alternates and final_url != source.get("base_url"):
+            alternates.append(final_url)
+        if alternates and (best is None or best["assessment"]["verdict"] != "passed"):
+            try:
+                second = do_attempt("official_alternate", alternates)
+                if best is None or rank[second["assessment"]["verdict"]] > rank[best["assessment"]["verdict"]]:
+                    best = second
+            except Exception as exc:
+                attempts.append({"label": "official_alternate", "exception": str(exc)[:1000]})
+
+        if best is None or best["assessment"]["verdict"] != "passed":
+            broad_urls = alternates or primary_urls
+            try:
+                third = do_attempt("controlled_broadening", broad_urls, controlled_broadening=True)
+                if best is None or rank[third["assessment"]["verdict"]] > rank[best["assessment"]["verdict"]]:
+                    best = third
+            except Exception as exc:
+                attempts.append({"label": "controlled_broadening", "exception": str(exc)[:1000]})
+
+        if best is None:
+            verdict = "failed"
+            best_assessment: dict[str, Any] = {}
+        else:
+            verdict = best["assessment"]["verdict"]
+            best_assessment = dict(best["assessment"])
+
         all_error = " ".join(
             str((attempt.get("assessment") or {}).get("error") or attempt.get("exception") or "")
             for attempt in attempts
         )
         if verdict == "failed":
             reason = classify_restriction(all_error, fetcher.events)
+            if remediation.get("requires_registration") and not auth:
+                reason = "requires_registration_or_login"
             final_verdict = "restricted" if reason in {
                 "robots_disallowed", "captcha_or_bot_challenge",
                 "requires_registration_or_login", "access_restricted",
@@ -362,6 +507,10 @@ def run_source(
         else:
             reason = ""
             final_verdict = verdict
+
+        if final_verdict == "passed" and remediation.get("coverage_limited"):
+            final_verdict = "partial"
+            reason = "coverage_limited_official_fallback"
 
         return {
             **entry,
@@ -371,11 +520,18 @@ def run_source(
             "access_method": source.get("access_method", ""),
             "final_verdict": final_verdict,
             "restriction_reason": reason,
-            "recommendation": "" if final_verdict == "passed" else recommendation(reason, bool(auth), remediation),
+            "recommendation": "" if final_verdict == "passed" else (
+                str(remediation.get("coverage_note") or "").strip()
+                if reason == "coverage_limited_official_fallback"
+                else recommendation(reason, bool(auth), remediation)
+            ),
             "robots": robot,
             "used_auth": bool(auth),
+            "requires_registration": bool(remediation.get("requires_registration")),
+            "registration_url": str(remediation.get("registration_url") or ""),
             "remediation_notes": str(remediation.get("notes") or ""),
-            "fetch_events": fetcher.events[-60:],
+            "best_assessment": best_assessment,
+            "fetch_events": fetcher.events[-100:],
             "attempts": attempts,
             "elapsed_seconds": round(time.time() - started, 1),
         }
