@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import re
+import tarfile
+import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from html.parser import HTMLParser
@@ -232,7 +235,17 @@ def _default_plan(source: dict[str, Any]) -> dict[str, Any]:
             "allow_field_match": True,
             "inherit_parent_for_attachments": True,
         },
-        "notes": "可在来源采集页面逐站调整分页、详情、附件、字段正则、业务相关性和采集上限。",
+        "archives": {
+            "enabled": False,
+            "urls": [],
+            "member_extensions": [".xml", ".json"],
+            "max_archives": 4,
+            "max_members": 2000,
+            "max_member_bytes": 8 * 1024 * 1024,
+            "max_total_member_bytes": 256 * 1024 * 1024,
+            "trusted_scope": False,
+        },
+        "notes": "可在来源采集页面逐站调整分页、详情、附件、字段正则、业务相关性、开放归档数据集和采集上限。",
     }
 
 
@@ -563,6 +576,38 @@ class SiteExtractionService:
                 re.compile(pattern)
             relevance[key] = patterns
         config["relevance"] = relevance
+        archives = dict(config.get("archives") or {})
+        archives["enabled"] = bool(archives.get("enabled", False))
+        archive_urls = [
+            str(item).strip()
+            for item in archives.get("urls") or []
+            if str(item).strip()
+        ]
+        if not all(url.startswith(("http://", "https://")) for url in archive_urls):
+            raise ValueError("archive urls must use http/https")
+        archives["urls"] = archive_urls
+        allowed_member_extensions = {".xml", ".json", ".html", ".htm", ".txt"}
+        member_extensions = [
+            str(item).strip().lower()
+            for item in archives.get("member_extensions") or [".xml", ".json"]
+            if str(item).strip().lower() in allowed_member_extensions
+        ]
+        archives["member_extensions"] = list(dict.fromkeys(member_extensions)) or [".xml", ".json"]
+        archives["max_archives"] = max(1, min(int(archives.get("max_archives") or 4), 20))
+        archives["max_members"] = max(1, min(int(archives.get("max_members") or 2000), 10000))
+        archives["max_member_bytes"] = max(
+            1024,
+            min(int(archives.get("max_member_bytes") or 8 * 1024 * 1024), 50 * 1024 * 1024),
+        )
+        archives["max_total_member_bytes"] = max(
+            archives["max_member_bytes"],
+            min(
+                int(archives.get("max_total_member_bytes") or 256 * 1024 * 1024),
+                1024 * 1024 * 1024,
+            ),
+        )
+        archives["trusted_scope"] = bool(archives.get("trusted_scope", False))
+        config["archives"] = archives
         start_urls = [str(item).strip() for item in config.get("start_urls") or [] if str(item).strip()]
         if not start_urls:
             raise ValueError("at least one start_url is required")
@@ -658,6 +703,109 @@ class SiteExtractionService:
         if "xml" in lowered or path.endswith(".xml"):
             return self._parse_xml(body)
         return self._parse_html(body, content_type)
+
+    @staticmethod
+    def _safe_archive_member_name(name: str) -> str:
+        raw = str(name or "").replace("\\", "/").strip()
+        if not raw or raw.startswith("/") or re.match(r"^[A-Za-z]:", raw):
+            return ""
+        parts = [part for part in raw.split("/") if part not in {"", "."}]
+        if not parts or any(part == ".." for part in parts):
+            return ""
+        return "/".join(parts)
+
+    @staticmethod
+    def _archive_member_content_type(name: str) -> str:
+        suffix = Path(name).suffix.lower()
+        return {
+            ".xml": "application/xml",
+            ".json": "application/json",
+            ".html": "text/html; charset=utf-8",
+            ".htm": "text/html; charset=utf-8",
+            ".txt": "text/plain; charset=utf-8",
+        }.get(suffix, "application/octet-stream")
+
+    @staticmethod
+    def _archive_member_url(archive_url: str, member_name: str) -> str:
+        parsed = urlparse(archive_url)
+        query = parse_qsl(parsed.query, keep_blank_values=True)
+        query.append(("archive_member", member_name))
+        return urlunparse((
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            urlencode(query, doseq=True),
+            "",
+        ))
+
+    def _iter_archive_members(
+        self,
+        body: bytes,
+        archive_url: str,
+        archive_config: dict[str, Any],
+    ):
+        extensions = tuple(archive_config.get("member_extensions") or [".xml", ".json"])
+        max_members = int(archive_config.get("max_members") or 2000)
+        max_member_bytes = int(archive_config.get("max_member_bytes") or 8 * 1024 * 1024)
+        max_total_bytes = int(
+            archive_config.get("max_total_member_bytes") or 256 * 1024 * 1024
+        )
+        emitted = 0
+        total_bytes = 0
+        stream = io.BytesIO(body)
+
+        if zipfile.is_zipfile(stream):
+            stream.seek(0)
+            with zipfile.ZipFile(stream) as archive:
+                for info in archive.infolist():
+                    if emitted >= max_members:
+                        break
+                    if info.is_dir():
+                        continue
+                    name = self._safe_archive_member_name(info.filename)
+                    if not name or not name.lower().endswith(extensions):
+                        continue
+                    if info.file_size < 0 or info.file_size > max_member_bytes:
+                        continue
+                    if total_bytes + info.file_size > max_total_bytes:
+                        break
+                    with archive.open(info, "r") as handle:
+                        data = handle.read(max_member_bytes + 1)
+                    if len(data) > max_member_bytes:
+                        continue
+                    total_bytes += len(data)
+                    emitted += 1
+                    yield name, data, self._archive_member_content_type(name)
+            return
+
+        stream.seek(0)
+        try:
+            archive = tarfile.open(fileobj=stream, mode="r:*")
+        except tarfile.TarError as exc:
+            raise ValueError(f"unsupported archive format: {archive_url}") from exc
+        with archive:
+            for member in archive:
+                if emitted >= max_members:
+                    break
+                if not member.isfile():
+                    continue
+                name = self._safe_archive_member_name(member.name)
+                if not name or not name.lower().endswith(extensions):
+                    continue
+                if member.size < 0 or member.size > max_member_bytes:
+                    continue
+                if total_bytes + member.size > max_total_bytes:
+                    break
+                handle = archive.extractfile(member)
+                if handle is None:
+                    continue
+                data = handle.read(max_member_bytes + 1)
+                if len(data) > max_member_bytes:
+                    continue
+                total_bytes += len(data)
+                emitted += 1
+                yield name, data, self._archive_member_content_type(name)
 
     @staticmethod
     def _pattern_match(patterns: list[str], value: str) -> bool:
@@ -820,6 +968,24 @@ class SiteExtractionService:
         folder = self.download_dir / source_key / "deep"
         folder.mkdir(parents=True, exist_ok=True)
         target = folder / f"{stamp}_{item_type}_{digest}{suffix}"
+        target.write_bytes(body)
+        return target
+
+    def _save_archive_member(
+        self,
+        source_key: str,
+        archive_url: str,
+        member_name: str,
+        body: bytes,
+    ) -> Path:
+        suffix = Path(member_name).suffix.lower() or ".bin"
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        digest = hashlib.sha256(
+            f"{archive_url}::{member_name}".encode("utf-8")
+        ).hexdigest()[:16]
+        folder = self.download_dir / source_key / "deep" / "archive_members"
+        folder.mkdir(parents=True, exist_ok=True)
+        target = folder / f"{stamp}_{digest}{suffix}"
         target.write_bytes(body)
         return target
 
@@ -1579,6 +1745,144 @@ class SiteExtractionService:
         errors: list[str] = []
 
         try:
+            archive_config = dict(config.get("archives") or {})
+            if archive_config.get("enabled") and archive_config.get("urls"):
+                archive_urls = list(archive_config.get("urls") or [])[
+                    : int(archive_config.get("max_archives") or 4)
+                ]
+                for archive_url in archive_urls:
+                    if items_discovered >= item_limit:
+                        break
+                    archive_url = canonical_url(archive_url)
+                    try:
+                        archive_body, archive_status, archive_content_type = self.fetcher(
+                            archive_url,
+                            headers,
+                            int(request_cfg["timeout_seconds"]),
+                            int(request_cfg["max_bytes"]),
+                        )
+                        if archive_status >= 400:
+                            raise ValueError(f"HTTP {archive_status}")
+                        if not archive_body:
+                            raise ValueError("empty archive response")
+                        archive_raw = self._save_raw(
+                            source_key,
+                            archive_url,
+                            archive_body,
+                            archive_content_type,
+                            "archive",
+                        )
+                        archive_digest = hashlib.sha256(archive_body).hexdigest()
+                        archive_metadata = {
+                            "archive_dataset": True,
+                            "http_status": archive_status,
+                            "relevance": {
+                                "status": "relevant",
+                                "reasons": ["official_archive_dataset"],
+                            },
+                        }
+                        if self._upsert_item(
+                            source_key=source_key,
+                            url=archive_url,
+                            item_type="listing",
+                            title=Path(urlparse(archive_url).path).name or "official archive dataset",
+                            content_type=archive_content_type,
+                            sha256=archive_digest,
+                            fields={},
+                            metadata=archive_metadata,
+                            text_excerpt="",
+                            raw_path=str(archive_raw),
+                            document_id=None,
+                        ):
+                            changed_items += 1
+                        items_discovered += 1
+                        pages_fetched += 1
+
+                        for member_name, member_body, member_content_type in self._iter_archive_members(
+                            archive_body,
+                            archive_url,
+                            archive_config,
+                        ):
+                            if items_discovered >= item_limit:
+                                break
+                            member_url = self._archive_member_url(archive_url, member_name)
+                            member_digest = hashlib.sha256(member_body).hexdigest()
+                            raw_path = self._save_archive_member(
+                                source_key,
+                                archive_url,
+                                member_name,
+                                member_body,
+                            )
+                            try:
+                                parsed = self._parse_page(
+                                    member_body,
+                                    member_content_type,
+                                    member_url,
+                                )
+                            except Exception as exc:
+                                errors.append(f"{member_url}: parse {exc}")
+                                continue
+                            fields = self._extract_fields(
+                                parsed.text,
+                                dict(config.get("fields") or {}),
+                            )
+                            max_excerpt = int(
+                                (config.get("content") or {}).get("max_excerpt_chars") or 4000
+                            )
+                            excerpt = parsed.text[:max_excerpt]
+                            title = (
+                                parsed.title
+                                or (parsed.headings[0]["text"] if parsed.headings else "")
+                                or Path(member_name).name
+                            )
+                            if archive_config.get("trusted_scope"):
+                                relevance = {
+                                    "status": "relevant",
+                                    "reasons": ["trusted_official_archive_scope"],
+                                }
+                            else:
+                                relevance = self._evaluate_relevance(
+                                    url=member_url,
+                                    item_type="detail",
+                                    title=title,
+                                    text=excerpt,
+                                    fields=fields,
+                                    config=config,
+                                    parent_relevant=True,
+                                    link_text=member_name,
+                                )
+                            metadata = {
+                                "archive_dataset": True,
+                                "archive_url": archive_url,
+                                "archive_member": member_name,
+                                "archive_sha256": archive_digest,
+                                "relevance": relevance,
+                            }
+                            document_id: int | None = None
+                            if auto_ingest and relevance.get("status") == "relevant":
+                                try:
+                                    document_id = ingest_file(self.store, raw_path)
+                                    documents_ingested += 1
+                                except Exception as exc:
+                                    errors.append(f"{member_url}: ingest {exc}")
+                            if self._upsert_item(
+                                source_key=source_key,
+                                url=member_url,
+                                item_type="detail",
+                                title=title,
+                                content_type=member_content_type,
+                                sha256=member_digest,
+                                fields=fields,
+                                metadata=metadata,
+                                text_excerpt=excerpt,
+                                raw_path=str(raw_path),
+                                document_id=document_id,
+                            ):
+                                changed_items += 1
+                            items_discovered += 1
+                    except Exception as exc:
+                        errors.append(f"{archive_url}: archive {exc}")
+
             while queue and pages_fetched < page_limit and items_discovered < item_limit:
                 url, item_type, depth, parent_relevant, link_text = queue.pop(0)
                 url = canonical_url(url)
