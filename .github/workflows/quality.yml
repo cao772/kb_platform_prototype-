@@ -101,3 +101,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage39_collection_relevance_gate.py
       - name: Stage40 relevance review loop tests
         run: PYTHONPATH=. python tests/test_stage40_relevance_review_loop.py
+      - name: Stage41 site tuning queue tests
+        run: PYTHONPATH=. python tests/test_stage41_site_tuning_queue.py
