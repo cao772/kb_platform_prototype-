@@ -47,6 +47,21 @@
 
   <div class="card">
     <div class="head">
+      <div><h2>剩余站点执行准备度</h2><div class="meta">只展示授权/运行条件是否满足，不展示 Cookie、Token、API Key 等任何秘密值。</div></div>
+    </div>
+    <div class="metrics" style="margin-bottom:8px">
+      <div class="metric"><span>待处理来源</span><strong id="pRemaining">-</strong></div>
+      <div class="metric"><span>需授权/API Key</span><strong id="pCredentials">-</strong></div>
+      <div class="metric"><span>凭证已配置</span><strong id="pConfigured">-</strong></div>
+      <div class="metric"><span>需自托管出口</span><strong id="pSelfhosted">-</strong></div>
+      <div class="metric"><span>等待合规时窗</span><strong id="pWindow">-</strong></div>
+    </div>
+    <div id="preconditionGrid" class="template-grid"><div class="empty">正在检查访问前置条件…</div></div>
+    <div class="detail" id="preconditionMeta"></div>
+  </div>
+
+  <div class="card">
+    <div class="head">
       <div><h2>可复用采集模式</h2><div class="meta">从50站配置和已验证经验中提炼少量通用模板。模板不绑定单一国家或单一网站。</div></div>
       <button class="btn secondary" onclick="loadAll()">刷新</button>
     </div>
@@ -92,7 +107,7 @@
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function api(url){const r=await fetch(url);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
-let DATA={sources:[],templates:[],common_lessons:[],summary:{}};
+let DATA={sources:[],templates:[],common_lessons:[],summary:{}},PRE={items:[],summary:{},execution:{}};
 
 function evidenceGroup(level){
   if(['operational_verified','operational_partial','verified_sample','partial_sample'].includes(level))return'verified';
@@ -113,6 +128,23 @@ function accessLabel(lane){return({
   registration_or_api_key:'需注册 / API Key',
   registration_or_authorized_api:'需授权API'
 })[lane]||lane}
+function readinessClass(status){return status==='ready'?'verified':status==='needs_credentials'?'partial':status==='waiting_for_window'?'partial':'restricted'}
+function renderPreconditions(){
+  const s=PRE.summary||{},ex=PRE.execution||{};
+  $('pRemaining').textContent=Number(s.remaining||0);
+  $('pCredentials').textContent=Number(s.credentials_required||0);
+  $('pConfigured').textContent=Number(s.credentials_configured||0);
+  $('pSelfhosted').textContent=Number(s.selfhosted_required||0);
+  $('pWindow').textContent=Number(s.waiting_for_window||0);
+  $('preconditionMeta').textContent='授权状态只检查 '+esc(ex.auth_env||'FIRST50_AUTH_JSON')+' 是否为对应来源配置；Secret值不会返回页面。自托管工作流：'+(ex.selfhosted_workflow_available?'已就绪':'未发现')+'。';
+  $('preconditionGrid').innerHTML=(PRE.items||[]).map(x=>{
+    const checks=[];
+    if(x.credential_required)checks.push('授权 '+(x.credential_configured?'已配置':'未配置'));
+    if(x.selfhosted_required)checks.push('需自托管出口');
+    if(x.time_window_required)checks.push((x.time_window_open?'当前在':'当前不在')+' '+esc(x.time_window));
+    return '<div class="template"><div class="head"><h3>'+esc(x.source_key)+'</h3><span class="status '+readinessClass(x.readiness)+'">'+esc(x.readiness_label)+'</span></div><p>'+esc(x.requirement||'')+'</p><div class="chips"><span class="chip">'+esc(accessLabel(x.access_lane||''))+'</span>'+checks.map(v=>'<span class="chip">'+v+'</span>').join('')+'</div><div class="detail">'+esc(x.next_action||'')+'</div>'+(x.registration_url?'<div class="detail"><a class="url" target="_blank" href="'+esc(x.registration_url)+'">官方注册/授权入口</a></div>':'')+'</div>';
+  }).join('')||'<div class="empty">当前没有待处理的访问前置条件。</div>';
+}
 function renderValidation(){
   const v=DATA.validation||{},s=v.summary||{},a=v.access_summary||{};
   $('vPassed').textContent=Number(s.passed||0);$('vPartial').textContent=Number(s.partial||0);$('vRestricted').textContent=Number(s.restricted||0);$('vFailed').textContent=Number(s.failed||0);$('vTotal').textContent=Number(s.total||0);
@@ -151,8 +183,11 @@ function renderMetrics(){
 }
 async function loadAll(){
   try{
-    DATA=await api('/api/collection-experience/overview');
-    renderMetrics();renderValidation();renderTemplates();renderLessons();renderAccessLessons();
+    [DATA,PRE]=await Promise.all([
+      api('/api/collection-experience/overview'),
+      api('/api/collection-experience/access-preconditions')
+    ]);
+    renderMetrics();renderValidation();renderPreconditions();renderTemplates();renderLessons();renderAccessLessons();
     $('templateFilter').innerHTML='<option value="">全部模板</option>'+(DATA.templates||[]).map(t=>'<option value="'+esc(t.template_id)+'">'+esc(t.name)+' ('+Number(t.source_count||0)+')</option>').join('');
     renderSources();
   }catch(e){
