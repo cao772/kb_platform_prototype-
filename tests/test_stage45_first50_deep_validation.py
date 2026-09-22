@@ -15,6 +15,7 @@ def main() -> None:
     round6 = json.loads(Path("data/first50_round6_status.json").read_text(encoding="utf-8"))
     round7 = json.loads(Path("data/first50_round7_status.json").read_text(encoding="utf-8"))
     round8 = json.loads(Path("data/first50_round8_status.json").read_text(encoding="utf-8"))
+    round9 = json.loads(Path("data/first50_round9_status.json").read_text(encoding="utf-8"))
     access = json.loads(Path("data/first50_access_requirements.json").read_text(encoding="utf-8"))
     live_workflow = Path(".github/workflows/first50_deep_validation.yml").read_text(encoding="utf-8")
     quality = Path(".github/workflows/quality.yml").read_text(encoding="utf-8")
@@ -40,9 +41,13 @@ def main() -> None:
     assert len(round7["status"]) == 50
     assert round8["summary"] == {"total": 50, "passed": 41, "partial": 1, "restricted": 8, "failed": 0}
     assert len(round8["status"]) == 50
-    assert access["summary"]["total_nonpassed"] == 9
-    assert access["summary"]["public_cloud_egress_blocked"] == 4
-    assert access["summary"]["registration_or_authorized_api"] + access["summary"]["registration_or_api_key"] == 5
+    assert round9["summary"] == {"total": 50, "passed": 42, "partial": 1, "restricted": 7, "failed": 0}
+    assert len(round9["status"]) == 50
+    assert access["summary"]["total_nonpassed"] == 8
+    assert access["summary"]["public_cloud_egress_blocked"] == 2
+    assert access["summary"]["site_terms_window_and_cloud_egress"] == 1
+    assert access["summary"]["public_metadata_retry"] == 1
+    assert access["summary"]["registration_or_authorized_api"] + access["summary"]["registration_or_api_key"] == 4
 
     for key in ("US-FEDREG", "JP-LAW", "DE-LAW", "EU-EURLEX", "US-ECFR"):
         assert key in remediation
@@ -54,8 +59,8 @@ def main() -> None:
     assert "FIRST50_AUTH_JSON" in live_workflow
     assert "playwright install --with-deps chromium" in live_workflow
     assert "first50-deep-validation-report" in live_workflow
-    assert "--retry-nonpassed-from data/first50_round8_status.json" in live_workflow
-    assert "first50_round8_status.json" in live_workflow
+    assert "--retry-nonpassed-from data/first50_round9_status.json" in live_workflow
+    assert "first50_round9_status.json" in live_workflow
 
     assert "robots_status" in runner
     assert "BrowserRenderer" in runner
@@ -82,9 +87,19 @@ def main() -> None:
     assert "browser_download" in runner
     assert "fetch_binary" in runner
     assert "--source-keys" in runner
+    assert "automation_window_state" in runner
+    assert "site_terms_time_window" in runner
+    assert "ZoneInfo" in runner
+    assert remediation["SG-LAW"]["automation_window"] == {
+        "timezone": "Asia/Singapore",
+        "start": "03:00",
+        "end": "07:00",
+    }
     selfhosted = Path(".github/workflows/first50_selfhosted_access.yml").read_text(encoding="utf-8")
     assert "runs-on: [self-hosted, linux]" in selfhosted
     assert "FIRST50_AUTH_JSON" in selfhosted
+    assert 'cron: "30 19 * * *"' in selfhosted
+    assert "site_terms_window_and_cloud_egress" in selfhosted
     experience = Path("static/collection_experience.html").read_text(encoding="utf-8")
     assert "50站深采集验收" in experience
     assert "公开内容 / 云出口受限" in experience
