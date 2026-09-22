@@ -14,6 +14,7 @@ def main() -> None:
     round5 = json.loads(Path("data/first50_round5_status.json").read_text(encoding="utf-8"))
     round6 = json.loads(Path("data/first50_round6_status.json").read_text(encoding="utf-8"))
     round7 = json.loads(Path("data/first50_round7_status.json").read_text(encoding="utf-8"))
+    round8 = json.loads(Path("data/first50_round8_status.json").read_text(encoding="utf-8"))
     access = json.loads(Path("data/first50_access_requirements.json").read_text(encoding="utf-8"))
     live_workflow = Path(".github/workflows/first50_deep_validation.yml").read_text(encoding="utf-8")
     quality = Path(".github/workflows/quality.yml").read_text(encoding="utf-8")
@@ -37,8 +38,10 @@ def main() -> None:
     assert len(round6["status"]) == 50
     assert round7["summary"] == {"total": 50, "passed": 40, "partial": 1, "restricted": 9, "failed": 0}
     assert len(round7["status"]) == 50
-    assert access["summary"]["total_nonpassed"] == 10
-    assert access["summary"]["public_cloud_egress_blocked"] == 5
+    assert round8["summary"] == {"total": 50, "passed": 41, "partial": 1, "restricted": 8, "failed": 0}
+    assert len(round8["status"]) == 50
+    assert access["summary"]["total_nonpassed"] == 9
+    assert access["summary"]["public_cloud_egress_blocked"] == 4
     assert access["summary"]["registration_or_authorized_api"] + access["summary"]["registration_or_api_key"] == 5
 
     for key in ("US-FEDREG", "JP-LAW", "DE-LAW", "EU-EURLEX", "US-ECFR"):
@@ -51,8 +54,8 @@ def main() -> None:
     assert "FIRST50_AUTH_JSON" in live_workflow
     assert "playwright install --with-deps chromium" in live_workflow
     assert "first50-deep-validation-report" in live_workflow
-    assert "--retry-nonpassed-from data/first50_round7_status.json" in live_workflow
-    assert "first50_round7_status.json" in live_workflow
+    assert "--retry-nonpassed-from data/first50_round8_status.json" in live_workflow
+    assert "first50_round8_status.json" in live_workflow
 
     assert "robots_status" in runner
     assert "BrowserRenderer" in runner
@@ -68,6 +71,7 @@ def main() -> None:
     assert "direct_content" in runner
     assert "request_headers" in runner
     assert "CA-ISED" in remediation
+    assert "api.oireachtas.ie/v1/legislation" in json.dumps(remediation["IE-LAW"])
     assert "IE-STD" in remediation
     assert "NL-STD" in remediation
     assert "DE-STD" in remediation
