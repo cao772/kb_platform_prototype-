@@ -276,6 +276,8 @@ def assessment(
     run: dict[str, Any],
     *,
     structured_api: bool = False,
+    metadata_only: bool = False,
+    direct_content: bool = False,
 ) -> dict[str, Any]:
     listing = service.list_items(source_key=source_key, limit=5000)
     summary = dict(listing.get("summary") or {})
@@ -294,8 +296,21 @@ def assessment(
         if item.get("item_type") in {"detail", "attachment"}
         and (item.get("effective_relevance") or {}).get("status") == "relevant"
     )
+    relevant_listing = sum(
+        1 for item in items
+        if item.get("item_type") == "listing"
+        and (item.get("effective_relevance") or {}).get("status") == "relevant"
+        and (len(str(item.get("text_excerpt") or "").strip()) >= 120 or bool(item.get("fields")))
+    )
     errors = str(run.get("error") or "")
-    if structured_api and pages >= 1 and meaningful >= 1 and relevant >= 1:
+    evidence_mode = "fulltext"
+    if metadata_only:
+        evidence_mode = "metadata_only"
+    elif structured_api:
+        evidence_mode = "structured_api"
+    elif direct_content:
+        evidence_mode = "direct_content"
+    if (structured_api or metadata_only or direct_content) and pages >= 1 and meaningful >= 1 and relevant >= 1:
         verdict = "passed"
     elif pages >= 2 and (details + attachments >= 1) and meaningful >= 1 and relevant_business >= 1:
         verdict = "passed"
@@ -305,6 +320,7 @@ def assessment(
         verdict = "failed"
     return {
         "verdict": verdict,
+        "evidence_mode": evidence_mode,
         "pages": pages,
         "items": int(run.get("items_discovered") or 0),
         "listing_items": listing_items,
@@ -312,6 +328,7 @@ def assessment(
         "attachments": attachments,
         "relevant": relevant,
         "relevant_business": relevant_business,
+        "relevant_listing": relevant_listing,
         "needs_review": int(summary.get("needs_review") or 0),
         "irrelevant": int(summary.get("irrelevant") or 0),
         "reviewed": int(summary.get("reviewed") or 0),
@@ -409,6 +426,7 @@ def run_source(
             *,
             controlled_broadening: bool = False,
             structured_api: bool = False,
+            direct_content: bool = False,
         ) -> dict[str, Any]:
             config = json.loads(json.dumps(base_config))
             candidate_urls = list(start_urls or config.get("start_urls") or [])
@@ -417,7 +435,11 @@ def run_source(
                 raise PermissionError("all candidate start URLs are disallowed by robots")
             config["start_urls"] = candidate_urls
             request = dict(config.get("request") or {})
-            request["headers"] = {**dict(request.get("headers") or {}), **fetcher.auth_headers}
+            request["headers"] = {
+                **dict(request.get("headers") or {}),
+                **{str(k): str(v) for k, v in (remediation.get("request_headers") or {}).items()},
+                **fetcher.auth_headers,
+            }
             config["request"] = request
             if controlled_broadening:
                 discovery = dict(config.get("discovery") or {})
@@ -465,6 +487,8 @@ def run_source(
                     source_key,
                     run,
                     structured_api=structured_api,
+                    metadata_only=config.get("document_policy") == "metadata_only",
+                    direct_content=direct_content,
                 ),
             }
             attempts.append(result)
@@ -498,6 +522,7 @@ def run_source(
                     "official_alternate",
                     alternates,
                     structured_api=bool(remediation.get("structured_api")),
+                    direct_content=bool(remediation.get("direct_content")),
                 )
                 if best is None or rank[second["assessment"]["verdict"]] > rank[best["assessment"]["verdict"]]:
                     best = second
@@ -507,7 +532,13 @@ def run_source(
         if best is None or best["assessment"]["verdict"] != "passed":
             broad_urls = alternates or primary_urls
             try:
-                third = do_attempt("controlled_broadening", broad_urls, controlled_broadening=True)
+                third = do_attempt(
+                    "controlled_broadening",
+                    broad_urls,
+                    controlled_broadening=True,
+                    structured_api=bool(remediation.get("structured_api")),
+                    direct_content=bool(remediation.get("direct_content")),
+                )
                 if best is None or rank[third["assessment"]["verdict"]] > rank[best["assessment"]["verdict"]]:
                     best = third
             except Exception as exc:
