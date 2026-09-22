@@ -1,10 +1,10 @@
 {
-  "generated_from_round": 11,
+  "generated_from_round": 13,
   "summary": {
-    "total_nonpassed": 7,
+    "total_nonpassed": 6,
     "partial": 1,
-    "restricted": 6,
-    "public_cloud_egress_blocked": 2,
+    "restricted": 5,
+    "public_cloud_egress_blocked": 1,
     "public_metadata_cloud_egress_blocked": 1,
     "site_terms_window_and_cloud_egress": 1,
     "registration_or_api_key": 2,
@@ -56,13 +56,6 @@
       "requirement": "SNV Connect/标准访问许可",
       "registration_url": "https://connect.snv.ch/",
       "next_action": "使用组织授权账号补完整目录/已购标准；公开页只用于元数据验证。"
-    },
-    {
-      "source_key": "CA-ISED",
-      "current_status": "restricted",
-      "access_lane": "public_cloud_egress_blocked",
-      "requirement": "ISED RSS-Gen等官方正文公开可读，但GitHub云出口触发反自动化",
-      "next_action": "本地/自托管Runner直接抓RSS-Gen/RSS目录正文，继续执行相关性和版本留存。"
     }
   ]
 }
