@@ -188,6 +188,13 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/collection-experience/access-actions":
+            try:
+                self._send_json(collection_experience.access_actions())
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/collection-experience/templates":
             try:
                 templates = collection_experience.templates()
