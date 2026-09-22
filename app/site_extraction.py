@@ -813,11 +813,18 @@ class SiteExtractionService:
         changed = True
         with self.store.lock:
             previous = self.store.conn.execute(
-                "SELECT sha256 FROM source_extracted_items WHERE source_key=? AND canonical_url=?",
+                "SELECT sha256,metadata_json FROM source_extracted_items WHERE source_key=? AND canonical_url=?",
                 (source_key, canonical),
             ).fetchone()
             if previous and str(previous["sha256"] or "") == sha256:
                 changed = False
+            if previous:
+                try:
+                    previous_metadata = json.loads(previous["metadata_json"] or "{}")
+                except (TypeError, ValueError):
+                    previous_metadata = {}
+                if previous_metadata.get("relevance_review"):
+                    metadata["relevance_review"] = previous_metadata["relevance_review"]
             self.store.conn.execute(
                 """INSERT INTO source_extracted_items(
                        source_key,canonical_url,source_url,item_type,title,content_type,sha256,
@@ -851,6 +858,38 @@ class SiteExtractionService:
             self.store.conn.commit()
         return changed
 
+    @staticmethod
+    def _effective_relevance(metadata: dict[str, Any]) -> dict[str, Any]:
+        review = dict(metadata.get("relevance_review") or {})
+        automatic = dict(metadata.get("relevance") or {})
+        if review.get("status") in {"relevant", "needs_review", "irrelevant"}:
+            return {
+                "status": review["status"],
+                "origin": "human",
+                "reasons": [review.get("note") or "人工复核"],
+                "operator": review.get("operator", ""),
+                "reviewed_at": review.get("reviewed_at", ""),
+            }
+        return {
+            "status": automatic.get("status") or "needs_review",
+            "origin": "rule",
+            "reasons": automatic.get("reasons") or [],
+        }
+
+    def item_detail(self, item_id: int) -> dict[str, Any]:
+        with self.store.lock:
+            row = self.store.conn.execute(
+                "SELECT * FROM source_extracted_items WHERE id=?",
+                (int(item_id),),
+            ).fetchone()
+        if not row:
+            raise ValueError("collection item not found")
+        item = dict(row)
+        item["fields"] = json.loads(item.pop("fields_json") or "{}")
+        item["metadata"] = json.loads(item.pop("metadata_json") or "{}")
+        item["effective_relevance"] = self._effective_relevance(item["metadata"])
+        return item
+
     def list_items(self, *, source_key: str = "", limit: int = 200) -> dict[str, Any]:
         params: list[Any] = []
         where = ""
@@ -868,6 +907,7 @@ class SiteExtractionService:
             item = dict(row)
             item["fields"] = json.loads(item.pop("fields_json") or "{}")
             item["metadata"] = json.loads(item.pop("metadata_json") or "{}")
+            item["effective_relevance"] = self._effective_relevance(item["metadata"])
             items.append(item)
         return {
             "items": items,
@@ -876,18 +916,104 @@ class SiteExtractionService:
                 "details": sum(1 for item in items if item["item_type"] == "detail"),
                 "attachments": sum(1 for item in items if item["item_type"] == "attachment"),
                 "documents": sum(1 for item in items if item.get("document_id")),
-                "relevant": sum(
-                    1 for item in items
-                    if (item.get("metadata") or {}).get("relevance", {}).get("status") == "relevant"
-                ),
-                "irrelevant": sum(
-                    1 for item in items
-                    if (item.get("metadata") or {}).get("relevance", {}).get("status") == "irrelevant"
-                ),
-                "needs_review": sum(
-                    1 for item in items
-                    if (item.get("metadata") or {}).get("relevance", {}).get("status") == "needs_review"
-                ),
+                "relevant": sum(1 for item in items if item["effective_relevance"]["status"] == "relevant"),
+                "irrelevant": sum(1 for item in items if item["effective_relevance"]["status"] == "irrelevant"),
+                "needs_review": sum(1 for item in items if item["effective_relevance"]["status"] == "needs_review"),
+                "reviewed": sum(1 for item in items if item["effective_relevance"]["origin"] == "human"),
+            },
+        }
+
+    def review_item(
+        self,
+        item_id: int,
+        *,
+        status: str,
+        operator: str = "",
+        note: str = "",
+        auto_ingest: bool = False,
+    ) -> dict[str, Any]:
+        status = str(status or "").strip()
+        if status not in {"relevant", "needs_review", "irrelevant"}:
+            raise ValueError("unsupported relevance status")
+        item = self.item_detail(item_id)
+        metadata = dict(item.get("metadata") or {})
+        metadata["relevance_review"] = {
+            "status": status,
+            "operator": str(operator or "").strip(),
+            "note": str(note or "").strip(),
+            "reviewed_at": _now(),
+        }
+
+        document_id = item.get("document_id")
+        if (
+            status == "relevant"
+            and auto_ingest
+            and not document_id
+            and item.get("item_type") in {"detail", "attachment"}
+        ):
+            raw_path = Path(str(item.get("raw_path") or ""))
+            if not raw_path.is_file():
+                raise ValueError("raw collection file not found")
+            document_id = ingest_file(self.store, raw_path)
+
+        with self.store.lock:
+            self.store.conn.execute(
+                "UPDATE source_extracted_items SET metadata_json=?,document_id=COALESCE(?,document_id) WHERE id=?",
+                (json.dumps(metadata, ensure_ascii=False), document_id, int(item_id)),
+            )
+            self.store.conn.commit()
+        return self.item_detail(item_id)
+
+    def relevance_overview(self, *, source_key: str = "") -> dict[str, Any]:
+        params: list[Any] = []
+        where = "WHERE item_type IN ('detail','attachment')"
+        if source_key:
+            where += " AND source_key=?"
+            params.append(source_key)
+        with self.store.lock:
+            rows = self.store.conn.execute(
+                f"SELECT source_key,metadata_json,document_id FROM source_extracted_items {where} ORDER BY source_key,id",
+                params,
+            ).fetchall()
+
+        grouped: dict[str, dict[str, Any]] = {}
+        for row in rows:
+            key = str(row["source_key"] or "")
+            bucket = grouped.setdefault(key, {
+                "source_key": key,
+                "items": 0,
+                "relevant": 0,
+                "needs_review": 0,
+                "irrelevant": 0,
+                "reviewed": 0,
+                "documents": 0,
+            })
+            try:
+                metadata = json.loads(row["metadata_json"] or "{}")
+            except (TypeError, ValueError):
+                metadata = {}
+            effective = self._effective_relevance(metadata)
+            bucket["items"] += 1
+            bucket[effective["status"]] += 1
+            bucket["reviewed"] += 1 if effective["origin"] == "human" else 0
+            bucket["documents"] += 1 if row["document_id"] else 0
+
+        items = []
+        for bucket in grouped.values():
+            total = int(bucket["items"] or 0)
+            bucket["relevant_rate"] = round((bucket["relevant"] / total * 100), 1) if total else 0.0
+            bucket["review_rate"] = round((bucket["reviewed"] / total * 100), 1) if total else 0.0
+            items.append(bucket)
+        items.sort(key=lambda item: (-item["needs_review"], -item["irrelevant"], item["source_key"]))
+        return {
+            "items": items,
+            "summary": {
+                "sources": len(items),
+                "items": sum(item["items"] for item in items),
+                "relevant": sum(item["relevant"] for item in items),
+                "needs_review": sum(item["needs_review"] for item in items),
+                "irrelevant": sum(item["irrelevant"] for item in items),
+                "reviewed": sum(item["reviewed"] for item in items),
             },
         }
 
