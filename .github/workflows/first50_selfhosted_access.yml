@@ -1,0 +1,73 @@
+name: first50-selfhosted-access-validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      lane:
+        description: "Access lane to validate"
+        required: true
+        default: "public_cloud_egress_blocked"
+        type: choice
+        options:
+          - public_cloud_egress_blocked
+          - registration_or_api_key
+          - registration_or_authorized_api
+          - all_nonpassed
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: [self-hosted, linux]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install playwright
+          python -m playwright install chromium
+      - name: Resolve access-lane sources
+        id: resolve
+        shell: bash
+        env:
+          ACCESS_LANE: ${{ inputs.lane }}
+        run: |
+          KEYS="$(python - <<'PY'
+          import json, os
+          from pathlib import Path
+          data=json.loads(Path("data/first50_access_requirements.json").read_text(encoding="utf-8"))
+          lane=os.environ["ACCESS_LANE"]
+          items=data.get("items", [])
+          if lane == "all_nonpassed":
+              keys=[x["source_key"] for x in items]
+          else:
+              keys=[x["source_key"] for x in items if x.get("access_lane") == lane]
+          print(",".join(keys))
+          PY
+          )"
+          echo "keys=$KEYS" >> "$GITHUB_OUTPUT"
+          echo "Sources: $KEYS"
+      - name: Run targeted deep validation
+        if: steps.resolve.outputs.keys != ''
+        env:
+          FIRST50_AUTH_JSON: ${{ secrets.FIRST50_AUTH_JSON }}
+          SITE_DEEP_TIMEOUT_SECONDS: "300"
+        run: |
+          PYTHONPATH=. python scripts/deep_validate_first50.py \
+            --batch-index 0 \
+            --batch-count 1 \
+            --source-keys "${{ steps.resolve.outputs.keys }}" \
+            --output-dir selfhosted-validation
+      - name: Upload targeted results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: first50-selfhosted-${{ inputs.lane }}
+          path: selfhosted-validation/batch-0.json
+          if-no-files-found: warn
+          retention-days: 30
