@@ -1037,10 +1037,23 @@ def main() -> None:
             remediation_catalog=remediation,
             site_timeout=args.site_timeout,
         )
+        prior = str(prior_status.get(source_key) or "")
+        rank = {"failed": 0, "restricted": 1, "partial": 2, "passed": 3}
+        current = str(result.get("final_verdict") or "failed")
+        if prior in rank and rank[current] < rank[prior]:
+            result["retry_verdict"] = current
+            result["retry_restriction_reason"] = str(result.get("restriction_reason") or "")
+            result["final_verdict"] = prior
+            result["restriction_reason"] = ""
+            result["retained_prior_status"] = True
+            result["recommendation"] = (
+                "本轮重试结果低于历史已验证状态；保留历史验收等级，"
+                "同时保留本轮失败/受限证据用于后续调优。"
+            )
         results.append(result)
         print(
             f"[deep-validate] {item['source_key']} => {result['final_verdict']} "
-            f"({result.get('restriction_reason') or 'ok'})",
+            f"({result.get('restriction_reason') or ('retained-prior' if result.get('retained_prior_status') else 'ok')})",
             flush=True,
         )
         if result["final_verdict"] != "passed":
