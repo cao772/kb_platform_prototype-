@@ -39,9 +39,9 @@
   },
   "ES-LAW": {
     "alternate_start_urls": [
-      "https://www.boe.es/datosabiertos/api/legislacion-consolidada"
+      "https://www.boe.es/datosabiertos/api/legislacion-consolidada?offset=0&limit=50"
     ],
-    "notes": "网页入口robots受限时改用AEBOE官方OpenData API；不绕过robots。",
+    "notes": "网页入口robots受限时改用AEBOE官方OpenData API；显式传offset/limit避免无效请求；不绕过robots。",
     "structured_api": true
   },
   "ES-STD": {
@@ -81,9 +81,9 @@
   },
   "IE-LAW": {
     "alternate_start_urls": [
-      "https://www.irishstatutebook.ie/eli/2025/act"
+      "https://www.irishstatutebook.ie/eli/2016/si/345/made/en/print"
     ],
-    "notes": "使用Irish Statute Book公开ELI年度Acts目录作为法规详情发现入口。"
+    "notes": "使用Irish Statute Book公开的EU Low Voltage Electrical Equipment Regulations 2016详情页作为业务相关法规入口。"
   },
   "IE-STD": {
     "alternate_start_urls": [
@@ -186,10 +186,11 @@
   },
   "CA-LAW": {
     "alternate_start_urls": [
-      "https://laws-lois.justice.gc.ca/eng/XML/ActsRegsList.xml"
+      "https://laws-lois.justice.gc.ca/eng/acts/C-1.68/",
+      "https://laws-lois.justice.gc.ca/eng/XML/C-1.68.xml"
     ],
     "structured_api": true,
-    "notes": "使用Justice Laws官方Acts/Regulations XML索引，正文XML可由索引继续定位。"
+    "notes": "使用Justice Laws官方Canada Consumer Product Safety Act业务相关正文与XML；替换第一轮返回404的旧ActsRegsList地址。"
   },
   "KR-LAW": {
     "alternate_start_urls": [
@@ -206,5 +207,32 @@
     "registration_url": "https://eprel.ec.europa.eu/screen/requestpublicapikey",
     "auth_notes": "EPREL Public API需要API key，并需提交签署/盖章的Declaration。",
     "notes": "公开网页可浏览；批量深采集建议申请EPREL Public API key。"
+  },
+  "NL-LAW": {
+    "alternate_start_urls": [
+      "https://wetten.overheid.nl/BWBR0001969/",
+      "https://wetten.overheid.nl/BWBR0019074/"
+    ],
+    "notes": "使用Wetten.nl公开Warenwet及一般产品安全法规作为业务相关深采集入口；KOOP同时提供法规XML开放数据。"
+  },
+  "AU-STD": {
+    "alternate_start_urls": [
+      "https://www.standards.org.au/search-for-a-standard",
+      "https://www.standards.org.au/standards-catalogue/sa-snz/electrotechnology/el-042/as-slash-nzs--5033-colon-2014"
+    ],
+    "notes": "使用Standards Australia公开Search for a Standard与具体标准目录详情，仅采公开元数据，全文保持许可边界。"
+  },
+  "GB-STD": {
+    "alternate_start_urls": [
+      "https://www.bsigroup.com/en-GB/about-bsi/national-standards-body/"
+    ],
+    "notes": "继续metadata_only；对已发现的标准目录/详情页按标准编号、title、catalogue信号判定相关。"
+  },
+  "EU-NANDO": {
+    "alternate_start_urls": [
+      "https://single-market-economy.ec.europa.eu/single-market/goods/building-blocks/notified-bodies_en",
+      "https://api.tech.ec.europa.eu/nando-prod/files?download=true&group=NOTIFICATION_PROCEDURE&id=1eb19323beba3451bc9734da2e79b274829ef411&repo=nando"
+    ],
+    "notes": "使用欧委会Notified Bodies官方页面与NANDO公开API文件入口，验证机构/notification元数据链。"
   }
 }
