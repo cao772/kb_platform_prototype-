@@ -13,6 +13,10 @@ on:
       - ".github/workflows/first50_deep_validation.yml"
   workflow_dispatch:
 
+concurrency:
+  group: first50-deep-validation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
