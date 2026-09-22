@@ -854,6 +854,7 @@ def main() -> None:
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--site-timeout", type=int, default=int(os.getenv("SITE_DEEP_TIMEOUT_SECONDS", "180")))
     parser.add_argument("--retry-nonpassed-from", default="")
+    parser.add_argument("--source-keys", default="", help="Comma-separated source keys to run; other selected sources are skipped.")
     args = parser.parse_args()
 
     wave = load_json(FIRST_WAVE_PATH, [])
@@ -867,6 +868,12 @@ def main() -> None:
         raise SystemExit("FIRST50_AUTH_JSON is not valid JSON")
 
     selected = [item for idx, item in enumerate(wave) if idx % args.batch_count == args.batch_index]
+    requested_keys = {item.strip() for item in str(args.source_keys or "").split(",") if item.strip()}
+    if requested_keys:
+        unknown = requested_keys - {str(item["source_key"]) for item in wave}
+        if unknown:
+            raise SystemExit("unknown source keys: " + ", ".join(sorted(unknown)))
+        selected = [item for item in selected if str(item["source_key"]) in requested_keys]
     prior_status: dict[str, str] = {}
     if args.retry_nonpassed_from:
         prior_payload = load_json(Path(args.retry_nonpassed_from), {})
