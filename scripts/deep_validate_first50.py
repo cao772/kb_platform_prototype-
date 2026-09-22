@@ -611,6 +611,15 @@ def run_source(
                 **fetcher.auth_headers,
             }
             config["request"] = request
+            archive_dataset = dict(remediation.get("archive_dataset") or {})
+            if archive_dataset:
+                config["archives"] = archive_dataset
+                archive_max_bytes = int(archive_dataset.get("max_archive_bytes") or 0)
+                if archive_max_bytes:
+                    config["request"]["max_bytes"] = max(
+                        int(config["request"].get("max_bytes") or 0),
+                        min(archive_max_bytes, 100 * 1024 * 1024),
+                    )
             if controlled_broadening:
                 discovery = dict(config.get("discovery") or {})
                 source_type = str(source.get("source_type") or "")
