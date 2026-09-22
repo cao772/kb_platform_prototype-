@@ -109,3 +109,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage43_collection_experience_library.py
       - name: Stage44 new-site experience reuse tests
         run: PYTHONPATH=. python tests/test_stage44_new_site_experience_reuse.py
+      - name: Stage45 first50 full deep validation tests
+        run: PYTHONPATH=. python tests/test_stage45_first50_deep_validation.py
