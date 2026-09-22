@@ -9,6 +9,14 @@ from app.source_collection import FIRST_WAVE_PATH
 from app.source_registry import SourceRegistryService
 from app.site_extraction import SiteExtractionService
 
+ROOT = FIRST_WAVE_PATH.parent.parent
+ACCESS_REQUIREMENTS_PATH = ROOT / "data" / "first50_access_requirements.json"
+VALIDATION_STATUS_PATHS = [
+    ROOT / "data" / f"first50_round{round_no}_status.json"
+    for round_no in range(12, 0, -1)
+]
+
+
 
 DOCUMENTED_EVIDENCE: dict[str, dict[str, str]] = {
     "DE-LAW": {
@@ -343,6 +351,28 @@ class CollectionExperienceService:
         return {str(item["template_id"]): dict(item) for item in TEMPLATE_CATALOG}
 
     @staticmethod
+    def _latest_validation_status() -> dict[str, Any]:
+        for path in VALIDATION_STATUS_PATHS:
+            if not path.exists():
+                continue
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(payload, dict) and len(payload.get("status") or {}) == 50:
+                return payload
+        return {"summary": {"total": 0, "passed": 0, "partial": 0, "restricted": 0, "failed": 0}, "status": {}}
+
+    @staticmethod
+    def _access_requirements() -> dict[str, dict[str, Any]]:
+        if not ACCESS_REQUIREMENTS_PATH.exists():
+            return {}
+        payload = json.loads(ACCESS_REQUIREMENTS_PATH.read_text(encoding="utf-8"))
+        return {
+            str(item.get("source_key") or ""): dict(item)
+            for item in payload.get("items") or []
+            if str(item.get("source_key") or "").strip()
+        }
+
+
+    @staticmethod
     def _deep_merge(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:
         result = json.loads(json.dumps(base))
         for key, value in patch.items():
@@ -511,6 +541,10 @@ class CollectionExperienceService:
 
     def source_experiences(self) -> list[dict[str, Any]]:
         templates = self._template_map()
+        validation_payload = self._latest_validation_status()
+        validation_status = dict(validation_payload.get("status") or {})
+        validation_round = int(validation_payload.get("run_number") or 0)
+        access_requirements = self._access_requirements()
         output: list[dict[str, Any]] = []
         for entry in self._load_wave():
             key = str(entry.get("source_key") or "")
@@ -603,6 +637,11 @@ class CollectionExperienceService:
                     "irrelevant": int(item_summary.get("irrelevant") or 0),
                     "reviewed": int(item_summary.get("reviewed") or 0),
                 },
+                "validation": {
+                    "round": validation_round,
+                    "status": str(validation_status.get(key) or "not_recorded"),
+                    "access": access_requirements.get(key) or {},
+                },
             })
         return output
 
@@ -624,6 +663,13 @@ class CollectionExperienceService:
     def overview(self) -> dict[str, Any]:
         experiences = self.source_experiences()
         templates = self.templates()
+        validation_payload = self._latest_validation_status()
+        validation_summary = dict(validation_payload.get("summary") or {})
+        access_requirements = self._access_requirements()
+        access_counts = Counter(
+            str(item.get("access_lane") or "unclassified")
+            for item in access_requirements.values()
+        )
         evidence_counts = Counter(item["evidence"]["level"] for item in experiences)
         type_counts = Counter(item["source_type"] for item in experiences)
         access_counts = Counter(item["access_method"] for item in experiences)
@@ -632,6 +678,13 @@ class CollectionExperienceService:
             "sources": experiences,
             "templates": templates,
             "common_lessons": [dict(item) for item in COMMON_LESSONS],
+            "validation": {
+                "run_id": validation_payload.get("run_id"),
+                "run_number": validation_payload.get("run_number"),
+                "summary": validation_summary,
+                "access_summary": dict(access_counts),
+                "remaining": [dict(item) for item in access_requirements.values()],
+            },
             "summary": {
                 "sources": len(experiences),
                 "templates": len(templates),
