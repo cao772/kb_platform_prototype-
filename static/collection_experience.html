@@ -99,7 +99,15 @@ function evidenceClass(level){
 }
 function validationClass(status){return status==='passed'?'verified':status==='partial'?'partial':status==='restricted'?'restricted':'configured'}
 function validationLabel(status){return({passed:'通过',partial:'部分通过',restricted:'受限',failed:'失败',not_recorded:'未记录'})[status]||status}
-function accessLabel(lane){return({public_cloud_egress_blocked:'公开内容 / 云出口受限',registration_or_api_key:'需注册 / API Key',registration_or_authorized_api:'需授权API'})[lane]||lane}
+function accessLabel(lane){return({
+  public_cloud_egress_blocked:'公开内容 / 云出口受限',
+  public_metadata_cloud_egress_blocked:'公开元数据 / 云出口受限',
+  public_metadata_retry:'公开元数据重试',
+  official_open_archive_dataset:'官方开放归档数据集',
+  site_terms_window_and_cloud_egress:'站点限定采集时窗 / 云出口受限',
+  registration_or_api_key:'需注册 / API Key',
+  registration_or_authorized_api:'需授权API'
+})[lane]||lane}
 function renderValidation(){
   const v=DATA.validation||{},s=v.summary||{},a=v.access_summary||{};
   $('vPassed').textContent=Number(s.passed||0);$('vPartial').textContent=Number(s.partial||0);$('vRestricted').textContent=Number(s.restricted||0);$('vFailed').textContent=Number(s.failed||0);$('vTotal').textContent=Number(s.total||0);
