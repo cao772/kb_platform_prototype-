@@ -8,10 +8,10 @@
   },
   "CA-ISED": {
     "alternate_start_urls": [
-      "https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/devices-and-equipment/radio-equipment-standards",
-      "https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/devices-and-equipment/radio-equipment-standards/radio-standards-specifications-rss"
+      "https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/devices-and-equipment/radio-equipment-standards/radio-standards-specifications-rss",
+      "https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/learn-more/key-documents/official-publications"
     ],
-    "notes": "使用ISED公开Radio Equipment Standards和RSS目录，不依赖受限首页。"
+    "notes": "使用ISED公开RSS标准目录和Official Publications入口，避开受挑战首页。"
   },
   "CH-STD": {
     "alternate_start_urls": [
@@ -39,9 +39,10 @@
   },
   "ES-LAW": {
     "alternate_start_urls": [
-      "https://www.boe.es/datosabiertos/api/legislacion-consolidada?limit=20"
+      "https://www.boe.es/datosabiertos/api/legislacion-consolidada"
     ],
-    "notes": "网页入口robots受限时改用AEBOE官方OpenData REST API；API提供合并法规检索、元数据和正文接口。"
+    "notes": "网页入口robots受限时改用AEBOE官方OpenData API；不绕过robots。",
+    "structured_api": true
   },
   "ES-STD": {
     "alternate_start_urls": [
@@ -80,9 +81,9 @@
   },
   "IE-LAW": {
     "alternate_start_urls": [
-      "https://www.irishstatutebook.ie/eli/"
+      "https://www.irishstatutebook.ie/eli/2025/act"
     ],
-    "notes": "Irish Statute Book网页在部分云运行环境返回403；优先ELI结构化入口，若仍受限需在允许访问的网络执行或联系官方获取数据接口。"
+    "notes": "使用Irish Statute Book公开ELI年度Acts目录作为法规详情发现入口。"
   },
   "IE-STD": {
     "alternate_start_urls": [
@@ -95,7 +96,8 @@
     "alternate_start_urls": [
       "https://elaws.e-gov.go.jp/api/1/lawlists/3"
     ],
-    "notes": "优先切换日本e-Gov法令XML API。"
+    "notes": "优先日本e-Gov法令XML API；结构化API响应作为深采集证据。",
+    "structured_api": true
   },
   "JP-METI-PRODUCT-SAFETY": {
     "alternate_start_urls": [
@@ -120,37 +122,46 @@
       "https://www.regjeringen.no/en/find-document/acts-and-regulations/acts/id438755/"
     ],
     "coverage_limited": true,
-    "coverage_note": "Government.no是官方替代入口，但其自身明确说明并非完整现行法规库；完整覆盖仍需Lovdata授权/许可渠道。",
-    "notes": "Lovdata robots禁止时不绕过，使用Norwegian Government公开法规索引作为有限覆盖兜底。"
+    "coverage_note": "Norwegian Government公开索引只能有限覆盖；完整、机器可读现行法规需Lovdata授权API。",
+    "notes": "robots禁止时仅使用政府公开替代索引；正式完整覆盖走Lovdata授权API。",
+    "requires_registration": true,
+    "registration_url": "https://lovdata.no/",
+    "auth_notes": "Lovdata机器可读API为授权/付费服务；公开网页robots限制不绕过。需要完整覆盖时应采购/申请Lovdata API授权。"
   },
   "NZ-LAW": {
     "alternate_start_urls": [
-      "https://www.legislation.govt.nz/",
+      "https://www.legislation.govt.nz/act/public/1990/109/en/latest.xml",
       "https://www.legislation.govt.nz/learn-more/legislation-data/xml-data/"
     ],
     "requires_registration": true,
     "registration_url": "https://www.legislation.govt.nz/developer-api",
     "auth_notes": "官方Developer API需要API key，可向Parliamentary Counsel Office申请；取得后以Authorization/API-key头通过FIRST50_AUTH_JSON注入。",
-    "notes": "优先公开HTML/XML；批量程序化检索可申请官方Developer API key。"
+    "notes": "先用公开XML验证正文链路，完整批量发现使用官方Developer API。",
+    "structured_api": true,
+    "coverage_limited": true,
+    "coverage_note": "公开XML可验证正文结构；要做完整搜索/批量发现仍需申请New Zealand Legislation API key。"
   },
   "SG-LAW": {
     "alternate_start_urls": [
-      "https://sso.agc.gov.sg/Browse/Act/Current",
-      "https://sso.agc.gov.sg/SL/"
+      "https://sso.agc.gov.sg/Browse/Act/Current/All?PageSize=100",
+      "https://sso.agc.gov.sg/Browse/Act/Current"
     ],
-    "notes": "Singapore Statutes Online公开Browse页提供Current Acts、分页、PDF和修订RSS。"
+    "notes": "绕开受限首页，使用SSO官方Current Acts Browse目录，继续发现法案/PDF/RSS。"
   },
   "US-ECFR": {
     "alternate_start_urls": [
-      "https://www.ecfr.gov/current/title-16/chapter-II"
+      "https://www.ecfr.gov/api/versioner/v1/titles.json",
+      "https://www.ecfr.gov/api/versioner/v1/structure/2026-09-18/title-16.json"
     ],
-    "notes": "使用eCFR当前Title 16/CPSC公开法规目录；若GitHub runner仍受挑战，保留为运行环境访问限制并考虑官方开发接口/本地授权网络。"
+    "notes": "网页挑战时切换eCFR官方结构化API；优先Title 16/CPSC相关法规。",
+    "structured_api": true
   },
   "US-FEDREG": {
     "alternate_start_urls": [
       "https://www.federalregister.gov/api/v1/documents.json?per_page=20&order=newest"
     ],
-    "notes": "优先切换官方Federal Register API；无需API key。"
+    "notes": "Federal Register网页受挑战时使用官方JSON API；API响应本身作为结构化深采集证据。",
+    "structured_api": true
   },
   "US-STD": {
     "alternate_start_urls": [
@@ -158,5 +169,42 @@
       "https://webstore.ansi.org/standards/pcc/ansicatalog"
     ],
     "notes": "只采ANSI Webstore公开标准元数据/目录信息；购买的全文受许可证限制，不自动抓取。"
+  },
+  "SE-LAW": {
+    "alternate_start_urls": [
+      "https://data.riksdagen.se/dokumentlista/?doktyp=sfs&utformat=json"
+    ],
+    "structured_api": true,
+    "notes": "使用Sveriges riksdag官方Open Data API作为法规文档结构化入口。"
+  },
+  "DK-LAW": {
+    "alternate_start_urls": [
+      "https://api.retsinformation.dk/v1/Documents"
+    ],
+    "structured_api": true,
+    "notes": "使用Retsinformation官方开放REST API/ELI服务，不依赖动态网页入口。"
+  },
+  "CA-LAW": {
+    "alternate_start_urls": [
+      "https://laws-lois.justice.gc.ca/eng/XML/ActsRegsList.xml"
+    ],
+    "structured_api": true,
+    "notes": "使用Justice Laws官方Acts/Regulations XML索引，正文XML可由索引继续定位。"
+  },
+  "KR-LAW": {
+    "alternate_start_urls": [
+      "https://www.law.go.kr/DRF/lawSearch.do?OC=test&target=law&type=XML&display=20"
+    ],
+    "structured_api": true,
+    "requires_registration": true,
+    "registration_url": "https://open.law.go.kr/LSO/openApi/guideResult.do",
+    "auth_notes": "官方Open API正式使用需要申请OC认证值；当前documented test OC仅用于接口连通和结构验证。",
+    "notes": "优先国家法令信息中心Open API，生产环境需申请OC。"
+  },
+  "EU-EPREL": {
+    "requires_registration": true,
+    "registration_url": "https://eprel.ec.europa.eu/screen/requestpublicapikey",
+    "auth_notes": "EPREL Public API需要API key，并需提交签署/盖章的Declaration。",
+    "notes": "公开网页可浏览；批量深采集建议申请EPREL Public API key。"
   }
 }
