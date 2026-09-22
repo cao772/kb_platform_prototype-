@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from collections import Counter
 from typing import Any
@@ -278,6 +279,28 @@ class CollectionExperienceService:
     ) -> None:
         self.source_registry = source_registry
         self.site_extraction = site_extraction
+        self._ensure_reuse_schema()
+
+    def _ensure_reuse_schema(self) -> None:
+        with self.site_extraction.store.lock:
+            self.site_extraction.store.conn.executescript(
+                """
+                CREATE TABLE IF NOT EXISTS collection_template_applications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    source_key TEXT NOT NULL,
+                    template_id TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'applied',
+                    base_hash TEXT NOT NULL,
+                    applied_config_json TEXT NOT NULL,
+                    operator TEXT DEFAULT '',
+                    note TEXT DEFAULT '',
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX IF NOT EXISTS idx_collection_template_applications_source
+                    ON collection_template_applications(source_key,id DESC);
+                """
+            )
+            self.site_extraction.store.conn.commit()
 
     @staticmethod
     def _load_wave() -> list[dict[str, Any]]:
@@ -318,6 +341,173 @@ class CollectionExperienceService:
     @staticmethod
     def _template_map() -> dict[str, dict[str, Any]]:
         return {str(item["template_id"]): dict(item) for item in TEMPLATE_CATALOG}
+
+    @staticmethod
+    def _deep_merge(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:
+        result = json.loads(json.dumps(base))
+        for key, value in patch.items():
+            if isinstance(value, dict) and isinstance(result.get(key), dict):
+                result[key] = CollectionExperienceService._deep_merge(result[key], value)
+            else:
+                result[key] = json.loads(json.dumps(value))
+        return result
+
+    @staticmethod
+    def _config_hash(config: dict[str, Any]) -> str:
+        raw = json.dumps(config, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    def template(self, template_id: str) -> dict[str, Any]:
+        item = self._template_map().get(str(template_id or "").strip())
+        if not item:
+            raise ValueError("experience template not found")
+        return item
+
+    def recommend(self, source_key: str) -> dict[str, Any]:
+        source = self.source_registry.by_key(source_key)
+        text = " ".join([
+            str(source.get("source_name") or ""),
+            str(source.get("crawl_scope") or ""),
+            str(source.get("source_summary") or ""),
+            str(source.get("extractable_summary") or ""),
+        ]).lower()
+        preferred = self._template_id(source, text)
+        ranked: list[dict[str, Any]] = []
+        for template in TEMPLATE_CATALOG:
+            item = dict(template)
+            tid = str(item["template_id"])
+            score = 100 if tid == preferred else 0
+            reasons: list[str] = []
+            if tid == preferred:
+                reasons.append("与来源类型、接入方式和资料范围最匹配")
+            signals = [str(x).lower() for x in item.get("fit_signals") or []]
+            matched = [signal for signal in signals if signal and signal in text]
+            if matched:
+                score += min(30, len(matched) * 10)
+                reasons.append("命中经验信号：" + " / ".join(matched))
+            if source.get("source_type") == "standard" and tid == "standards_metadata_catalog":
+                score += 30
+                reasons.append("标准来源默认遵守 metadata_only 授权边界")
+            if source.get("access_method") in {"api", "xml"} and tid == "structured_legal_api":
+                score += 25
+                reasons.append("结构化/API 接入优先复用结构化采集模板")
+            if source.get("source_type") == "certification" and tid == "certification_registry":
+                score += 25
+                reasons.append("认证来源优先按机构/名录模式处理")
+            item["score"] = score
+            item["recommended"] = tid == preferred
+            item["recommendation_reasons"] = reasons or ["可作为备选模板人工比较"]
+            ranked.append(item)
+        ranked.sort(key=lambda x: (-int(x["score"]), str(x["template_id"])))
+        return {
+            "source": source,
+            "recommended_template_id": preferred,
+            "items": ranked,
+        }
+
+    @staticmethod
+    def _diff_paths(left: Any, right: Any, prefix: str = "") -> list[str]:
+        if isinstance(left, dict) and isinstance(right, dict):
+            paths: list[str] = []
+            for key in sorted(set(left) | set(right)):
+                path = f"{prefix}.{key}" if prefix else str(key)
+                if key not in left or key not in right:
+                    paths.append(path)
+                else:
+                    paths.extend(CollectionExperienceService._diff_paths(left[key], right[key], path))
+            return paths
+        if left != right:
+            return [prefix or "$"]
+        return []
+
+    def preview_template(self, source_key: str, template_id: str) -> dict[str, Any]:
+        source = self.source_registry.by_key(source_key)
+        template = self.template(template_id)
+        plan = self.site_extraction.plan(source_key)
+        current = json.loads(json.dumps(plan.get("config") or {}))
+        candidate = self._deep_merge(current, dict(template.get("config_patch") or {}))
+        # New-site identity and entry scope must never be replaced by a generic template.
+        candidate["start_urls"] = list(current.get("start_urls") or [source.get("base_url")])
+        candidate["crawl_scope"] = current.get("crawl_scope") or source.get("crawl_scope") or ""
+        candidate = self.site_extraction._validate_config(candidate)
+        current = self.site_extraction._validate_config(current)
+        changed_paths = self._diff_paths(current, candidate)
+        return {
+            "source_key": source_key,
+            "template_id": template_id,
+            "template_name": template["name"],
+            "base_hash": self._config_hash(current),
+            "current_config": current,
+            "candidate_config": candidate,
+            "changed_paths": changed_paths,
+            "safety_notes": [
+                "模板不会替换新网站自己的 start_urls。",
+                "模板只提供初始采集经验，套用后仍需先做受限试采和人工复核。",
+                "试采结果必须经过相关性闸门，采集结果不直接成为正式知识。",
+            ],
+        }
+
+    def apply_template(
+        self,
+        source_key: str,
+        template_id: str,
+        *,
+        expected_base_hash: str,
+        operator: str = "",
+        note: str = "",
+    ) -> dict[str, Any]:
+        preview = self.preview_template(source_key, template_id)
+        if not expected_base_hash or expected_base_hash != preview["base_hash"]:
+            raise ValueError("site plan changed after preview; refresh preview before applying")
+        current_plan = self.site_extraction.plan(source_key)
+        applied = self.site_extraction.update_plan(
+            source_key,
+            config=dict(preview["candidate_config"]),
+            enabled=bool(current_plan.get("enabled", True)),
+        )
+        with self.site_extraction.store.lock:
+            cur = self.site_extraction.store.conn.execute(
+                """INSERT INTO collection_template_applications(
+                       source_key,template_id,status,base_hash,applied_config_json,operator,note
+                   ) VALUES(?,?,?,?,?,?,?)""",
+                (
+                    source_key,
+                    template_id,
+                    "applied",
+                    expected_base_hash,
+                    json.dumps(preview["candidate_config"], ensure_ascii=False),
+                    str(operator or "").strip(),
+                    str(note or "").strip(),
+                ),
+            )
+            application_id = int(cur.lastrowid)
+            self.site_extraction.store.conn.commit()
+        return {
+            "application_id": application_id,
+            "source_key": source_key,
+            "template_id": template_id,
+            "template_name": preview["template_name"],
+            "changed_paths": preview["changed_paths"],
+            "plan": applied,
+            "next_step": "run_bounded_trial",
+        }
+
+    def list_applications(self, *, source_key: str = "", limit: int = 100) -> dict[str, Any]:
+        params: list[Any] = []
+        where = ""
+        if source_key:
+            where = "WHERE source_key=?"
+            params.append(source_key)
+        params.append(max(1, min(int(limit), 500)))
+        with self.site_extraction.store.lock:
+            rows = self.site_extraction.store.conn.execute(
+                f"""SELECT id,source_key,template_id,status,base_hash,operator,note,created_at
+                    FROM collection_template_applications {where}
+                    ORDER BY id DESC LIMIT ?""",
+                params,
+            ).fetchall()
+        items = [dict(row) for row in rows]
+        return {"items": items, "summary": {"applications": len(items)}}
 
     def source_experiences(self) -> list[dict[str, Any]]:
         templates = self._template_map()
