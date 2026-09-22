@@ -1,12 +1,12 @@
 {
-  "generated_from_round": 7,
+  "generated_from_round": 8,
   "summary": {
-    "total_nonpassed": 10,
+    "total_nonpassed": 9,
     "partial": 1,
-    "restricted": 9,
-    "public_cloud_egress_blocked": 5,
-    "registration_or_authorized_api": 3,
+    "restricted": 8,
+    "public_cloud_egress_blocked": 4,
     "registration_or_api_key": 2,
+    "registration_or_authorized_api": 3,
     "registration_or_authorization_total": 5
   },
   "items": [
@@ -70,13 +70,6 @@
       "requirement": "SNV Connect/标准访问许可",
       "registration_url": "https://connect.snv.ch/",
       "next_action": "使用组织授权账号补完整目录/已购标准；公开页只用于元数据验证。"
-    },
-    {
-      "source_key": "US-STD",
-      "current_status": "restricted",
-      "access_lane": "public_cloud_egress_blocked",
-      "requirement": "ANSI官方Approved/Proposed ANS Excel/PDF公开下载，但GitHub云出口触发挑战",
-      "next_action": "本地/自托管Runner优先下载Approved ANS Excel，再解析公开元数据；不采收费全文。"
     },
     {
       "source_key": "CA-ISED",
