@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from collections import Counter
+from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from app.source_collection import FIRST_WAVE_PATH
 from app.source_registry import SourceRegistryService
@@ -396,6 +399,95 @@ class CollectionExperienceService:
 
 
     @staticmethod
+    def _configured_auth_sources() -> set[str]:
+        raw = os.getenv("FIRST50_AUTH_JSON", "").strip()
+        if not raw:
+            return set()
+        try:
+            payload = json.loads(raw)
+        except ValueError:
+            return set()
+        if not isinstance(payload, dict):
+            return set()
+        return {
+            str(key)
+            for key, value in payload.items()
+            if str(key).strip() and bool(value)
+        }
+
+    def access_preconditions(self) -> dict[str, Any]:
+        requirements = self._access_requirements()
+        configured_auth = self._configured_auth_sources()
+        selfhosted_workflow = ROOT / ".github" / "workflows" / "first50_selfhosted_access.yml"
+        now_sg = datetime.now(ZoneInfo("Asia/Singapore"))
+        sg_minutes = now_sg.hour * 60 + now_sg.minute
+        sg_window_open = 3 * 60 <= sg_minutes < 7 * 60
+
+        items: list[dict[str, Any]] = []
+        for source_key, raw in requirements.items():
+            item = dict(raw)
+            lane = str(item.get("access_lane") or "")
+            credential_required = lane in {
+                "registration_or_api_key",
+                "registration_or_authorized_api",
+            }
+            selfhosted_required = lane in {
+                "public_cloud_egress_blocked",
+                "public_metadata_cloud_egress_blocked",
+                "site_terms_window_and_cloud_egress",
+            }
+            time_window_required = lane == "site_terms_window_and_cloud_egress"
+            credential_configured = source_key in configured_auth
+
+            if credential_required and not credential_configured:
+                readiness = "needs_credentials"
+                readiness_label = "待配置授权"
+            elif time_window_required and not sg_window_open:
+                readiness = "waiting_for_window"
+                readiness_label = "等待合规时窗"
+            elif selfhosted_required:
+                readiness = "self_hosted_required"
+                readiness_label = "需自托管执行"
+            else:
+                readiness = "ready"
+                readiness_label = "可继续执行"
+
+            item.update({
+                "credential_required": credential_required,
+                "credential_configured": credential_configured,
+                "selfhosted_required": selfhosted_required,
+                "selfhosted_workflow_available": selfhosted_workflow.exists(),
+                "time_window_required": time_window_required,
+                "time_window": "03:00-07:00 Asia/Singapore" if time_window_required else "",
+                "time_window_open": sg_window_open if time_window_required else None,
+                "readiness": readiness,
+                "readiness_label": readiness_label,
+            })
+            items.append(item)
+
+        readiness_counts = Counter(item["readiness"] for item in items)
+        return {
+            "items": items,
+            "summary": {
+                "remaining": len(items),
+                "credentials_required": sum(1 for item in items if item["credential_required"]),
+                "credentials_configured": sum(1 for item in items if item["credential_configured"]),
+                "selfhosted_required": sum(1 for item in items if item["selfhosted_required"]),
+                "waiting_for_window": int(readiness_counts.get("waiting_for_window", 0)),
+                "ready": int(readiness_counts.get("ready", 0)),
+                "by_readiness": dict(readiness_counts),
+            },
+            "execution": {
+                "selfhosted_workflow": ".github/workflows/first50_selfhosted_access.yml",
+                "selfhosted_workflow_available": selfhosted_workflow.exists(),
+                "auth_env": "FIRST50_AUTH_JSON",
+                "secret_values_exposed": False,
+                "singapore_now": now_sg.isoformat(),
+            },
+        }
+
+
+    @staticmethod
     def _deep_merge(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:
         result = json.loads(json.dumps(base))
         for key, value in patch.items():
@@ -689,13 +781,13 @@ class CollectionExperienceService:
         validation_payload = self._latest_validation_status()
         validation_summary = dict(validation_payload.get("summary") or {})
         access_requirements = self._access_requirements()
-        access_counts = Counter(
+        access_lane_counts = Counter(
             str(item.get("access_lane") or "unclassified")
             for item in access_requirements.values()
         )
         evidence_counts = Counter(item["evidence"]["level"] for item in experiences)
         type_counts = Counter(item["source_type"] for item in experiences)
-        access_counts = Counter(item["access_method"] for item in experiences)
+        access_method_counts = Counter(item["access_method"] for item in experiences)
         policy_counts = Counter(item["document_policy"] for item in experiences)
         return {
             "sources": experiences,
@@ -706,7 +798,7 @@ class CollectionExperienceService:
                 "run_id": validation_payload.get("run_id"),
                 "run_number": validation_payload.get("run_number"),
                 "summary": validation_summary,
-                "access_summary": dict(access_counts),
+                "access_summary": dict(access_lane_counts),
                 "remaining": [dict(item) for item in access_requirements.values()],
             },
             "summary": {
@@ -724,7 +816,7 @@ class CollectionExperienceService:
                 "metadata_only": int(policy_counts.get("metadata_only", 0)),
                 "by_evidence": dict(evidence_counts),
                 "by_source_type": dict(type_counts),
-                "by_access_method": dict(access_counts),
+                "by_access_method": dict(access_method_counts),
                 "by_document_policy": dict(policy_counts),
             },
         }
