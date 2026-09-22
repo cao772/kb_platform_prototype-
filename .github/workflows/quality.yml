@@ -111,3 +111,5 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage44_new_site_experience_reuse.py
       - name: Stage45 first50 full deep validation tests
         run: PYTHONPATH=. python tests/test_stage45_first50_deep_validation.py
+      - name: Stage45 archive dataset tests
+        run: PYTHONPATH=. python tests/test_stage45_archive_dataset.py
