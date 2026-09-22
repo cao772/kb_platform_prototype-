@@ -161,6 +161,17 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/collection/site-tuning-proposals":
+            try:
+                self._send_json(site_extraction.list_tuning_proposals(
+                    source_key=params.get("source_key", [""])[0],
+                    status=params.get("status", [""])[0],
+                    limit=min(int(params.get("limit", ["100"])[0] or 100), 500),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/collection/runs":
             try:
                 self._send_json(source_collection.list_runs(
@@ -677,6 +688,29 @@ class Handler(BaseHandler):
                     operator=str(payload.get("operator") or ""),
                     note=str(payload.get("note") or ""),
                     auto_ingest=bool(payload.get("auto_ingest", False)),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/site-tuning-proposal/generate":
+            try:
+                payload = self._read_json()
+                self._send_json(site_extraction.generate_tuning_proposal(
+                    str(payload.get("source_key") or "")
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection/site-tuning-proposal/decision":
+            try:
+                payload = self._read_json()
+                self._send_json(site_extraction.decide_tuning_proposal(
+                    int(payload.get("proposal_id") or 0),
+                    action=str(payload.get("action") or ""),
+                    operator=str(payload.get("operator") or ""),
+                    note=str(payload.get("note") or ""),
                 ))
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
