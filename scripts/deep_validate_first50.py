@@ -627,8 +627,8 @@ def run_source(
             direct_content: bool = False,
         ) -> dict[str, Any]:
             config = json.loads(json.dumps(base_config))
-            candidate_urls = list(start_urls or config.get("start_urls") or [])
-            candidate_urls = allowed_start_urls(candidate_urls)
+            raw_candidate_urls = list(start_urls or config.get("start_urls") or [])
+            candidate_urls = allowed_start_urls(raw_candidate_urls)
             archive_dataset = dict(remediation.get("archive_dataset") or {})
             trusted_archive = bool(
                 archive_dataset.get("enabled")
@@ -637,6 +637,11 @@ def run_source(
             )
             if not candidate_urls and not trusted_archive:
                 raise PermissionError("all candidate start URLs are disallowed by robots")
+            if not candidate_urls and trusted_archive:
+                # SiteExtractionService requires at least one start URL in a plan.
+                # Keep a structural placeholder; archive processing runs first and
+                # the fetcher still enforces robots for ordinary web crawling.
+                candidate_urls = raw_candidate_urls[:1] or list(archive_dataset.get("urls") or [])[:1]
             config["start_urls"] = candidate_urls
             request = dict(config.get("request") or {})
             request["headers"] = {
