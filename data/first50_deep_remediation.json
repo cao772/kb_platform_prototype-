@@ -90,11 +90,11 @@
   },
   "IE-LAW": {
     "alternate_start_urls": [
+      "https://api.oireachtas.ie/v1/legislation?limit=20",
       "https://www.irishstatutebook.ie/eli/2016/si/345/made/en/xml",
-      "https://www.irishstatutebook.ie/eli/2016/si",
       "https://www.irishstatutebook.ie/eli/open-data.html"
     ],
-    "notes": "优先使用Irish Statute Book官方ELI XML开放数据；S.I. 345/2016为低电压设备法规业务样板。网页入口403时不再依赖首页。",
+    "notes": "优先尝试Houses of the Oireachtas官方Open Data legislation API；如需法规正文再回落Irish Statute Book ELI XML/PDF。两个官方域分开验证，避免把单一云出口策略误判为爱尔兰法规不可采。",
     "binary_documents": [
       "https://www.irishstatutebook.ie/eli/2016/si/345/made/en/pdf"
     ],
