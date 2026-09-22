@@ -9,9 +9,12 @@
   "CA-ISED": {
     "alternate_start_urls": [
       "https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/devices-and-equipment/radio-equipment-standards/radio-standards-specifications-rss",
-      "https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/learn-more/key-documents/official-publications"
+      "https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/learn-more/key-documents/official-publications",
+      "https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/devices-and-equipment/radio-equipment-standards/radio-standards-specifications-rss/rss-gen-general-requirements-compliance-radio-apparatus",
+      "https://www.ised-isde.canada.ca/site/certification-engineering-bureau/en/wireless-equipment-standards-knowledge-center/radio-standards-specifications"
     ],
-    "notes": "使用ISED公开RSS标准目录和Official Publications入口，避开受挑战首页。"
+    "notes": "使用ISED官方RSS-Gen正文和Radio Standards Specifications目录，覆盖无线设备认证/测试的核心监管要求。",
+    "direct_content": true
   },
   "CH-STD": {
     "alternate_start_urls": [
@@ -33,9 +36,12 @@
   "DE-STD": {
     "alternate_start_urls": [
       "https://www.din.de/en/meta/search/61764!search?query=metadata",
-      "https://www.din.de/en/meta/search/61764!search?query=iso19115"
+      "https://www.din.de/en/meta/search/61764!search?query=iso19115",
+      "https://www.din.de/en/getting-involved/standards-committees/nia/publications",
+      "https://www.din.de/en/getting-involved/standards-committees/nid/publications"
     ],
-    "notes": "使用DIN官网公开标准搜索结果采集编号、名称、版本和状态元数据，不采受许可全文。"
+    "notes": "使用DIN官网公开Standards Committee Publications列表获取标准编号、Edition、Title和状态类元数据；不采DIN标准全文。",
+    "direct_content": true
   },
   "ES-LAW": {
     "alternate_start_urls": [
@@ -92,9 +98,12 @@
   "IE-STD": {
     "alternate_start_urls": [
       "https://www.nsai.ie/standards/search-buy-standards/",
-      "https://www.nsai.ie/standards/search-buy-standards/new-irish-standards/"
+      "https://www.nsai.ie/standards/search-buy-standards/new-irish-standards/",
+      "https://shop.standards.ie/en-ie/standards/i-s-en-iec-63000-2018-1139939_saig_nsai_nsai_2699514/",
+      "https://shop.standards.ie/en-ie/standards/i-s-en-iso-iec-17024-2026-857248_saig_nsai_nsai_4013167/"
     ],
-    "notes": "NSAI明确允许Guest用户浏览标准分类和最新版本信息，保持metadata_only。"
+    "notes": "使用NSAI官方标准商店公开详情页获取标准号、状态、发布日期、Publisher、等同关系等元数据；不下载受许可全文。",
+    "direct_content": true
   },
   "JP-LAW": {
     "alternate_start_urls": [
@@ -113,12 +122,15 @@
   },
   "NL-STD": {
     "alternate_start_urls": [
-      "https://www.nen.nl/en/managementsystemen/conformiteitsbeoordeling/normen"
+      "https://www.nen.nl/en/managementsystemen/conformiteitsbeoordeling/normen",
+      "https://www.nen.nl/en/nen-en-18223-2026-en-352704",
+      "https://www.nen.nl/en/nen-iso-iec-11179-6-2023-en-306138"
     ],
     "requires_registration": true,
     "registration_url": "https://connect.nen.nl/portal/Registreren/Vrij-Beschikbare-Normen/en",
     "auth_notes": "公开目录只采元数据；如使用NEN Connect免费可读标准需按官方流程注册并遵守许可。",
-    "notes": "优先使用NEN公开目录获取编号、标题、状态、发布日期等元数据；全文不自动采集。"
+    "notes": "使用NEN官网公开标准详情页采集编号、标题、状态、发布日期、委员会、ICS等元数据；全文仍受版权/订阅许可约束。",
+    "direct_content": true
   },
   "NO-LAW": {
     "alternate_start_urls": [
