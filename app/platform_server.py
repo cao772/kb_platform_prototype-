@@ -154,6 +154,13 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/collection/site-tuning-queue":
+            try:
+                self._send_json(site_extraction.tuning_queue())
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/collection/runs":
             try:
                 self._send_json(source_collection.list_runs(
