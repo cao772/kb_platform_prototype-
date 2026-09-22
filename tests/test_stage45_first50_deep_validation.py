@@ -39,7 +39,7 @@ def main() -> None:
     assert "不绕过 robots" in runner
     assert "受控Secret" in runner
     assert "oauth_client_credentials" in runner
-    assert "controlled_broadened_discovery" in runner
+    assert "controlled_broadening" in runner
     assert "relevant_business" in runner
     assert "carried-forward" in runner
 
