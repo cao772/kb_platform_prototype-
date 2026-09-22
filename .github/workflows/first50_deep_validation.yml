@@ -9,6 +9,7 @@ on:
       - "data/first50_deep_remediation.json"
       - "data/first50_round1_status.json"
       - "data/first50_round2_status.json"
+      - "data/first50_round3_status.json"
       - "scripts/deep_validate_first50.py"
       - "scripts/aggregate_first50_validation.py"
       - ".github/workflows/first50_deep_validation.yml"
@@ -50,7 +51,7 @@ jobs:
             --batch-index ${{ matrix.batch_index }} \
             --batch-count 5 \
             --output-dir live-validation \
-            --retry-nonpassed-from data/first50_round2_status.json
+            --retry-nonpassed-from data/first50_round3_status.json
       - name: Upload batch result
         if: always()
         uses: actions/upload-artifact@v4
