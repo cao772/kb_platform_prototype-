@@ -1,9 +1,9 @@
 {
-  "generated_from_round": 13,
+  "generated_from_round": 14,
   "summary": {
     "total_nonpassed": 6,
-    "partial": 1,
-    "restricted": 5,
+    "partial": 2,
+    "restricted": 4,
     "public_cloud_egress_blocked": 1,
     "public_metadata_cloud_egress_blocked": 1,
     "site_terms_window_and_cloud_egress": 1,
@@ -22,11 +22,11 @@
     },
     {
       "source_key": "NZ-LAW",
-      "current_status": "restricted",
+      "current_status": "partial",
       "access_lane": "registration_or_api_key",
-      "requirement": "New Zealand Legislation Developer API key",
+      "requirement": "公开RSS + Fair Trading Act HTML/XML/PDF 已走通；完整检索/批量发现仍需 New Zealand Legislation Developer API key",
       "registration_url": "https://www.legislation.govt.nz/developer-api",
-      "next_action": "申请API key并通过FIRST50_AUTH_JSON注入；公开XML保留为正文结构验证。"
+      "next_action": "当前可继续用公开RSS做增量发现并抓关键法规正文；生产级全量检索建议申请官方API key。"
     },
     {
       "source_key": "SG-LAW",
