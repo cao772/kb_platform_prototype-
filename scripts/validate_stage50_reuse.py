@@ -61,7 +61,61 @@ def run_candidate(entry: dict[str, Any], out_dir: Path, site_timeout: int) -> di
             auto_ingest=False,
         )
         outcome_payload = experience.reuse_outcomes(source_key=source_key, limit=10)
-        outcome = (outcome_payload.get("items") or [{}])[0]
+        initial_outcome = (outcome_payload.get("items") or [{}])[0]
+        initial_trial = {
+            "run_id": int(run.get("id") or 0),
+            "status": str(run.get("status") or ""),
+            "pages": int(run.get("pages_fetched") or 0),
+            "items": int(run.get("items_discovered") or 0),
+            "attachments": int(run.get("attachments_discovered") or 0),
+            "error": str(run.get("error") or "")[:3000],
+        }
+
+        remediation_attempted = False
+        remediation_note = ""
+        post_adjustment_outcome: dict[str, Any] | None = None
+        post_adjustment_trial: dict[str, Any] | None = None
+        alternate_start_urls = [
+            str(url).strip()
+            for url in entry.get("alternate_start_urls") or []
+            if str(url).strip()
+        ]
+        migration_outcome = str(initial_outcome.get("effective_outcome") or "needs_rework")
+        migration_reason = str(initial_outcome.get("auto_reason") or "")
+
+        if migration_outcome == "needs_rework" and alternate_start_urls:
+            remediation_attempted = True
+            remediation_note = str(entry.get("remediation_note") or "")
+            plan = site.plan(source_key)
+            adjusted_config = json.loads(json.dumps(plan.get("config") or {}))
+            adjusted_config["start_urls"] = alternate_start_urls
+            site.update_plan(source_key, config=adjusted_config, enabled=True)
+            adjusted_run = site.run(
+                source_key,
+                max_pages=4,
+                max_items=80,
+                auto_ingest=False,
+            )
+            adjusted_payload = experience.reuse_outcomes(source_key=source_key, limit=10)
+            post_adjustment_outcome = (adjusted_payload.get("items") or [{}])[0]
+            post_adjustment_trial = {
+                "run_id": int(adjusted_run.get("id") or 0),
+                "status": str(adjusted_run.get("status") or ""),
+                "pages": int(adjusted_run.get("pages_fetched") or 0),
+                "items": int(adjusted_run.get("items_discovered") or 0),
+                "attachments": int(adjusted_run.get("attachments_discovered") or 0),
+                "error": str(adjusted_run.get("error") or "")[:3000],
+            }
+            recovered = str(post_adjustment_outcome.get("effective_outcome") or "")
+            if recovered in {"direct_reuse", "minor_adjustment"}:
+                migration_outcome = "minor_adjustment"
+                migration_reason = "初始模板试采失败；切换同一官方站替代入口后试采成功，因此记为需小幅调整。"
+            else:
+                migration_outcome = "needs_rework"
+                migration_reason = "初始模板试采失败，官方替代入口补救后仍未形成可用试采结果。"
+
+        outcome = post_adjustment_outcome or initial_outcome
+        effective_run = post_adjustment_trial or initial_trial
         expected_template = str(entry.get("expected_template") or "")
         result = {
             **entry,
@@ -83,19 +137,34 @@ def run_candidate(entry: dict[str, Any], out_dir: Path, site_timeout: int) -> di
             "application_id": int(applied["application_id"]),
             "changed_paths": list(applied.get("changed_paths") or []),
             "robots": robots_status(str(source.get("base_url") or "")),
-            "trial": {
-                "run_id": int(run.get("id") or 0),
-                "status": str(run.get("status") or ""),
-                "pages": int(run.get("pages_fetched") or 0),
-                "items": int(run.get("items_discovered") or 0),
-                "attachments": int(run.get("attachments_discovered") or 0),
-                "error": str(run.get("error") or "")[:3000],
+            "initial_trial": initial_trial,
+            "initial_reuse_outcome": {
+                "auto_outcome": initial_outcome.get("auto_outcome", ""),
+                "auto_outcome_label": initial_outcome.get("auto_outcome_label", ""),
+                "auto_reason": initial_outcome.get("auto_reason", ""),
+                "effective_outcome": initial_outcome.get("effective_outcome", ""),
+                "relevance": initial_outcome.get("relevance") or {},
             },
-            "reuse_outcome": {
+            "remediation": {
+                "attempted": remediation_attempted,
+                "note": remediation_note,
+                "alternate_start_urls": alternate_start_urls if remediation_attempted else [],
+                "changed_paths": ["start_urls"] if remediation_attempted else [],
+            },
+            "post_adjustment_trial": post_adjustment_trial,
+            "post_adjustment_reuse_outcome": ({
                 "auto_outcome": outcome.get("auto_outcome", ""),
                 "auto_outcome_label": outcome.get("auto_outcome_label", ""),
                 "auto_reason": outcome.get("auto_reason", ""),
                 "effective_outcome": outcome.get("effective_outcome", ""),
+                "relevance": outcome.get("relevance") or {},
+            } if remediation_attempted else None),
+            "trial": effective_run,
+            "reuse_outcome": {
+                "auto_outcome": outcome.get("auto_outcome", ""),
+                "auto_outcome_label": outcome.get("auto_outcome_label", ""),
+                "auto_reason": migration_reason,
+                "effective_outcome": migration_outcome,
                 "relevance": outcome.get("relevance") or {},
             },
             "fetch_events": fetcher.events[-80:],
