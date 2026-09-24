@@ -398,6 +398,21 @@ class CollectionExperienceService:
                 );
                 CREATE INDEX IF NOT EXISTS idx_collection_template_applications_source
                     ON collection_template_applications(source_key,id DESC);
+                CREATE TABLE IF NOT EXISTS collection_template_validations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    application_id INTEGER NOT NULL UNIQUE,
+                    source_key TEXT NOT NULL,
+                    baseline_run_id INTEGER NOT NULL DEFAULT 0,
+                    run_id INTEGER NOT NULL DEFAULT 0,
+                    auto_outcome TEXT NOT NULL DEFAULT 'awaiting_trial',
+                    human_outcome TEXT NOT NULL DEFAULT '',
+                    operator TEXT DEFAULT '',
+                    note TEXT DEFAULT '',
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX IF NOT EXISTS idx_collection_template_validations_source
+                    ON collection_template_validations(source_key,application_id DESC);
                 """
             )
             self.site_extraction.store.conn.commit()
@@ -928,6 +943,8 @@ class CollectionExperienceService:
         if not expected_base_hash or expected_base_hash != preview["base_hash"]:
             raise ValueError("site plan changed after preview; refresh preview before applying")
         current_plan = self.site_extraction.plan(source_key)
+        baseline_runs = self.site_extraction.list_runs(source_key=source_key, limit=1)
+        baseline_run_id = int(((baseline_runs.get("items") or [{}])[0]).get("id") or 0)
         applied = self.site_extraction.update_plan(
             source_key,
             config=dict(preview["candidate_config"]),
@@ -949,6 +966,21 @@ class CollectionExperienceService:
                 ),
             )
             application_id = int(cur.lastrowid)
+            self.site_extraction.store.conn.execute(
+                """INSERT OR REPLACE INTO collection_template_validations(
+                       application_id,source_key,baseline_run_id,run_id,auto_outcome,human_outcome,operator,note,updated_at
+                   ) VALUES(?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)""",
+                (
+                    application_id,
+                    source_key,
+                    baseline_run_id,
+                    0,
+                    "awaiting_trial",
+                    "",
+                    "",
+                    "",
+                ),
+            )
             self.site_extraction.store.conn.commit()
         return {
             "application_id": application_id,
@@ -976,6 +1008,209 @@ class CollectionExperienceService:
             ).fetchall()
         items = [dict(row) for row in rows]
         return {"items": items, "summary": {"applications": len(items)}}
+
+    @staticmethod
+    def _reuse_outcome_label(outcome: str) -> str:
+        return {
+            "awaiting_trial": "等待试采",
+            "direct_reuse": "可直接复用",
+            "minor_adjustment": "需小幅调整",
+            "needs_rework": "需重新处理",
+        }.get(outcome, outcome or "未知")
+
+    def _auto_reuse_outcome(self, source_key: str, baseline_run_id: int) -> dict[str, Any]:
+        runs = self.site_extraction.list_runs(source_key=source_key, limit=50).get("items") or []
+        trial = next(
+            (
+                dict(item)
+                for item in runs
+                if int(item.get("id") or 0) > int(baseline_run_id or 0)
+            ),
+            None,
+        )
+        if not trial:
+            return {
+                "run_id": 0,
+                "outcome": "awaiting_trial",
+                "label": self._reuse_outcome_label("awaiting_trial"),
+                "reason": "模板套用后还没有新的受限试采记录。",
+                "trial": None,
+                "relevance": {},
+            }
+
+        status = str(trial.get("status") or "")
+        items_discovered = int(trial.get("items_discovered") or 0)
+        relevance = self.site_extraction.list_items(
+            source_key=source_key,
+            limit=2000,
+        ).get("summary") or {}
+        relevant = int(relevance.get("relevant") or 0)
+        needs_review = int(relevance.get("needs_review") or 0)
+
+        if status == "failed" or items_discovered <= 0:
+            outcome = "needs_rework"
+            reason = "试采失败或未发现有效条目，需要重新检查访问入口、模板匹配或站点规则。"
+        elif status == "partial":
+            outcome = "minor_adjustment"
+            reason = "试采已获得内容但只部分完成，建议先处理错误和缺口再复跑。"
+        elif status == "completed" and relevant > 0 and needs_review <= max(2, relevant):
+            outcome = "direct_reuse"
+            reason = "试采完成且已有明确相关条目，当前模板可作为稳定起点继续进入人工复核。"
+        else:
+            outcome = "minor_adjustment"
+            reason = "试采已完成但相关性信号仍偏弱或待复核较多，建议小幅调优后再确认复用效果。"
+
+        return {
+            "run_id": int(trial.get("id") or 0),
+            "outcome": outcome,
+            "label": self._reuse_outcome_label(outcome),
+            "reason": reason,
+            "trial": {
+                "status": status,
+                "pages": int(trial.get("pages_fetched") or 0),
+                "items": items_discovered,
+                "attachments": int(trial.get("attachments_discovered") or 0),
+                "error": str(trial.get("error") or "")[:500],
+            },
+            "relevance": {
+                "relevant": relevant,
+                "needs_review": needs_review,
+                "irrelevant": int(relevance.get("irrelevant") or 0),
+                "reviewed": int(relevance.get("reviewed") or 0),
+            },
+        }
+
+    def reuse_outcomes(self, *, source_key: str = "", limit: int = 100) -> dict[str, Any]:
+        params: list[Any] = []
+        where = ""
+        if source_key:
+            where = "WHERE a.source_key=?"
+            params.append(source_key)
+        params.append(max(1, min(int(limit), 500)))
+        with self.site_extraction.store.lock:
+            rows = self.site_extraction.store.conn.execute(
+                f"""SELECT a.id AS application_id,a.source_key,a.template_id,a.operator AS applied_by,
+                           a.note AS application_note,a.created_at,
+                           COALESCE(v.baseline_run_id,0) AS baseline_run_id,
+                           COALESCE(v.human_outcome,'') AS human_outcome,
+                           COALESCE(v.operator,'') AS review_operator,
+                           COALESCE(v.note,'') AS review_note,
+                           v.updated_at
+                    FROM collection_template_applications a
+                    LEFT JOIN collection_template_validations v ON v.application_id=a.id
+                    {where}
+                    ORDER BY a.id DESC LIMIT ?""",
+                params,
+            ).fetchall()
+
+        items: list[dict[str, Any]] = []
+        counts: Counter[str] = Counter()
+        for row in rows:
+            item = dict(row)
+            auto = self._auto_reuse_outcome(
+                str(item.get("source_key") or ""),
+                int(item.get("baseline_run_id") or 0),
+            )
+            human_outcome = str(item.get("human_outcome") or "")
+            effective = human_outcome if human_outcome in {
+                "direct_reuse", "minor_adjustment", "needs_rework"
+            } else str(auto["outcome"])
+            counts[effective] += 1
+            item.update({
+                "auto_outcome": auto["outcome"],
+                "auto_outcome_label": auto["label"],
+                "auto_reason": auto["reason"],
+                "human_outcome_label": self._reuse_outcome_label(human_outcome) if human_outcome else "",
+                "effective_outcome": effective,
+                "effective_outcome_label": self._reuse_outcome_label(effective),
+                "trial_run_id": auto["run_id"],
+                "trial": auto["trial"],
+                "relevance": auto["relevance"],
+                "needs_human_review": auto["outcome"] != "awaiting_trial" and not bool(human_outcome),
+            })
+            items.append(item)
+
+        return {
+            "items": items,
+            "summary": {
+                "applications": len(items),
+                "awaiting_trial": int(counts.get("awaiting_trial", 0)),
+                "direct_reuse": int(counts.get("direct_reuse", 0)),
+                "minor_adjustment": int(counts.get("minor_adjustment", 0)),
+                "needs_rework": int(counts.get("needs_rework", 0)),
+                "human_reviewed": sum(1 for item in items if item.get("human_outcome")),
+            },
+            "governance": {
+                "automatic_outcome_is_advisory": True,
+                "human_confirmation_supported": True,
+                "formal_knowledge_auto_promotion": False,
+            },
+        }
+
+    def save_reuse_outcome(
+        self,
+        application_id: int,
+        *,
+        outcome: str,
+        operator: str = "",
+        note: str = "",
+    ) -> dict[str, Any]:
+        outcome = str(outcome or "").strip()
+        if outcome not in {"direct_reuse", "minor_adjustment", "needs_rework"}:
+            raise ValueError("invalid reuse outcome")
+        with self.site_extraction.store.lock:
+            row = self.site_extraction.store.conn.execute(
+                """SELECT a.id AS application_id,a.source_key,
+                          COALESCE(v.baseline_run_id,0) AS baseline_run_id
+                   FROM collection_template_applications a
+                   LEFT JOIN collection_template_validations v ON v.application_id=a.id
+                   WHERE a.id=?""",
+                (int(application_id),),
+            ).fetchone()
+        if not row:
+            raise ValueError("template application not found")
+        row = dict(row)
+        auto = self._auto_reuse_outcome(
+            str(row["source_key"]),
+            int(row.get("baseline_run_id") or 0),
+        )
+        if int(auto.get("run_id") or 0) <= 0:
+            raise ValueError("run bounded trial before reviewing reuse outcome")
+
+        with self.site_extraction.store.lock:
+            self.site_extraction.store.conn.execute(
+                """INSERT INTO collection_template_validations(
+                       application_id,source_key,baseline_run_id,run_id,auto_outcome,
+                       human_outcome,operator,note,updated_at
+                   ) VALUES(?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
+                   ON CONFLICT(application_id) DO UPDATE SET
+                       run_id=excluded.run_id,
+                       auto_outcome=excluded.auto_outcome,
+                       human_outcome=excluded.human_outcome,
+                       operator=excluded.operator,
+                       note=excluded.note,
+                       updated_at=CURRENT_TIMESTAMP""",
+                (
+                    int(application_id),
+                    str(row["source_key"]),
+                    int(row.get("baseline_run_id") or 0),
+                    int(auto["run_id"]),
+                    str(auto["outcome"]),
+                    outcome,
+                    str(operator or "").strip(),
+                    str(note or "").strip(),
+                ),
+            )
+            self.site_extraction.store.conn.commit()
+        return {
+            "application_id": int(application_id),
+            "source_key": str(row["source_key"]),
+            "auto_outcome": auto["outcome"],
+            "human_outcome": outcome,
+            "effective_outcome": outcome,
+            "effective_outcome_label": self._reuse_outcome_label(outcome),
+            "trial_run_id": int(auto["run_id"]),
+        }
 
     def source_experiences(self) -> list[dict[str, Any]]:
         templates = self._template_map()
