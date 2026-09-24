@@ -1,0 +1,36 @@
+name: stage50-migration-pilot
+
+on:
+  pull_request:
+    types: [opened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run Stage50 real migration pilot
+        env:
+          PYTHONPATH: .
+        run: |
+          python scripts/run_stage50_migration_pilot.py \
+            --pilot data/stage50_migration_pilot.json \
+            --output stage50-migration-result.json
+      - name: Upload Stage50 migration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage50-migration-pilot
+          path: stage50-migration-result.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,69 @@
+{
+  "pilot_id": "stage50-first-transfer-10",
+  "title": "第51-60站经验迁移真实试采",
+  "purpose": "验证首批50站沉淀的6类模板与9类能力块，能否迁移到未参与经验提炼的新官方来源。",
+  "selection_rules": [
+    "必须不在首批50站中",
+    "优先官方/权威公开来源",
+    "覆盖 regulation / gma / certification / standard 多种来源类型",
+    "标准类只验证公开元数据/协调标准引用，不抓取受许可限制的标准全文",
+    "每站仅做低频有边界试采，不绕过 robots、登录、CAPTCHA 或访问控制"
+  ],
+  "trial_limits": {
+    "max_pages": 2,
+    "max_items": 20,
+    "timeout_seconds": 12
+  },
+  "sources": [
+    {
+      "order": 51,
+      "source_key": "EU-CE-MARKING",
+      "expected_family": "market_access_energy"
+    },
+    {
+      "order": 52,
+      "source_key": "EU-MARKET-SURVEILLANCE",
+      "expected_family": "market_access_energy"
+    },
+    {
+      "order": 53,
+      "source_key": "EU-TRIS",
+      "expected_family": "legal_portal_fulltext"
+    },
+    {
+      "order": 54,
+      "source_key": "EU-EA",
+      "expected_family": "certification_registry"
+    },
+    {
+      "order": 55,
+      "source_key": "EU-RED-STANDARDS",
+      "expected_family": "standards_metadata_catalog"
+    },
+    {
+      "order": 56,
+      "source_key": "EU-LVD-STANDARDS",
+      "expected_family": "standards_metadata_catalog"
+    },
+    {
+      "order": 57,
+      "source_key": "EU-EMC-STANDARDS",
+      "expected_family": "standards_metadata_catalog"
+    },
+    {
+      "order": 58,
+      "source_key": "EU-ROHS",
+      "expected_family": "legal_portal_fulltext"
+    },
+    {
+      "order": 59,
+      "source_key": "EU-WEEE",
+      "expected_family": "legal_portal_fulltext"
+    },
+    {
+      "order": 60,
+      "source_key": "EU-BATTERY",
+      "expected_family": "legal_portal_fulltext"
+    }
+  ]
+}
