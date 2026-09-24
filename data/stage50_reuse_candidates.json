@@ -1,0 +1,36 @@
+{
+  "stage": 50,
+  "description": "首批50站之外的真实新站迁移验收样本。覆盖法规门户、认证机构、产品安全、标准元数据等不同站点形态。",
+  "items": [
+    {
+      "order": 51,
+      "source_key": "IT-GAZZETTA",
+      "expected_template": "legal_portal_fulltext",
+      "purpose": "意大利官方公报法规入口"
+    },
+    {
+      "order": 52,
+      "source_key": "IT-ACCREDIA",
+      "expected_template": "certification_registry",
+      "purpose": "意大利认可机构与认可范围"
+    },
+    {
+      "order": 53,
+      "source_key": "IT-MIMIT-PRODUCT-SAFETY",
+      "expected_template": "product_safety_notice",
+      "purpose": "意大利消费品安全与市场监管"
+    },
+    {
+      "order": 54,
+      "source_key": "ES-BOE-GAZETTE",
+      "expected_template": "legal_portal_fulltext",
+      "purpose": "西班牙官方公报法规入口"
+    },
+    {
+      "order": 55,
+      "source_key": "IT-CEI",
+      "expected_template": "standards_metadata_catalog",
+      "purpose": "意大利电工电子标准公开元数据"
+    }
+  ]
+}
