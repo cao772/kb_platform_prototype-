@@ -1,10 +1,8 @@
 name: stage50-migration-pilot
 
 on:
-  push:
-    branches: ["feature/stage50-migration-pilot"]
-    paths:
-      - "scripts/run_stage50_migration_pilot.py"
+  pull_request:
+    types: [opened]
   workflow_dispatch:
 
 permissions:
