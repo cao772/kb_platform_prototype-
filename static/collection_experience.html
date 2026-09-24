@@ -81,6 +81,21 @@
   </div>
 
   <div class="card">
+    <div class="head">
+      <div><h2>通用复用能力地图</h2><div class="meta">把50站经验从“网站案例”进一步拆成可组合能力块。新网站不是复制某一个站，而是按站点形态组合入口发现、结构化接口、正文/字段、附件、授权边界、相关性治理和反馈回环。</div></div>
+    </div>
+    <div class="metrics" style="margin-bottom:8px">
+      <div class="metric"><span>已实跑来源</span><strong id="tTested">-</strong></div>
+      <div class="metric"><span>能力块</span><strong id="tCapabilities">-</strong></div>
+      <div class="metric"><span>经验模板</span><strong id="tTemplates">-</strong></div>
+      <div class="metric"><span>通过 + 部分通过</span><strong id="tUsable">-</strong></div>
+      <div class="metric"><span>仍受限</span><strong id="tRestricted">-</strong></div>
+    </div>
+    <div id="transferFlow" class="chips" style="margin:10px 0 12px"></div>
+    <div id="capabilityGrid" class="template-grid"><div class="empty">正在生成50站通用能力地图…</div></div>
+  </div>
+
+  <div class="card">
     <div class="head"><div><h2>跨站通用经验</h2><div class="meta">这些经验将直接进入后续“新网站接入向导”的默认判断和操作流程。</div></div></div>
     <div id="lessonGrid" class="lesson-grid"><div class="empty">正在加载…</div></div>
   </div>
@@ -119,7 +134,7 @@
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function api(url){const r=await fetch(url);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
-let DATA={sources:[],templates:[],common_lessons:[],summary:{}},PRE={items:[],summary:{},execution:{}},ACT={items:[],summary:{}};
+let DATA={sources:[],templates:[],common_lessons:[],summary:{}},PRE={items:[],summary:{},execution:{}},ACT={items:[],summary:{}},TRANS={capabilities:[],templates:[],summary:{},workflow:[]};
 
 function evidenceGroup(level){
   if(['operational_verified','operational_partial','verified_sample','partial_sample'].includes(level))return'verified';
@@ -184,6 +199,21 @@ function resetFilters(){$('q').value='';$('templateFilter').value='';$('evidence
 function renderTemplates(){
   $('templateGrid').innerHTML=(DATA.templates||[]).map(t=>'<div class="template"><div class="head"><h3>'+esc(t.name)+'</h3><span class="status configured">'+Number(t.source_count||0)+'站</span></div><p>'+esc(t.summary)+'</p><div class="chips">'+(t.fit_signals||[]).map(x=>'<span class="chip">'+esc(x)+'</span>').join('')+'</div><ul>'+(t.lessons||[]).slice(0,4).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><div class="detail">覆盖来源：'+esc((t.source_keys||[]).join('、'))+'</div></div>').join('');
 }
+function renderTransferability(){
+  const s=TRANS.summary||{};
+  $('tTested').textContent=Number(s.tested||0);
+  $('tCapabilities').textContent=Number(s.capabilities||0);
+  $('tTemplates').textContent=Number(s.templates||0);
+  $('tUsable').textContent=Number(s.passed||0)+Number(s.partial||0);
+  $('tRestricted').textContent=Number(s.restricted||0)+Number(s.failed||0);
+  $('transferFlow').innerHTML=(TRANS.workflow||[]).map((x,i)=>'<span class="chip">'+(i+1)+' · '+esc(x)+'</span>').join('');
+  $('capabilityGrid').innerHTML=(TRANS.capabilities||[]).map(x=>{
+    const st=x.status_counts||{};
+    const examples=(x.examples||[]).map(v=>v.source_key).join('、');
+    return '<div class="template"><div class="head"><h3>'+esc(x.name)+'</h3><span class="status verified">'+Number(x.source_count||0)+'站经验</span></div><p>'+esc(x.description||'')+'</p><div class="chips"><span class="chip">'+esc(x.stage||'')+'</span><span class="chip">已实跑 '+Number(x.tested_count||0)+'</span><span class="chip">通过/部分 '+Number(x.passed_or_partial||0)+'</span></div><div class="detail"><b>复用方式：</b>'+esc(x.reuse||'')+'</div><div class="detail">典型来源：'+esc(examples||'-')+' · 状态 passed '+Number(st.passed||0)+' / partial '+Number(st.partial||0)+' / restricted '+Number(st.restricted||0)+'</div></div>';
+  }).join('')||'<div class="empty">暂无可复用能力。</div>';
+}
+
 function renderLessons(){
   $('lessonGrid').innerHTML=(DATA.common_lessons||[]).map(x=>'<div class="lesson"><b>'+esc(x.title)+'</b><p>'+esc(x.principle)+'</p><div class="detail"><b>复用方式：</b>'+esc(x.reuse)+'</div></div>').join('');
 }
@@ -211,12 +241,13 @@ function renderMetrics(){
 }
 async function loadAll(){
   try{
-    [DATA,PRE,ACT]=await Promise.all([
+    [DATA,PRE,ACT,TRANS]=await Promise.all([
       api('/api/collection-experience/overview'),
       api('/api/collection-experience/access-preconditions'),
-      api('/api/collection-experience/access-actions')
+      api('/api/collection-experience/access-actions'),
+      api('/api/collection-experience/transferability')
     ]);
-    renderMetrics();renderValidation();renderPreconditions();renderActions();renderTemplates();renderLessons();renderAccessLessons();
+    renderMetrics();renderValidation();renderPreconditions();renderActions();renderTemplates();renderTransferability();renderLessons();renderAccessLessons();
     $('templateFilter').innerHTML='<option value="">全部模板</option>'+(DATA.templates||[]).map(t=>'<option value="'+esc(t.template_id)+'">'+esc(t.name)+' ('+Number(t.source_count||0)+')</option>').join('');
     renderSources();
   }catch(e){
