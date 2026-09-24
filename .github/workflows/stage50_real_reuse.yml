@@ -1,0 +1,59 @@
+name: stage50-real-reuse-validation
+
+on:
+  push:
+    branches:
+      - feature/stage50-real-reuse-validation
+    paths:
+      - "data/stage50_reuse_candidates.json"
+      - "scripts/validate_stage50_reuse.py"
+      - "app/collection_experience.py"
+      - "app/site_extraction.py"
+      - ".github/workflows/stage50_real_reuse.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Run real Stage50 migration trials
+        env:
+          SITE_DEEP_TIMEOUT_SECONDS: "180"
+        run: |
+          PYTHONPATH=. python scripts/validate_stage50_reuse.py             --output-dir stage50-validation             --site-timeout 180
+      - name: Print Stage50 summary
+        if: always()
+        run: |
+          if [ -f stage50-validation/results.json ]; then
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("stage50-validation/results.json").read_text(encoding="utf-8"))
+          print(json.dumps(p.get("summary", {}), ensure_ascii=False, indent=2))
+          for item in p.get("sources", []):
+              print(item["source_key"], "=>", item.get("reuse_outcome", {}).get("effective_outcome"),
+                    "|", item.get("trial", {}).get("status"),
+                    "|", item.get("trial", {}).get("items"), "items")
+          PY
+          fi
+      - name: Upload Stage50 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage50-real-reuse-results
+          path: stage50-validation/
+          if-no-files-found: warn
+          retention-days: 30
