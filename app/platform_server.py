@@ -202,6 +202,13 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/collection-experience/migration-validation":
+            try:
+                self._send_json(collection_experience.migration_validation())
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/collection-experience/templates":
             try:
                 templates = collection_experience.templates()

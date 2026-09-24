@@ -1,0 +1,91 @@
+{
+  "stage": 50,
+  "observed_at": "2026-09-24T05:50:35Z",
+  "evidence": {
+    "workflow": "stage50-real-reuse-validation",
+    "run_number": 8,
+    "run_id": 35961624321,
+    "head_sha": "c0ccbe5d73c1008852122d8fdc299f36ef779048",
+    "artifact_id": 10791654740,
+    "artifact_sha256": "2ca9c8f2acb01cf9e5bc62538e835ddc84e703ce52411cc8c1918dc1fefcfd41",
+    "real_network_trial": true,
+    "outside_first50": true,
+    "bounded_trial": true
+  },
+  "summary": {
+    "processed": 5,
+    "template_matches": 5,
+    "direct_reuse": 4,
+    "minor_adjustment": 0,
+    "needs_rework": 1,
+    "direct_reuse_rate": 0.8
+  },
+  "items": [
+    {
+      "order": 51,
+      "source_key": "IT-GAZZETTA",
+      "source_name": "Gazzetta Ufficiale",
+      "template_id": "legal_portal_fulltext",
+      "outcome": "direct_reuse",
+      "outcome_label": "可直接复用",
+      "pages": 2,
+      "items": 2,
+      "relevant": 2,
+      "note": "法规门户模板直接完成有边界试采。"
+    },
+    {
+      "order": 52,
+      "source_key": "IT-ACCREDIA",
+      "source_name": "Accredia",
+      "template_id": "certification_registry",
+      "outcome": "direct_reuse",
+      "outcome_label": "可直接复用",
+      "pages": 4,
+      "items": 4,
+      "relevant": 4,
+      "note": "认证/认可机构模板直接完成有边界试采。"
+    },
+    {
+      "order": 53,
+      "source_key": "IT-MIMIT-PRODUCT-SAFETY",
+      "source_name": "MIMIT Product Safety",
+      "template_id": "product_safety_notice",
+      "outcome": "needs_rework",
+      "outcome_label": "需重新处理",
+      "pages": 0,
+      "items": 0,
+      "relevant": 0,
+      "note": "模板匹配正确，但英文入口和两个同站官方意大利语替代入口均触发浏览器挑战；需后续寻找官方API/数据导出、合规会话或其他授权访问通道。",
+      "remediation_attempts": 3
+    },
+    {
+      "order": 54,
+      "source_key": "ES-BOE-GAZETTE",
+      "source_name": "BOE Diario Oficial",
+      "template_id": "legal_portal_fulltext",
+      "outcome": "direct_reuse",
+      "outcome_label": "可直接复用",
+      "pages": 1,
+      "items": 1,
+      "relevant": 1,
+      "note": "法规门户模板直接完成有边界试采。"
+    },
+    {
+      "order": 55,
+      "source_key": "IT-CEI",
+      "source_name": "CEI",
+      "template_id": "standards_metadata_catalog",
+      "outcome": "direct_reuse",
+      "outcome_label": "可直接复用",
+      "pages": 4,
+      "items": 4,
+      "relevant": 4,
+      "note": "标准元数据模板遵守 metadata_only 边界并直接完成试采。"
+    }
+  ],
+  "governance": {
+    "formal_knowledge_auto_promotion": false,
+    "human_review_still_required": true,
+    "result_scope": "迁移试采结果，不等同于全站覆盖或正式知识质量。"
+  }
+}

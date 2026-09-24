@@ -96,6 +96,21 @@
   </div>
 
   <div class="card">
+    <div class="head">
+      <div><h2>Stage50 · 第51～55站真实迁移验证</h2><div class="meta">不是模拟：5个来源均不在首批50站内，按 Stage48 推荐模板直接套用后执行真实联网、有边界试采。结果用于验证经验迁移能力，不等于全站覆盖或正式知识质量。</div></div>
+    </div>
+    <div class="metrics" style="margin-bottom:8px">
+      <div class="metric"><span>真实新站</span><strong id="gProcessed">-</strong></div>
+      <div class="metric"><span>模板匹配正确</span><strong id="gMatches">-</strong></div>
+      <div class="metric"><span>可直接复用</span><strong id="gDirect">-</strong></div>
+      <div class="metric"><span>需小幅调整</span><strong id="gMinor">-</strong></div>
+      <div class="metric"><span>需重新处理</span><strong id="gRework">-</strong></div>
+    </div>
+    <div id="migrationGrid" class="template-grid"><div class="empty">正在加载真实迁移证据…</div></div>
+    <div class="detail" id="migrationMeta"></div>
+  </div>
+
+  <div class="card">
     <div class="head"><div><h2>跨站通用经验</h2><div class="meta">这些经验将直接进入后续“新网站接入向导”的默认判断和操作流程。</div></div></div>
     <div id="lessonGrid" class="lesson-grid"><div class="empty">正在加载…</div></div>
   </div>
@@ -134,7 +149,7 @@
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function api(url){const r=await fetch(url);const d=await r.json();if(!r.ok||d.error)throw new Error(d.error||'请求失败');return d}
-let DATA={sources:[],templates:[],common_lessons:[],summary:{}},PRE={items:[],summary:{},execution:{}},ACT={items:[],summary:{}},TRANS={capabilities:[],templates:[],summary:{},workflow:[]};
+let DATA={sources:[],templates:[],common_lessons:[],summary:{}},PRE={items:[],summary:{},execution:{}},ACT={items:[],summary:{}},TRANS={capabilities:[],templates:[],summary:{},workflow:[]},MIG={items:[],summary:{},evidence:{}};
 
 function evidenceGroup(level){
   if(['operational_verified','operational_partial','verified_sample','partial_sample'].includes(level))return'verified';
@@ -214,6 +229,22 @@ function renderTransferability(){
   }).join('')||'<div class="empty">暂无可复用能力。</div>';
 }
 
+function migrationClass(outcome){return outcome==='direct_reuse'?'verified':outcome==='minor_adjustment'?'partial':'restricted'}
+function renderMigration(){
+  const s=MIG.summary||{},e=MIG.evidence||{};
+  $('gProcessed').textContent=Number(s.processed||0);
+  $('gMatches').textContent=Number(s.template_matches||0);
+  $('gDirect').textContent=Number(s.direct_reuse||0);
+  $('gMinor').textContent=Number(s.minor_adjustment||0);
+  $('gRework').textContent=Number(s.needs_rework||0);
+  $('migrationMeta').textContent='实证 workflow run #'+(e.run_number||'-')+' · artifact '+(e.artifact_id||'-')+' · HEAD '+(e.head_sha||'-');
+  $('migrationGrid').innerHTML=(MIG.items||[]).map(x=>{
+    const metrics='页 '+Number(x.pages||0)+' · 条目 '+Number(x.items||0)+' · 相关 '+Number(x.relevant||0);
+    const attempts=x.remediation_attempts?'<span class="chip">补救 '+Number(x.remediation_attempts)+' 次</span>':'';
+    return '<div class="template"><div class="head"><h3>#'+Number(x.order||0)+' · '+esc(x.source_key)+'</h3><span class="status '+migrationClass(x.outcome)+'">'+esc(x.outcome_label||x.outcome)+'</span></div><p>'+esc(x.source_name||'')+'</p><div class="chips"><span class="chip">'+esc(x.template_id||'')+'</span><span class="chip">'+metrics+'</span>'+attempts+'</div><div class="detail">'+esc(x.note||'')+'</div></div>';
+  }).join('')||'<div class="empty">暂无真实迁移验证结果。</div>';
+}
+
 function renderLessons(){
   $('lessonGrid').innerHTML=(DATA.common_lessons||[]).map(x=>'<div class="lesson"><b>'+esc(x.title)+'</b><p>'+esc(x.principle)+'</p><div class="detail"><b>复用方式：</b>'+esc(x.reuse)+'</div></div>').join('');
 }
@@ -241,13 +272,14 @@ function renderMetrics(){
 }
 async function loadAll(){
   try{
-    [DATA,PRE,ACT,TRANS]=await Promise.all([
+    [DATA,PRE,ACT,TRANS,MIG]=await Promise.all([
       api('/api/collection-experience/overview'),
       api('/api/collection-experience/access-preconditions'),
       api('/api/collection-experience/access-actions'),
-      api('/api/collection-experience/transferability')
+      api('/api/collection-experience/transferability'),
+      api('/api/collection-experience/migration-validation')
     ]);
-    renderMetrics();renderValidation();renderPreconditions();renderActions();renderTemplates();renderTransferability();renderLessons();renderAccessLessons();
+    renderMetrics();renderValidation();renderPreconditions();renderActions();renderTemplates();renderTransferability();renderMigration();renderLessons();renderAccessLessons();
     $('templateFilter').innerHTML='<option value="">全部模板</option>'+(DATA.templates||[]).map(t=>'<option value="'+esc(t.template_id)+'">'+esc(t.name)+' ('+Number(t.source_count||0)+')</option>').join('');
     renderSources();
   }catch(e){
