@@ -119,5 +119,7 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage48_transferable_experience_map.py
       - name: Stage49 reuse validation loop tests
         run: PYTHONPATH=. python tests/test_stage49_reuse_validation_loop.py
+      - name: Stage50 real reuse migration tests
+        run: PYTHONPATH=. python tests/test_stage50_real_reuse_migration.py
       - name: Stage45 archive dataset tests
         run: PYTHONPATH=. python tests/test_stage45_archive_dataset.py
