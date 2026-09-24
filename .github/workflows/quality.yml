@@ -121,5 +121,25 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage49_reuse_validation_loop.py
       - name: Stage50 real reuse migration tests
         run: PYTHONPATH=. python tests/test_stage50_real_reuse_migration.py
+      - name: Stage50 real network evidence install
+        if: github.event_name == 'pull_request'
+        run: |
+          pip install playwright
+          python -m playwright install chromium
+      - name: Stage50 real network migration evidence
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: |
+          PYTHONPATH=. python scripts/validate_stage50_reuse.py \
+            --output-dir stage50-validation \
+            --site-timeout 180
+      - name: Upload Stage50 real migration evidence
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage50-real-reuse-results
+          path: stage50-validation/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Stage45 archive dataset tests
         run: PYTHONPATH=. python tests/test_stage45_archive_dataset.py
