@@ -46,6 +46,11 @@ def main() -> None:
         site = SiteExtractionService(store, registry, root / "downloads")
         service = CollectionExperienceService(registry, site)
 
+        migration = service.migration_validation()
+        assert migration["summary"]["processed"] == 5
+        assert migration["summary"]["direct_reuse"] == 4
+        assert migration["summary"]["needs_rework"] == 1
+
         for item in items:
             source_key = str(item["source_key"])
             source = registry.by_key(source_key)
@@ -73,7 +78,7 @@ def main() -> None:
     assert "/api/collection-experience/migration-validation" in page
     assert "真实迁移证据" in page
     assert "stage50-real-reuse-results" in real_workflow
-    assert "feature/stage50-real-reuse-validation" in real_workflow
+    assert '"通用知识库平台"' in real_workflow
     assert "Stage50 real reuse migration tests" in quality
 
     print("OK: Stage50 candidates are outside first50 and reuse the validated template/outcome chain")
