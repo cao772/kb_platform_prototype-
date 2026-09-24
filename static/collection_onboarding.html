@@ -86,7 +86,15 @@ async function createAndRecommend(){
 async function loadExisting(){const key=$('existingKey').value.trim();if(!key)return;$('existingResult').textContent='正在加载…';try{currentSourceKey=key;await recommend(key);$('existingResult').textContent='已加载 '+key}catch(e){$('existingResult').textContent='加载失败：'+e.message}}
 async function recommend(key){
   const d=await api('/api/collection-experience/recommend?source_key='+encodeURIComponent(key));currentSourceKey=key;currentTemplateId='';currentPreview=null;$('applyBtn').disabled=true;$('trialLink').style.display='none';$('recommendMeta').textContent=d.source.source_key+' · '+d.source.source_name+' · '+d.source.source_type+' · '+d.source.access_method;
-  $('templateRecommendations').innerHTML=(d.items||[]).map(t=>'<div class="tpl '+(t.recommended?'recommended':'')+'"><div class="head"><h3>'+esc(t.name)+'</h3>'+(t.recommended?'<span class="tag good">主推荐</span>':'<span class="tag">备选</span>')+'</div><p>'+esc(t.summary)+'</p><div class="meta">'+esc((t.recommendation_reasons||[]).join('；'))+'</div><div class="actions"><button class="btn secondary" onclick="previewTemplate(\''+esc(t.template_id)+'\')">预览套用效果</button></div></div>').join('');
+  $('templateRecommendations').innerHTML=(d.items||[]).map(t=>{
+    const support=t.experience_support||{};
+    const examples=(support.examples||[]).map(x=>x.source_key).join('、');
+    const caps=(support.capability_ids||[]).map(x=>'<span class="tag">'+esc(x)+'</span>').join('');
+    const supportText=Number(support.source_count||0)
+      ? '首批50站同类经验 '+Number(support.source_count||0)+' 站 · 已实跑 '+Number(support.tested_count||0)+' · 通过 '+Number(support.passed||0)+' · 部分 '+Number(support.partial||0)+' · 受限 '+Number(support.restricted||0)
+      : '暂无首批50站同类支撑，需更谨慎试采';
+    return '<div class="tpl '+(t.recommended?'recommended':'')+'"><div class="head"><h3>'+esc(t.name)+'</h3>'+(t.recommended?'<span class="tag good">主推荐</span>':'<span class="tag">备选</span>')+'</div><p>'+esc(t.summary)+'</p><div class="meta">'+esc((t.recommendation_reasons||[]).join('；'))+'</div><div class="note" style="margin-top:9px"><b>经验支撑：</b>'+esc(supportText)+(examples?'<br><b>典型来源：</b>'+esc(examples):'')+'</div><div class="chips" style="margin-top:8px">'+caps+'</div><div class="actions"><button class="btn secondary" onclick="previewTemplate(\''+esc(t.template_id)+'\')">预览套用效果</button></div></div>';
+  }).join('');
 }
 async function previewTemplate(templateId){
   if(!currentSourceKey)return;currentTemplateId=templateId;$('previewMeta').textContent='正在生成规则差异…';
