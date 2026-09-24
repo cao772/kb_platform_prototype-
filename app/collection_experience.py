@@ -304,6 +304,72 @@ COMMON_LESSONS: tuple[dict[str, str], ...] = (
     },
 )
 
+CAPABILITY_BLOCKS: tuple[dict[str, Any], ...] = (
+    {
+        "capability_id": "site_shape_matching",
+        "name": "站点形态识别与模板匹配",
+        "stage": "接入判断",
+        "description": "根据来源类型、接入方式和资料范围识别法规门户、结构化接口、标准目录、召回通报、认证名录或市场准入站。",
+        "reuse": "新网站先匹配经验族，再生成初始规则，避免从零配置。",
+    },
+    {
+        "capability_id": "bounded_discovery",
+        "name": "受限发现与详情跟随",
+        "stage": "入口与发现",
+        "description": "把入口、分页、列表、详情分层并设置边界，显式区分零页面、部分完成和访问限制。",
+        "reuse": "复用分页上限、同域限制、详情跟随和 include/exclude 结构。",
+    },
+    {
+        "capability_id": "structured_source_first",
+        "name": "结构化接口优先",
+        "stage": "数据接入",
+        "description": "存在 JSON、XML、RSS、OpenData 或官方 API 时优先利用结构化入口，网页作为补充证据。",
+        "reuse": "降低页面改版造成的维护成本，并保留稳定 ID、文号和版本字段。",
+    },
+    {
+        "capability_id": "content_and_fields",
+        "name": "正文与字段抽取",
+        "stage": "内容解析",
+        "description": "正文去噪后抽取法规编号、日期、状态、产品、风险、机构、标准号等业务字段。",
+        "reuse": "按来源类型复用字段组，不把导航、帮助页或搜索壳当正文。",
+    },
+    {
+        "capability_id": "attachment_evidence",
+        "name": "附件继承与独立留证",
+        "stage": "附件处理",
+        "description": "PDF/XML/XLSX 等附件可继承已确认父页面上下文，同时独立保存原始件、指纹和来源关系。",
+        "reuse": "适用于法规附件、测试程序、公告附件和公开批量数据集。",
+    },
+    {
+        "capability_id": "rights_boundary",
+        "name": "公开元数据与授权边界",
+        "stage": "合规边界",
+        "description": "标准与受许可内容默认只处理公开元数据，全文只有在合法授权后进入处理链。",
+        "reuse": "新标准站默认 metadata_only，不因技术上可访问就扩大抓取范围。",
+    },
+    {
+        "capability_id": "relevance_governance",
+        "name": "相关性闸门与人工复核",
+        "stage": "质量治理",
+        "description": "自动判断与人工结论分开保存；只有相关项进入后续解析，待复核与排除项保留审计证据。",
+        "reuse": "新站通过少量代表样本快速稳定规则，同时防止无关页面污染知识库。",
+    },
+    {
+        "capability_id": "access_preconditions",
+        "name": "授权、出口与时窗前置",
+        "stage": "运行条件",
+        "description": "把 API Key、账号授权、自托管出口和站点允许的自动抽取时窗作为显式运行前置。",
+        "reuse": "前置条件可视化并可执行，Secret 与站点配置、采集结果分离。",
+    },
+    {
+        "capability_id": "version_feedback_loop",
+        "name": "版本留存与反馈回环",
+        "stage": "持续优化",
+        "description": "抓取件做指纹和版本留存；过采/漏采先形成最小候选规则，回放验证并经人工确认后应用。",
+        "reuse": "新站从受限试采进入增量采集与持续调优，而不是一次性脚本。",
+    },
+)
+
 
 class CollectionExperienceService:
     def __init__(
@@ -578,6 +644,167 @@ class CollectionExperienceService:
             raise ValueError("experience template not found")
         return item
 
+    @staticmethod
+    def _experience_capability_ids(item: dict[str, Any]) -> list[str]:
+        ids = {
+            "site_shape_matching",
+            "bounded_discovery",
+            "content_and_fields",
+            "relevance_governance",
+            "version_feedback_loop",
+        }
+        access_method = str(item.get("access_method") or "")
+        rule_profile = dict(item.get("rule_profile") or {})
+        validation = dict(item.get("validation") or {})
+        access = dict(validation.get("access") or {})
+        if access_method in {"api", "xml", "rss"}:
+            ids.add("structured_source_first")
+        if bool(rule_profile.get("fetch_attachments")):
+            ids.add("attachment_evidence")
+        if str(item.get("document_policy") or "") == "metadata_only":
+            ids.add("rights_boundary")
+        if access:
+            ids.add("access_preconditions")
+        return sorted(ids)
+
+    def transferability(self) -> dict[str, Any]:
+        experiences = self.source_experiences()
+        capability_map = {
+            str(item["capability_id"]): dict(item)
+            for item in CAPABILITY_BLOCKS
+        }
+        capability_sources: dict[str, list[dict[str, Any]]] = {
+            key: [] for key in capability_map
+        }
+        template_groups: dict[str, list[dict[str, Any]]] = {}
+        for experience in experiences:
+            template_groups.setdefault(str(experience["template_id"]), []).append(experience)
+            capability_ids = self._experience_capability_ids(experience)
+            experience["capability_ids"] = capability_ids
+            for capability_id in capability_ids:
+                capability_sources.setdefault(capability_id, []).append(experience)
+
+        capabilities: list[dict[str, Any]] = []
+        for raw in CAPABILITY_BLOCKS:
+            capability_id = str(raw["capability_id"])
+            sources = capability_sources.get(capability_id, [])
+            status_counts = Counter(
+                str((item.get("validation") or {}).get("status") or "not_recorded")
+                for item in sources
+            )
+            template_ids = sorted({str(item["template_id"]) for item in sources})
+            examples = sorted(
+                sources,
+                key=lambda item: (
+                    0 if str((item.get("validation") or {}).get("status")) == "passed" else
+                    1 if str((item.get("validation") or {}).get("status")) == "partial" else
+                    2,
+                    int(item.get("order") or 0),
+                ),
+            )[:6]
+            capabilities.append({
+                **dict(raw),
+                "source_count": len(sources),
+                "tested_count": sum(
+                    count for status, count in status_counts.items()
+                    if status != "not_recorded"
+                ),
+                "passed_or_partial": int(status_counts.get("passed", 0)) + int(status_counts.get("partial", 0)),
+                "status_counts": dict(status_counts),
+                "template_ids": template_ids,
+                "examples": [
+                    {
+                        "source_key": item["source_key"],
+                        "source_name": item["source_name"],
+                        "template_name": item["template_name"],
+                        "validation_status": (item.get("validation") or {}).get("status", "not_recorded"),
+                    }
+                    for item in examples
+                ],
+            })
+
+        templates: list[dict[str, Any]] = []
+        catalog = self._template_map()
+        for template_id, sources in sorted(template_groups.items()):
+            status_counts = Counter(
+                str((item.get("validation") or {}).get("status") or "not_recorded")
+                for item in sources
+            )
+            capability_ids = sorted({
+                capability_id
+                for item in sources
+                for capability_id in self._experience_capability_ids(item)
+            })
+            examples = sorted(
+                sources,
+                key=lambda item: (
+                    0 if str((item.get("validation") or {}).get("status")) == "passed" else
+                    1 if str((item.get("validation") or {}).get("status")) == "partial" else
+                    2,
+                    int(item.get("order") or 0),
+                ),
+            )[:8]
+            templates.append({
+                "template_id": template_id,
+                "template_name": catalog[template_id]["name"],
+                "source_count": len(sources),
+                "tested_count": sum(
+                    count for status, count in status_counts.items()
+                    if status != "not_recorded"
+                ),
+                "passed": int(status_counts.get("passed", 0)),
+                "partial": int(status_counts.get("partial", 0)),
+                "restricted": int(status_counts.get("restricted", 0)),
+                "failed": int(status_counts.get("failed", 0)),
+                "capability_ids": capability_ids,
+                "source_keys": [str(item["source_key"]) for item in sources],
+                "examples": [
+                    {
+                        "source_key": item["source_key"],
+                        "source_name": item["source_name"],
+                        "validation_status": (item.get("validation") or {}).get("status", "not_recorded"),
+                    }
+                    for item in examples
+                ],
+            })
+
+        all_status_counts = Counter(
+            str((item.get("validation") or {}).get("status") or "not_recorded")
+            for item in experiences
+        )
+        return {
+            "capabilities": capabilities,
+            "templates": templates,
+            "workflow": [
+                "识别站点形态",
+                "匹配首批50站经验模板",
+                "组合可复用能力块并生成候选规则",
+                "受限试采",
+                "相关性闸门与人工复核",
+                "最小规则修正与回放验证",
+                "进入增量采集、版本留存和持续优化",
+            ],
+            "summary": {
+                "sources": len(experiences),
+                "templates": len(template_groups),
+                "capabilities": len(capabilities),
+                "tested": sum(
+                    count for status, count in all_status_counts.items()
+                    if status != "not_recorded"
+                ),
+                "passed": int(all_status_counts.get("passed", 0)),
+                "partial": int(all_status_counts.get("partial", 0)),
+                "restricted": int(all_status_counts.get("restricted", 0)),
+                "failed": int(all_status_counts.get("failed", 0)),
+            },
+            "governance": {
+                "template_is_initial_rule": True,
+                "bounded_trial_required": True,
+                "human_review_required": True,
+                "formal_knowledge_auto_promotion": False,
+            },
+        }
+
     def recommend(self, source_key: str) -> dict[str, Any]:
         source = self.source_registry.by_key(source_key)
         text = " ".join([
@@ -613,6 +840,32 @@ class CollectionExperienceService:
             item["recommended"] = tid == preferred
             item["recommendation_reasons"] = reasons or ["可作为备选模板人工比较"]
             ranked.append(item)
+        support_map = {
+            str(item["template_id"]): item
+            for item in self.transferability().get("templates") or []
+        }
+        for item in ranked:
+            support = dict(support_map.get(str(item["template_id"])) or {})
+            item["experience_support"] = {
+                "source_count": int(support.get("source_count") or 0),
+                "tested_count": int(support.get("tested_count") or 0),
+                "passed": int(support.get("passed") or 0),
+                "partial": int(support.get("partial") or 0),
+                "restricted": int(support.get("restricted") or 0),
+                "failed": int(support.get("failed") or 0),
+                "capability_ids": list(support.get("capability_ids") or []),
+                "examples": list(support.get("examples") or []),
+            }
+            if item["experience_support"]["source_count"]:
+                item["recommendation_reasons"].append(
+                    "首批50站中有 "
+                    + str(item["experience_support"]["source_count"])
+                    + " 个同类来源经验，其中 "
+                    + str(item["experience_support"]["passed"])
+                    + " 个通过、"
+                    + str(item["experience_support"]["partial"])
+                    + " 个部分通过"
+                )
         ranked.sort(key=lambda x: (-int(x["score"]), str(x["template_id"])))
         return {
             "source": source,
