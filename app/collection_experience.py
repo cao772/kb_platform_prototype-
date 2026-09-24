@@ -18,6 +18,7 @@ VALIDATION_STATUS_PATHS = [
     ROOT / "data" / f"first50_round{round_no}_status.json"
     for round_no in range(99, 0, -1)
 ]
+STAGE50_REUSE_RESULTS_PATH = ROOT / "data" / "stage50_reuse_results.json"
 
 
 
@@ -1332,6 +1333,31 @@ class CollectionExperienceService:
             item["source_keys"] = keys.get(template_id, [])
             output.append(item)
         return output
+
+    @staticmethod
+    def migration_validation() -> dict[str, Any]:
+        if not STAGE50_REUSE_RESULTS_PATH.exists():
+            return {
+                "stage": 50,
+                "summary": {
+                    "processed": 0,
+                    "template_matches": 0,
+                    "direct_reuse": 0,
+                    "minor_adjustment": 0,
+                    "needs_rework": 0,
+                    "direct_reuse_rate": 0,
+                },
+                "items": [],
+                "evidence": {},
+                "governance": {
+                    "formal_knowledge_auto_promotion": False,
+                    "human_review_still_required": True,
+                },
+            }
+        payload = json.loads(STAGE50_REUSE_RESULTS_PATH.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("Stage50 reuse result must be an object")
+        return payload
 
     def overview(self) -> dict[str, Any]:
         experiences = self.source_experiences()
