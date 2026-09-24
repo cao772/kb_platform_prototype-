@@ -115,5 +115,7 @@ jobs:
         run: PYTHONPATH=. python tests/test_stage46_access_preconditions.py
       - name: Stage47 access action center tests
         run: PYTHONPATH=. python tests/test_stage47_access_action_center.py
+      - name: Stage48 transferable experience map tests
+        run: PYTHONPATH=. python tests/test_stage48_transferable_experience_map.py
       - name: Stage45 archive dataset tests
         run: PYTHONPATH=. python tests/test_stage45_archive_dataset.py
