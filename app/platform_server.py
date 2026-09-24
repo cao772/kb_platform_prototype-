@@ -242,6 +242,16 @@ class Handler(BaseHandler):
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
+        if parsed.path == "/api/collection-experience/reuse-outcomes":
+            try:
+                self._send_json(collection_experience.reuse_outcomes(
+                    source_key=params.get("source_key", [""])[0],
+                    limit=min(int(params.get("limit", ["100"])[0] or 100), 500),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if parsed.path == "/api/collection/runs":
             try:
                 self._send_json(source_collection.list_runs(
@@ -803,6 +813,19 @@ class Handler(BaseHandler):
                     str(payload.get("source_key") or ""),
                     str(payload.get("template_id") or ""),
                     expected_base_hash=str(payload.get("expected_base_hash") or ""),
+                    operator=str(payload.get("operator") or ""),
+                    note=str(payload.get("note") or ""),
+                ))
+            except Exception as exc:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if parsed.path == "/api/collection-experience/reuse-outcome-review":
+            try:
+                payload = self._read_json()
+                self._send_json(collection_experience.save_reuse_outcome(
+                    int(payload.get("application_id") or 0),
+                    outcome=str(payload.get("outcome") or ""),
                     operator=str(payload.get("operator") or ""),
                     note=str(payload.get("note") or ""),
                 ))
