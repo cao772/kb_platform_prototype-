@@ -3,15 +3,6 @@ name: stage50-real-reuse-validation
 on:
   push:
     branches:
-      - feature/stage50-real-reuse-validation
-    paths:
-      - "data/stage50_reuse_candidates.json"
-      - "scripts/validate_stage50_reuse.py"
-      - "app/collection_experience.py"
-      - "app/site_extraction.py"
-      - ".github/workflows/stage50_real_reuse.yml"
-  pull_request:
-    branches:
       - "通用知识库平台"
     paths:
       - "data/stage50_reuse_candidates.json"
