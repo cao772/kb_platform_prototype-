@@ -18,7 +18,12 @@
       "order": 53,
       "source_key": "IT-MIMIT-PRODUCT-SAFETY",
       "expected_template": "product_safety_notice",
-      "purpose": "意大利消费品安全与市场监管"
+      "purpose": "意大利消费品安全与市场监管",
+      "alternate_start_urls": [
+        "https://www.mimit.gov.it/it/mercato-e-consumatori/tutela-del-consumatore/diritti-del-consumatore/normativa-sulla-sicurezza-dei-prodotti",
+        "https://www.mimit.gov.it/it/mercato-e-consumatori/sicurezza-prodotti/prodotti-sicuri"
+      ],
+      "remediation_note": "英文入口触发浏览器挑战时，仅切换到同一MIMIT官方站可公开访问的意大利语产品安全入口。"
     },
     {
       "order": 54,
