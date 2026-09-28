@@ -1,0 +1,35 @@
+name: storage-contract
+
+on:
+  pull_request:
+    paths:
+      - "docs/storage/**"
+      - "scripts/storage_contract.py"
+      - "tests/test_storage_contract.py"
+      - ".github/workflows/storage_contract.yml"
+  push:
+    branches:
+      - "通用知识库平台"
+    paths:
+      - "docs/storage/**"
+      - "scripts/storage_contract.py"
+      - "tests/test_storage_contract.py"
+      - ".github/workflows/storage_contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate storage manifest
+        run: PYTHONPATH=. python scripts/storage_contract.py --check
+      - name: Test storage contract
+        run: PYTHONPATH=. python tests/test_storage_contract.py
+      - name: Print Drive folder mapping
+        run: PYTHONPATH=. python scripts/storage_contract.py --list-folders
