@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "project": "法规知识库平台",
+  "updated_at": "2026-09-28",
+  "storage_policy": {
+    "code": "github",
+    "artifacts": "google_drive",
+    "logs_and_long_term_context": "notion"
+  },
+  "github": {
+    "repository": "cao772/kb_platform_prototype-",
+    "stable_branch": "通用知识库平台"
+  },
+  "notion": {
+    "root_page_id": "3e37bbed-1352-80bf-b923-d83f3578ede2",
+    "stable_context_page_id": "3e37bbed-1352-814a-a807-f157a9985352",
+    "git_progress_page_id": "3e37bbed-1352-8111-94e7-c9a911957aaf",
+    "change_log_page_id": "3e37bbed-1352-8148-8128-fe38e08c6a60"
+  },
+  "google_drive": {
+    "root": {
+      "name": "法规知识库平台",
+      "id": "1q7q3TUE25H_t0nukHvX5_jBgKrZm0hVd",
+      "url": "https://drive.google.com/drive/folders/1q7q3TUE25H_t0nukHvX5_jBgKrZm0hVd"
+    },
+    "folders": {
+      "project_index": {
+        "name": "00_项目索引",
+        "id": "1_Ek9jiyS7JVCXa27JnDuj2QYJK9dz7mm"
+      },
+      "formal_standards": {
+        "name": "01_正式标准与业务口径",
+        "id": "1YL16bjoqfGqpOBbqutd3_5gdcNo80LKa"
+      },
+      "raw_business_data": {
+        "name": "02_原始业务数据",
+        "id": "106zxzDNws05-hFlpqNpATDnf-dB-A6gi"
+      },
+      "evaluation_data": {
+        "name": "03_评测与验证数据",
+        "id": "1fHXF5NP3ZnF6JIc8g1wv8HlAnt72ywp4"
+      },
+      "algorithms_and_rules": {
+        "name": "04_算法与规则资料",
+        "id": "1qBL-4_hpOVH2CUU6wXobfGfy5t0VgwJu"
+      },
+      "project_process": {
+        "name": "05_项目过程材料",
+        "id": "180L_p4zmxj2Fq-OiHnWNW4mdWalqDhWR"
+      },
+      "acceptance_and_delivery": {
+        "name": "06_初验与交付材料",
+        "id": "18k96lqz_fWEnp6sybLKX3ZQU__H-PoE0"
+      },
+      "screenshots_and_evidence": {
+        "name": "07_截图与证据",
+        "id": "1i3n6PyYrMMoM9ikBF0hhy4sq280GxIMK"
+      },
+      "reports_and_outputs": {
+        "name": "08_报告与输出",
+        "id": "1-4FU4N3NHJyu6PFmArrNZgZ-LYF_YfuG"
+      },
+      "archive": {
+        "name": "99_历史归档",
+        "id": "1pTBfgNaqUwrqfxWAEeTtlLO27B9ZdUcr"
+      }
+    }
+  },
+  "artifact_record_contract": {
+    "required_fields": [
+      "logical_key",
+      "file_name",
+      "drive_file_id",
+      "drive_url",
+      "folder_key",
+      "sha256",
+      "size_bytes",
+      "created_at",
+      "producer",
+      "source_commit"
+    ],
+    "producer_values": ["chatgpt", "codex", "manual", "ci"]
+  },
+  "handoff": {
+    "chatgpt": [
+      "Inspect and organize Google Drive files and folders",
+      "Upload finished artifacts and evidence to the mapped Drive folder",
+      "Record stable decisions, links, hashes, and stage summaries in Notion",
+      "Verify GitHub branch, PR, and CI before recording stable code state"
+    ],
+    "codex": [
+      "Implement code, scripts, tests, and CI changes in GitHub",
+      "Generate artifacts into deterministic local output paths",
+      "Never hard-code private Drive credentials or tokens",
+      "Use this manifest's logical folder keys instead of inventing Drive destinations"
+    ],
+    "shared_protocol": [
+      "GitHub is the coordination source for code and machine-readable storage metadata",
+      "Drive is the binary/artifact source of truth",
+      "Notion is the long-term project log and cross-window context source of truth",
+      "A filename alone is not a file identity; use Drive file id plus SHA256 for immutable evidence",
+      "Replacing a deliverable should preserve the logical_key and create a new hash/version record"
+    ]
+  }
+}
