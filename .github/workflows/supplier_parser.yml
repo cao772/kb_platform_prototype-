@@ -1,0 +1,17 @@
+name: supplier-parser-offline
+on:
+  push:
+    paths: ['supplier_test_parser/**', '.github/workflows/supplier_parser.yml']
+  pull_request:
+    paths: ['supplier_test_parser/**', '.github/workflows/supplier_parser.yml']
+permissions:
+  contents: read
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest discover -s supplier_test_parser/tests -v

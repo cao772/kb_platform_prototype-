@@ -1,0 +1,7 @@
+outputs/*
+!outputs/.gitkeep
+node_modules
+*.pdf
+*.xlsx
+*.zip
+*.log
