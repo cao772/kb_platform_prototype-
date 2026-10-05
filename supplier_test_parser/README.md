@@ -41,6 +41,14 @@ python3 -m unittest discover -s supplier_test_parser/tests -v
 
 ## 边界
 
+### 终审修订模式
+
+`--review execution_review.json`读取外部提供的源哈希绑定修订，不调用模型。`edits`逐行精确匹配，匹配失败立即中止；保留原识别文字、坐标和修订依据。`expected_gaps`及`duplicate_references`仅按标准、页码、条款白名单降为信息提示，不自动补号。源文件/修订全文只归档Drive，不提交Git。
+
+终审模式下，客户条款主表一条款一行；稳定键包含标准、章节或附录、节点类型和编号。经验测试名按给定规则回填，附录上下文优先，未提供主题不猜测。单元格超过Excel容量时中止而非截断；长文本可通过公式栏或原页对照阅读。
+
+使用`python3 -m supplier_test_parser.standard_parser.review_validation <新目录> <旧目录> <原修复清单.json> <执行修订.json>`生成19条工程断言和稳定键差异，随后运行Excel生成器与打包器。语义终审仍需业务复核，不能用断言通过率冒充准确率。
+
 本工具保证记录处理覆盖和可追溯，不代替逐项业务签审。扫描误识别（如I/II/III、微单位、公式上下标）和表格行列可能仍需原图复核。图表索引保留原图，不把OCR文本伪装成已准确恢复的二维表。业务方负责口径、关键数值抽检和最终对外版。
 
 PDF原件、OCR全文、客户产物、密钥和运行日志均不提交GitHub。GitHub只保存可复现代码、字段定义、合成测试和不含原文的运行统计。

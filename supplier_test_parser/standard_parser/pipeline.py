@@ -4,6 +4,7 @@ from .ocr import cached_pages,normalize,sha256,apply_corrections
 from .clause_tree import build_tree
 from .extract import extract,UNSPECIFIED
 from .validation import validate
+from .review import apply_review,classify_review_issues,experience_name,stable_key
 
 def save(path,data):
     path.parent.mkdir(parents=True,exist_ok=True)
@@ -15,6 +16,7 @@ def run(args):
     headers=json.loads((Path(__file__).parents[1]/'templates/standard_fields.json').read_text(encoding='utf8'))
     documents=[];all_nodes=[];all_issues=[];toc_all=[];page_rows=[];applied=[]
     corrections=json.loads(Path(args.corrections).read_text(encoding='utf8')) if args.corrections else []
+    review=json.loads(Path(args.review).read_text(encoding='utf8')) if getattr(args,'review',None) else None
     for source in args.pdf:
         pdf=Path(source).resolve();doc=fitz.open(pdf);digest=sha256(pdf)
         if args.ocr_cache:
@@ -25,6 +27,7 @@ def run(args):
             subprocess.run(['swift',str(Path(__file__).parent/'ocr/vision.swift'),str(pdf),str(raw)],check=True)
             pages=[normalize(json.loads(p.read_text(encoding='utf8'))) for p in sorted(raw.glob('*.json'))]
         applied.extend(apply_corrections(pages,digest,corrections))
+        if review:applied.extend(apply_review(pages,digest,review))
         cover=pages[0]['text'] if pages else ''
         specific='4706.13' in pdf.name or '4706.13' in cover
         code='GB4706-13' if specific else 'GB4706-1'
@@ -32,6 +35,7 @@ def run(args):
         title='家用和类似用途电器的安全 第13部分：制冷器具、冰淇淋机和制冰机的特殊要求' if specific else '家用和类似用途电器的安全 第1部分：通用要求'
         nodes,toc,events=build_tree(pages,code)
         issues=validate(pages,nodes,toc,len(doc),events)
+        if review:classify_review_issues(issues,std,review)
         for issue in issues:issue.update(standard=std,source_pdf=pdf.name)
         all_issues.extend(issues)
         for t in toc:t.update(standard=std,source_pdf=pdf.name);toc_all.append(t)
@@ -43,6 +47,8 @@ def run(args):
             page_rows.append({'code':code,'standard':std,'source_pdf':pdf.name,'page':p['page'],'text':p['text'],'line_count':len(p['lines']),'image':image,'method':'本地Apple Vision','width_pt':page.rect.width,'height_pt':page.rect.height})
         for n in nodes:
             n.update(standard=std,standard_name=title,source_pdf=pdf.name,source_sha256=digest,extraction=extract(n))
+            n['stable_clause_key']=stable_key(n)
+            if review:n['experience_test_name']=experience_name(n,review['experience_test_name_rules'])
             n['source_url']=f"原文对照.html#{code}-p{n['pages'][0]}"
             n['pdf_location']=[{'page':e['page'],'bbox_normalized':e['bbox'],'coordinate_system':'bottom_left_xywh','text':e['text']} for e in n['evidence']]
         save(out/'clause_tree'/f'{code}.json',{'id':code,'standard':std,'nodes':nodes,'toc':toc})
@@ -52,20 +58,20 @@ def run(args):
     save(out/'validation/issues.json',all_issues)
     save(out/'validation/applied_corrections.json',applied)
     save(out/'manifest.json',{'documents':documents,'model_api_calls':0,'ocr_engine':'Apple Vision local','extraction':'literal paragraph matching','bbox_coordinates':'normalized bottom-left xywh'})
-    specs=workbooks(documents,all_nodes,toc_all,all_issues,page_rows,headers)
+    specs=workbooks(documents,all_nodes,toc_all,all_issues,page_rows,headers,one_row=bool(review))
     save(out/'excel_generator/workbooks.json',specs)
     build_reader(out,all_nodes,page_rows)
     summary={d['standard']:{'pdf_pages':d['pdf_pages'],'ocr_pages':d['ocr_pages'],'clause_nodes':d['clause_nodes'],'figure_table_nodes':d['figure_table_nodes']} for d in documents}
     print(json.dumps({'documents':summary,'issues':dict(collections.Counter(x['type'] for x in all_issues)),'model_api_calls':0},ensure_ascii=False))
 
-def workbooks(documents,nodes,toc,issues,pages,headers):
+def workbooks(documents,nodes,toc,issues,pages,headers,one_row=False):
     def sheet(name,rows,widths):return {'name':name,'rows':rows,'widths':widths}
     info=[['标准号','标准名称','来源文件','PDF页数','已处理页数','源文件SHA256','字段口径']]
     for d in documents:info.append([d['standard'],d['title'],d['filename'],d['pdf_pages'],d['ocr_pages'],d['sha256'],'以收到版本为准；周期只摘录条文试验时间，不填实验室或认证周期。本条未规定不代表其他条款没有要求。'])
     directory=[['标准号','来源','章节/条款','标题','父节点','PDF页码','印刷页码','节点ID']]
     for t in toc:directory.append([t['standard'],'原目录',t['number'],t['title'],'',t['page'],t['printed_page'],''])
     for n in nodes:directory.append([n['standard'],'正文结构',n['number'],n['title'],n['parent_id'],','.join(map(str,n['pages'])),'',n['id']])
-    parsed=[headers+['source_pdf','page','clause','原文位置','原页链接','内容分段']]
+    parsed=[headers+['source_pdf','page','clause','原文位置','原页链接','stable_clause_key' if one_row else '内容分段']]
     tests=[['标准号','章节','条款号','测试类型','样品要求','预处理','试验时间/次数','测试条件','设备','方法','稳定条件','判定要求','顺序','通用与特殊关系','来源页码','原页链接','内容分段']]
     refs=[['标准号','章节','条款号','引用标准','来源页码','原文','原页链接']]
     figures=[['标准号','章节','条款号','图表编号','类型','标题或引用语境','来源页码','附录关系','原页链接']]
@@ -86,10 +92,15 @@ def workbooks(documents,nodes,toc,issues,pages,headers):
         terminology='；'.join(z for z in x['related_clauses'] if z.startswith('3.')) or '本条未明确引用术语编号'
         v=[n['standard'],n['standard_name'],applicability,exclusion,n['chapter'],n['number'],x['test_type'],n['title'] if '试验' in n['title'] else '本条未规定独立测试名称','需业务方填写',f['样品要求'],f['预处理'],f['周期'],condition,f['设备'],f['方法'],f['稳定条件'],f['判定要求'],f['顺序'],'；'.join(x['references']) or UNSPECIFIED,terminology,'；'.join(x['figures']) or UNSPECIFIED,n['text']]
         v+=(x['related_clauses']+['本条未规定']*5)[:5]
+        if one_row:v[8]=n['experience_test_name']
         v+=['未提供对应材料','未提供对应材料','未提供对应材料',('附录关系：'+'；'.join(x['annexes'])+'。' if x['annexes'] else '')+('通用/特殊关系：'+x['relationship'] if x['relationship'] else '')]
         position='；'.join(f"P{e['page']} bbox={','.join(f'{v:.4f}' for v in e['bbox'])}" for e in n['evidence'][:3])
         if n['number']!='1' or n['chapter']!='1':v[2:4]=['见本标准第1章范围条目的完整原文','见本标准第1章范围条目的完整原文']
-        parsed.extend(split_row(v+[n['source_pdf'],pagestr,n['number'],position,n['source_url']],[2,3,*range(9,31)],37))
+        if one_row:
+            row=v+[n['source_pdf'],pagestr,n['number'],position,n['source_url'],n['stable_clause_key']]
+            if any(len(str(c))>32767 for c in row):raise ValueError('Excel cell limit exceeded; no truncation permitted')
+            parsed.append(row)
+        else:parsed.extend(split_row(v+[n['source_pdf'],pagestr,n['number'],position,n['source_url']],[2,3,*range(9,31)],37))
         if x['test_type']=='试验要求':tests.extend(split_row([n['standard'],n['chapter'],n['number'],x['test_type']]+[f[k] for k in ['样品要求','预处理','周期','测试条件','设备','方法','稳定条件','判定要求','顺序']]+[x['relationship'],pagestr,n['source_url']],list(range(4,13)),17))
         for ref in x['references']:
             quote=next((e['text'] for e in n['evidence'] if ref in e['text']),n['text'][:250])
@@ -107,6 +118,8 @@ def workbooks(documents,nodes,toc,issues,pages,headers):
     pagetable=[['标准号','PDF页码','文字数','识别行数','方法']]+[[p['standard'],p['page'],len(p['text']),p['line_count'],p['method']] for p in pages]
     rowcounts=[['工作表','数据行数']]+[[s['name'],len(s['rows'])-1] for s in main]
     checks=[sheet('检查汇总',overview,[35,22,100]),sheet('问题明细',issue_rows,[25,30,16,20,110]),sheet('OCR页检查',failures,[25,16,32,110]),sheet('逐页处理记录',pagetable,[25,16,18,18,35]),sheet('Excel行数',rowcounts,[35,24])]
+    if one_row:
+        stats[5][2]='一条款一行，stable_clause_key包含标准及正文/附录上下文；长文本完整保留，阅读时可用公式栏或原文对照。'
     return [{'filename':'01_标准全文解析结果.xlsx','sheets':main},{'filename':'standard_validation_report.xlsx','sheets':checks}]
 
 def split_row(row,long_columns,target_count,limit=420):
@@ -138,5 +151,6 @@ def main():
     p=argparse.ArgumentParser(description='Offline standard parser. Does not call model APIs.')
     p.add_argument('--pdf',nargs='+',required=True);p.add_argument('--output',required=True)
     p.add_argument('--ocr-cache');p.add_argument('--cache-manifest');p.add_argument('--corrections',help='Optional source-hash-bound, image-checked corrections JSON')
+    p.add_argument('--review',help='Source-bound review execution JSON; exact lines and expected gaps')
     run(p.parse_args())
 if __name__=='__main__':main()

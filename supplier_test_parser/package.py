@@ -17,6 +17,13 @@ def main():
             assert (w.max_row,w.max_column)==(len(s['rows']),len(s['rows'][0]))
             assert w.freeze_panes=='B2'
             assert len(w.tables)==1
+            for ri, expected_row in enumerate(s['rows'],1):
+                for ci, expected in enumerate(expected_row,1):
+                    cell=w.cell(ri,ci)
+                    if ri>1 and s['rows'][0][ci-1]=='原页链接' and expected:
+                        assert cell.value==f'=HYPERLINK("{expected}","查看原页")'
+                    else:
+                        assert (cell.value if cell.value is not None else '')==(expected if expected is not None else ''),(w.title,cell.coordinate,'export value mismatch')
             for row in w:
                 for cell in row:
                     if cell.data_type=='e':raise ValueError(f'Excel error {w.title}!{cell.coordinate}')
@@ -52,12 +59,30 @@ def main():
 
 已修订的原图抽查字符保留在validation/applied_corrections.json；未逐条完成业务签审。最终客户版由业务方统一口径、抽检和收口。
 '''
+    if (root/'validation/review_assertions.json').exists():
+        note='''# 标准修订差异复核包（待终审）
+
+本包仅更新01标准侧，不覆盖已收口的02认证规则。使用新01、validation报告和validation/old_new_diff.json对照旧版复核。
+
+条款主表按stable_clause_key一条款一行，长字段完整存储；Excel单行有显示高度限制，可通过公式栏及原文对照阅读全文。测试要求表仍保留有编号的续行。原页200页不变，raw OCR与corrected text分层。
+
+VAL-01～19为工程回归断言，不是业务终审签字；VAL-19只检查字段为原段摘录或未规定，不证明所有语义正确。256个低置信节点仍保留。表格本轮修正指定类别表头，不声称完成全表二维重建或全部数值核验。
+
+重要输入冲突：PDF41第16.2条0.5 mA对应0类、0I类和III类，输入清单误写I类。已按原图改为III类，请GPT优先差异复核。
+
+输入包、执行补丁、完整修订日志、旧新差异、逐页图像均在包内。不新增DeepSeek或其他模型API调用；不得把本包标成已验收最终版。
+'''
     (root/'交接说明.md').write_text(note,encoding='utf8')
     paths=[root/s['filename'] for s in specs]+[root/n for n in ['原文对照.html','manifest.json','交接说明.md','validation/issues.json','validation/applied_corrections.json','validation/export_checks.json']]
     if (root/'checked_corrections.json').exists():paths.append(root/'checked_corrections.json')
+    for name in ['validation/review_assertions.json','validation/old_new_diff.json']:
+        if (root/name).exists():paths.append(root/name)
+    if (root/'input').exists():paths.extend(p for p in (root/'input').iterdir() if p.suffix in ('.json','.xlsx'))
     for folder in ['ocr','clause_tree','extract','原页']:paths.extend(p for p in (root/folder).rglob('*') if p.is_file())
     paths=sorted(set(paths));files=[{'path':str(p.relative_to(root)),'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'size_bytes':p.stat().st_size} for p in paths]
     handoff={'logical_key':'supplier-part2-local-standard-parser','local_path':str(root),'folder_key':'evaluation_data','source_commit':args.source_commit,'artifact_type':'evidence','notes':'仅标准工程解析；不包含02认证规则及03业务抽检表；业务签审另行进行','files':files}
+    if (root/'validation/review_assertions.json').exists():
+        handoff.update(logical_key='supplier-part2-standard-review-revision',folder_key='acceptance_and_delivery',notes='01标准修订差异包；待终审；不覆盖02认证规则；16.2输入冲突按原图III类修正')
     (root/'handoff_manifest.json').write_text(json.dumps(handoff,ensure_ascii=False,indent=2),encoding='utf8')
     archive=root/'标准解析_工程交接包.zip'
     with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED) as z:

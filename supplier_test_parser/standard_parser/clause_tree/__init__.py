@@ -42,7 +42,7 @@ def build_tree(pages,doc_id):
                 chapter=cm.group(1);label=chapter;kind='chapter';title=cm.group(2)
             elif text in title_map and not annex:
                 chapter=title_map[text];label=chapter;kind='chapter';title=text;inferred=True
-            elif nm and x<.17:
+            elif nm and (x<.17 or l.get('force_heading')):
                 n=nm.group(1)
                 if n.split('.')[0]==chapter or annex and (n.startswith(annex+'.') or annex not in ('O','R') and n[0].isdigit()):
                     label=n;title=text[nm.end():].strip()
@@ -62,6 +62,8 @@ def build_tree(pages,doc_id):
                 active['text']+=('\n' if active['text'] else '')+text
     for n in nodes:
         n['pages']=sorted({e['page'] for e in n['evidence']})
+        if n['kind']=='clause' and not n['title'] and len(n['evidence'])>1:
+            n['title']=n['evidence'][1]['text']
     for n in nodes:
         if n['kind'] in ('figure','table'):continue
         # Distinguish annex namespace from repeated main-body chapter numbers.
