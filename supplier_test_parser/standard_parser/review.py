@@ -29,6 +29,25 @@ def apply_review(pages,digest,review):
                 l.setdefault('ocr_text',before);l['text']=after;l['correction_basis']='review R1/R2: numerical tolerance / electrical class only'
                 applied.append(dict(source_sha256=digest,page=p['page'],before=before,after=after,bbox=l['bbox'],basis=l['correction_basis']))
         p['text']='\n'.join(l['text'] for l in p['lines'])
+    # A later source-reviewed revision targets the corrected baseline, not raw OCR.
+    for edit in review.get('post_edits',[]):
+        if edit['source_sha256']!=digest:continue
+        p=next(p for p in pages if p['page']==edit['page'])
+        matches=[l for l in p['lines'] if l['text']==edit['before']]
+        if len(matches)!=1:raise ValueError('Post-review line mismatch: '+str(edit))
+        l=matches[0];l.setdefault('ocr_text',l['text']);l['text']=edit['after'];l['correction_basis']=edit['basis']
+        applied.append(dict(edit,bbox=l['bbox']))
+    if review.get('isolate_page_furniture'):
+        for p in pages:
+            for l in p['lines']:
+                before=l['text'];x,y,w,h=l['bbox']
+                # Source-specific watermark identity and printed page offset; no generic digit deletion.
+                after=re.sub(r'(?:号[：:]|[：:])?\s*2024-0814-1127-0806-4238','',before).rstrip()
+                if p['page']>=9 and before==str(p['page']-8) and y<.085 and (x>.80 or x<.15):after=''
+                if after!=before:
+                    l.setdefault('ocr_text',before);l['text']=after;l['correction_basis']='source-verified margin watermark / printed folio; original block retained'
+                    applied.append(dict(source_sha256=digest,page=p['page'],before=before,after=after,bbox=l['bbox'],basis=l['correction_basis']))
+    for p in pages:p['text']='\n'.join(l['text'] for l in p['lines'] if l['text'])
     return applied
 
 def classify_review_issues(issues,std,review):

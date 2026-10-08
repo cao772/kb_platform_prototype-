@@ -21,5 +21,13 @@ class ReviewTests(unittest.TestCase):
         pages=[dict(page=1,lines=[dict(text='43°C士',bbox=[0,0,1,1]),dict(text='1°C',bbox=[0,0,1,1])])]
         apply_review(pages,'ok',dict(source_sha256=['ok'],edits=[]))
         self.assertEqual(pages[0]['text'],'43°C±\n1°C')
+    def test_export_scan_without_leading_digit(self):
+        from supplier_test_parser.standard_parser.export_validation import bad_cells
+        self.assertEqual(len(bad_cells([dict(name='测试要求',rows=[['器具厚度士0.1 mm']])])),1)
+        self.assertFalse(bad_cells([dict(name='测试要求',rows=[['器具厚度±0.1 mm 蒸发皿']])]))
+    def test_footer_is_not_body_number(self):
+        pages=[dict(page=53,lines=[dict(text='45',bbox=[.85,.06,.02,.01]),dict(text='45',bbox=[.4,.5,.02,.01])])]
+        apply_review(pages,'ok',dict(source_sha256=['ok'],edits=[],isolate_page_furniture=True))
+        self.assertEqual(pages[0]['text'],'45')
 
 if __name__=='__main__':unittest.main()

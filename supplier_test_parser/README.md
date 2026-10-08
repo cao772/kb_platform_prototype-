@@ -41,6 +41,12 @@ python3 -m unittest discover -s supplier_test_parser/tests -v
 
 ## 边界
 
+### 三文件客户包
+
+`customer_workbooks.mjs <输出目录>`读取本地customer_specs.json、engineering_specs.json及已审认证工作簿，生成三个客户Excel和独立验证报告。`python3 -m supplier_test_parser.customer_package <输出目录> --source-commit <SHA>`对持久化Excel逐格回读、扫描全部工作表已知OCR坏串和过程性措辞，再输出固定名称ZIP；包内严格只有三个Excel。认证主表及完整字段值以已审输入为准，不重新推断。
+
+源OCR的二次修订使用review中的post_edits，仍按PDF哈希、物理页码和原行精确匹配。页脚排除限定已核源文件的页码偏移和页边坐标；原始块保留。工程断言、页覆盖与局部抽核均不构成业务签审。缺失附件和源文件访问权限应保持明确，不能为客户包净化而删掉真实边界。
+
 ### 终审修订模式
 
 `--review execution_review.json`读取外部提供的源哈希绑定修订，不调用模型。`edits`逐行精确匹配，匹配失败立即中止；保留原识别文字、坐标和修订依据。`expected_gaps`及`duplicate_references`仅按标准、页码、条款白名单降为信息提示，不自动补号。源文件/修订全文只归档Drive，不提交Git。

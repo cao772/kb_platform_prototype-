@@ -28,6 +28,7 @@ def build_tree(pages,doc_id):
     for p in pages:
         for l in p['lines']:
             text=l['text'].strip();x=l['bbox'][0]
+            if not text:continue
             if not started and p['page']>=7 and re.match(r'^1\s*范围\s*$',text):started=True
             if not started:continue
             label=None;kind='clause';inferred=False;title=''

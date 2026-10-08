@@ -2,6 +2,7 @@
 import argparse,json,re,collections
 from pathlib import Path
 from .review import stable_key
+from .export_validation import bad_cells
 
 def run(root,old,manifest,review):
     load=lambda p:json.loads(Path(p).read_text())
@@ -24,7 +25,8 @@ def run(root,old,manifest,review):
     check(4,all(len(get(e['clause'],e['standard']))==1 for e in duplicates) and not any(i['type']=='duplicate_heading_candidate' for i in issues),'4个编号各一个主正文节点；续段保留')
     oldkeys={stable_key(n) for n in previous if n['kind'] not in ('figure','table')};newkeys={stable_key(n) for n in nodes if n['kind'] not in ('figure','table')}
     check(5,len(newkeys-oldkeys)==2 and not oldkeys-newkeys and sum(i['type']=='expected_gap' for i in issues)==len(review['expected_gaps']),'仅新增22.25/22.30；已确认编号边界按47条白名单处理')
-    check(6,not re.search(r'\d\s*[^\n]{0,8}士\s*\d',alltext),'纠正页面层扫描数值公差')
+    export_hits=bad_cells(specs[0]['sheets'])
+    check(6,not re.search(r'士\s*\d',alltext) and not export_hits,'页面及客户所有Sheet/派生字段负向扫描；持久化Excel另做逐格回读')
     oldtext='\n'.join(load(p)['text'] for p in (old/'ocr').glob('*/*.json'))
     check(7,not re.search('皿类器具|皿类结构',alltext) and alltext.count('蒸发皿')==oldtext.count('蒸发皿'),'蒸发皿保留数量='+str(alltext.count('蒸发皿')))
     bad=['60 H2','ISO 700Q','19.463','32°C士16','IEC 60695-2~¥2']
@@ -46,7 +48,7 @@ def run(root,old,manifest,review):
     edits=load(root/'validation/applied_corrections.json')
     check(18,all(e.get('source_sha256') and e.get('page') and e.get('basis') for e in edits) and all(l.get('ocr_text') for p in pages for l in p['lines'] if l.get('correction_basis')),'修订按原PDF哈希/页码绑定；行保留raw OCR与bbox')
     # Structural provenance check only; semantic business sign-off remains manual.
-    check(19,all(v=='本条未规定' or all(piece in ''.join(e['text'] for e in n['evidence']) for piece in v.split('\n')) for n in nodes for v in n['extraction']['fields'].values()),'自动验证仅证明抽取字段为原段摘录或未规定，不代替语义终审；无新增经验数值')
+    check(19,not export_hits and all(v=='本条未规定' or all(piece in ''.join(e['text'] for e in n['evidence']) for piece in v.split('\n')) for n in nodes for v in n['extraction']['fields'].values()),'抽取字段来源校验及客户所有导出字段负向扫描；不代替语义签审，导出后必须逐格回读')
     prior={stable_key(n):n for n in previous};diff=[]
     for n in nodes:
         key=stable_key(n);p=prior.get(key)
