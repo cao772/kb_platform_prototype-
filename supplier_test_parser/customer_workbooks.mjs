@@ -3,13 +3,14 @@ import path from 'node:path';
 import {FileBlob,SpreadsheetFile,Workbook} from '@oai/artifact-tool';
 const root=path.resolve(process.argv[2]);
 const specs=JSON.parse(await fs.readFile(path.join(root,'customer_specs.json'),'utf8'));
-const internal=JSON.parse(await fs.readFile(path.join(root,'engineering_specs.json'),'utf8'));
+const compact=process.argv.includes('--compact');
+const internal=compact?[]:JSON.parse(await fs.readFile(path.join(root,'engineering_specs.json'),'utf8'));
 const output=path.join(root,'供应商试题Part2_解析成果');
 await fs.mkdir(output,{recursive:true});
 await fs.mkdir(path.join(root,'previews'),{recursive:true});
 function col(n){let s='';for(;n;n=Math.floor((n-1)/26))s=String.fromCharCode(65+(n-1)%26)+s;return s;}
 for(const [bi,spec] of [...specs,...internal].entries()){
- const cert=bi===1;
+ const cert=bi===1&&!compact;
  const wb=cert?await SpreadsheetFile.importXlsx(await FileBlob.load(path.join(root,'input/certification_reviewed.xlsx'))):Workbook.create();
  if(cert){
   const edits=JSON.parse(await fs.readFile(path.join(root,'input/cert_edits.json'),'utf8'));
@@ -27,7 +28,9 @@ for(const [bi,spec] of [...specs,...internal].entries()){
    }
    if(nr>1&&new Set(s.rows[0]).size===nc)sh.tables.add(`A1:${col(nc)}${nr}`,true,`Delivery_${bi}_${si}`).showFilterButton=true;
    const link=s.rows[0].indexOf('原页链接');
-   if(link>=0&&nr>1)sh.getRange(`${col(link+1)}2:${col(link+1)}${nr}`).formulas=s.rows.slice(1).map(r=>r[link]?[`=HYPERLINK("${r[link]}","查看原页")`]:['']);
+   // Native external hyperlink relationships are attached after export.
+   // Keep the literal URL as a readable fallback; never use HYPERLINK formulas.
+   if(link>=0&&nr>1)sh.getRange(`${col(link+1)}2:${col(link+1)}${nr}`).format.font={name:'Arial',size:11,color:'#000000',underline:true};
   }
   range.format.font={name:'Arial',size:11,color:'#000000'};range.format.wrapText=true;range.format.verticalAlignment='top';
   sh.showGridLines=false;sh.freezePanes.freezeRows(cert&&si===0?3:1);sh.freezePanes.freezeColumns(1);

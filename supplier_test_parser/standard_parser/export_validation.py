@@ -15,6 +15,8 @@ def bad_cells(sheets):
 
 def verify_export(path,spec):
     import openpyxl
+    from ..native_links import xml_errors
+    assert not xml_errors(path),xml_errors(path)[:10]
     wb=openpyxl.load_workbook(path,data_only=False)
     assert wb.sheetnames==[s['name'] for s in spec['sheets']]
     actual=[]
@@ -26,7 +28,7 @@ def verify_export(path,spec):
                 cell=w.cell(ri,ci)
                 assert cell.data_type!='e',(w.title,cell.coordinate)
                 if ri>1 and s['rows'][0][ci-1]=='原页链接' and v:
-                    assert cell.value==f'=HYPERLINK("{v}","查看原页")'
+                    assert cell.value==v and cell.hyperlink and cell.hyperlink.target==v
                 else:assert ('' if cell.value is None else cell.value)==('' if v is None else v),(w.title,cell.coordinate)
         actual.append(dict(name=w.title,rows=rows))
     hits=bad_cells(actual)

@@ -3,6 +3,7 @@ import argparse,hashlib,json,re,zipfile,posixpath
 from pathlib import Path
 from xml.etree import ElementTree as ET
 from .standard_parser.export_validation import verify_export,bad_cells
+from .native_links import add_links,xml_errors
 
 NS='http://schemas.openxmlformats.org/spreadsheetml/2006/main'
 REL='http://schemas.openxmlformats.org/package/2006/relationships'
@@ -76,13 +77,14 @@ def strip_audit_sheets(source,target,keep):
 
 def main():
     import openpyxl
-    p=argparse.ArgumentParser();p.add_argument('root',type=Path);p.add_argument('--source-commit',required=True);a=p.parse_args();root=a.root
+    p=argparse.ArgumentParser();p.add_argument('root',type=Path);p.add_argument('--source-commit',required=True);p.add_argument('--compact',action='store_true');a=p.parse_args();root=a.root
     specs=json.loads((root/'customer_specs.json').read_text());out=root/'供应商试题Part2_解析成果'
-    strip_audit_sheets(root/'input/cert_edited_with_audit.xlsx',out/specs[1]['filename'],[s['name'] for s in specs[1]['sheets']])
+    if not a.compact:strip_audit_sheets(root/'input/cert_edited_with_audit.xlsx',out/specs[1]['filename'],[s['name'] for s in specs[1]['sheets']])
     checks={}
     for spec in specs:
         path=out/spec['filename']
-        if spec is not specs[1]:checks[path.name]=verify_export(path,spec)
+        links=add_links(path,spec)
+        if a.compact or spec is not specs[1]:checks[path.name]=verify_export(path,spec)
         else:
             wb=openpyxl.load_workbook(path);assert wb.sheetnames==[s['name'] for s in spec['sheets']]
             for s in spec['sheets']:
@@ -91,6 +93,7 @@ def main():
                     for ci,v in enumerate(row,1):assert (w.cell(ri,ci).value or '')==(v or ''),(s['name'],ri,ci)
             checks[path.name]={s['name']:(2 if s['name']=='认证实施规则字段' else len(s['rows'])-1) for s in spec['sheets']}
         wb=openpyxl.load_workbook(path)
+        assert not xml_errors(path)
         for w in wb:
             assert w.freeze_panes and (w.auto_filter.ref or w.tables),(path.name,w.title,'missing reading controls')
             for row in w:

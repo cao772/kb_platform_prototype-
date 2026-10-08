@@ -43,6 +43,16 @@ python3 -m unittest discover -s supplier_test_parser/tests -v
 
 ### 三文件客户包
 
+客户精简版固定为4个Sheet：01仅“条款解析”（744条结构记录），02仅“认证实施规则字段”（33列×2条完整记录），03保留“证据索引”（2681条）与“抽样核验”（25条）。客户31个标准字段不改；目录、图表、引用、测试分段等独有记录归并到对应条款补充列，来源指纹与认证审核边界归并到证据索引。`compact_delivery`生成逐记录映射和无损检查日志，解析统计留内部，不夹进客户ZIP。
+
+```bash
+python3 -m supplier_test_parser.compact_delivery /旧输出/customer_specs.json /新输出
+node supplier_test_parser/customer_workbooks.mjs /新输出 --compact
+python3 -m supplier_test_parser.customer_package /新输出 --compact --source-commit <SHA>
+```
+
+原页链接存储为可读URL，并通过原生OpenXML外部关系跳转，不使用HYPERLINK公式。导出检查同时扫描工作表XML的`t=e`缓存错误，防止公式模式回读漏检。原PDF分享权限不自动扩大；收件人也可按来源文件名和物理PDF页码定位。完整长文存储不截断，Excel行高上限导致未全部显示的内容可在公式栏阅读。最终放行仍由业务审核负责，不把工程检查与局部抽样当全文准确率。
+
 `customer_workbooks.mjs <输出目录>`读取本地customer_specs.json、engineering_specs.json及已审认证工作簿，生成三个客户Excel和独立验证报告。`python3 -m supplier_test_parser.customer_package <输出目录> --source-commit <SHA>`对持久化Excel逐格回读、扫描全部工作表已知OCR坏串和过程性措辞，再输出固定名称ZIP；包内严格只有三个Excel。认证主表及完整字段值以已审输入为准，不重新推断。
 
 源OCR的二次修订使用review中的post_edits，仍按PDF哈希、物理页码和原行精确匹配。页脚排除限定已核源文件的页码偏移和页边坐标；原始块保留。工程断言、页覆盖与局部抽核均不构成业务签审。缺失附件和源文件访问权限应保持明确，不能为客户包净化而删掉真实边界。
