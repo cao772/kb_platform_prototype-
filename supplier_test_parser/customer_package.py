@@ -23,6 +23,18 @@ def strip_audit_sheets(source,target,keep):
         relpath=posixpath.dirname(n)+'/_rels/'+posixpath.basename(n)+'.rels'
         assert relpath not in data,'Audit tab now has dependent objects; explicit handling required'
         del data[n]
+    # Restore native range filters lost on template import; duplicate customer
+    # header names must stay unchanged, so Excel tables are not suitable here.
+    targets={r.attrib['Id']:r.attrib['Target'] for r in rels}
+    for sheet in sheets:
+        t=targets[sheet.attrib[f'{{{DOCREL}}}id']]
+        name=t.lstrip('/') if t.startswith('/') else posixpath.normpath('xl/'+t)
+        tree=ET.fromstring(data[name]);af=tree.find(f'{{{NS}}}autoFilter')
+        if af is None:
+            af=ET.Element(f'{{{NS}}}autoFilter');tree.insert(list(tree).index(tree.find(f'{{{NS}}}sheetData'))+1,af)
+        sn=sheet.attrib['name']
+        af.set('ref','A3:AG5' if sn=='认证实施规则字段' else 'A1:G34' if sn.endswith('字段明细') else 'A1:C7')
+        data[name]=ET.tostring(tree,encoding='utf-8',xml_declaration=True)
     content=ET.fromstring(data['[Content_Types].xml'])
     for entry in list(content):
         if entry.attrib.get('PartName','').lstrip('/') in remove:content.remove(entry)
@@ -80,6 +92,7 @@ def main():
             checks[path.name]={s['name']:(2 if s['name']=='认证实施规则字段' else len(s['rows'])-1) for s in spec['sheets']}
         wb=openpyxl.load_workbook(path)
         for w in wb:
+            assert w.freeze_panes and (w.auto_filter.ref or w.tables),(path.name,w.title,'missing reading controls')
             for row in w:
                 for c in row:
                     assert c.data_type!='e'
