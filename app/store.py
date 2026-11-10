@@ -239,7 +239,8 @@ class KnowledgeStore:
         return int(cur.lastrowid)
 
     def list_compliance_records(self, *, review_status: str | None = "approved", region_code: str | None = None,
-                                product_class: str | None = None, limit: int = 500) -> list[dict[str, Any]]:
+                                product_class: str | None = None, record_id: int | None = None,
+                                record_type: str | None = None, limit: int | None = 500) -> list[dict[str, Any]]:
         clauses: list[str] = []
         params: list[Any] = []
         if review_status:
@@ -248,11 +249,18 @@ class KnowledgeStore:
         if region_code:
             clauses.append("r.region_code=?")
             params.append(region_code)
+        if record_id is not None:
+            clauses.append("r.id=?")
+            params.append(record_id)
+        if record_type:
+            clauses.append("r.record_type=?")
+            params.append(record_type)
         if product_class:
             clauses.append("(r.product_class='' OR r.product_class='*' OR lower(r.product_class)=lower(?))")
             params.append(product_class)
         where = "WHERE " + " AND ".join(clauses) if clauses else ""
-        params.append(limit)
+        # SQLite uses -1 for all matching rows. Aggregations must see the whole set.
+        params.append(-1 if limit is None else limit)
         with self.lock:
             rows = self.conn.execute(
                 f"SELECT r.*,d.filename source_filename,c.chunk_index source_chunk_index FROM compliance_records r "

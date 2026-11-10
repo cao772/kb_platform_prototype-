@@ -156,7 +156,7 @@ def model_profile(purpose: str) -> dict[str, Any]:
     timeout = os.getenv(f"{prefix}_TIMEOUT", "") or profile.get("timeout_seconds", 60)
     enabled_env = os.getenv(f"{prefix}_ENABLED")
     enabled = profile.get("enabled", False) if enabled_env is None else enabled_env.lower() in {"1", "true", "yes", "on"}
-    if os.getenv(f"{prefix}_BASE_URL") and os.getenv(f"{prefix}_MODEL"):
+    if enabled_env is None and os.getenv(f"{prefix}_BASE_URL") and os.getenv(f"{prefix}_MODEL"):
         enabled = True
     return {
         **profile,

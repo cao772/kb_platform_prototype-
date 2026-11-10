@@ -61,7 +61,7 @@ def list_catalog(
     # Validate the date early so the API returns a clear error.
     date.fromisoformat(effective_date)
 
-    raw = store.list_compliance_records(review_status="approved", limit=5000)
+    raw = store.list_compliance_records(review_status="approved", limit=None)
     all_items = [_normalize_record(item, as_of=effective_date) for item in raw]
 
     type_counts = Counter(item.get("record_type") or "unknown" for item in all_items)
@@ -121,18 +121,17 @@ def list_catalog(
 
 def catalog_detail(store: KnowledgeStore, record_id: int, *, as_of: str | None = None) -> dict[str, Any]:
     effective_date = as_of or date.today().isoformat()
-    records = store.list_compliance_records(review_status="approved", limit=5000)
-    selected = next((item for item in records if int(item.get("id") or 0) == int(record_id)), None)
-    if not selected:
+    matches = store.list_compliance_records(record_id=record_id, limit=1)
+    if not matches:
         raise ValueError("knowledge record not found")
-    item = _normalize_record(selected, as_of=effective_date)
+    item = _normalize_record(matches[0], as_of=effective_date)
 
     code = str(item.get("code") or "").strip()
     name = str(item.get("name") or "").strip()
     versions = []
-    for candidate in records:
-        if candidate.get("record_type") != item.get("record_type"):
-            continue
+    for candidate in store.list_compliance_records(
+        region_code=item["region_code"], record_type=item["record_type"], limit=None
+    ):
         same_identity = bool(code and str(candidate.get("code") or "").strip().lower() == code.lower())
         if not code:
             same_identity = str(candidate.get("name") or "").strip().lower() == name.lower()

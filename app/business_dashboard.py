@@ -54,14 +54,7 @@ class BusinessDashboardService:
         effective_date = as_of or date.today().isoformat()
         overview = self.map_service.overview(as_of=effective_date)
         summary = dict(overview.get("summary") or {})
-        records = self.store.list_compliance_records(review_status="approved", limit=5000)
-
-        type_counts = Counter(str(item.get("record_type") or "unknown") for item in records)
-        product_counts = Counter(
-            str(item.get("product_class") or "").strip()
-            for item in records
-            if str(item.get("product_class") or "").strip() not in {"", "*"}
-        )
+        type_counts = summary["type_counts"]
         markets = list(overview.get("target_markets") or [])
         priorities = sorted(
             markets,
@@ -92,7 +85,7 @@ class BusinessDashboardService:
                 "target_markets": int(summary.get("target_markets") or len(markets)),
                 "markets_with_data": int(summary.get("target_markets_with_data") or 0),
                 "complete_markets": int(summary.get("complete_markets") or 0),
-                "formal_knowledge": int(summary.get("knowledge") or len(records)),
+                "formal_knowledge": summary["knowledge"],
                 "open_changes": int(changes.get("open") or 0),
                 "open_high": int(changes.get("open_high") or 0),
                 "upcoming_effective": int(summary.get("upcoming_effective") or 0),
@@ -120,13 +113,7 @@ class BusinessDashboardService:
                 "not_started": int(coverage_buckets.get("not_started", 0)),
                 "average_chain_completeness": float(summary.get("average_chain_completeness") or 0),
             },
-            "product_coverage": {
-                "product_classes": len(product_counts),
-                "top": [
-                    {"name": name, "count": int(count)}
-                    for name, count in product_counts.most_common(8)
-                ],
-            },
+            "product_coverage": summary["product_coverage"],
             "priority_markets": priorities,
             "recent_open_changes": self.change_monitor.list_tasks(status="open", limit=6),
             "change_summary": changes,

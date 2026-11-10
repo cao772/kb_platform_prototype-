@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import date, timedelta
 from typing import Any
 
@@ -43,6 +43,13 @@ def _class_match(value: Any, query: str) -> bool:
     return not text or text == "*" or q in text or text in q
 
 
+def _group_by_region(items: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    groups = defaultdict(list)
+    for item in items:
+        groups[canonical_region_code(str(item.get("region_code") or ""))].append(item)
+    return groups
+
+
 class RegulationMapService:
     """Business map projection over approved formal knowledge and open change tasks."""
 
@@ -52,7 +59,7 @@ class RegulationMapService:
     def _records(self, *, product_class: str = "", record_type: str = "", as_of: str | None = None) -> list[dict[str, Any]]:
         effective_date = as_of or date.today().isoformat()
         date.fromisoformat(effective_date)
-        records = self.store.list_compliance_records(review_status="approved", limit=5000)
+        records = self.store.list_compliance_records(review_status="approved", limit=None)
         result = []
         for record in records:
             if product_class and not _class_match(record.get("product_class"), product_class):
@@ -93,8 +100,8 @@ class RegulationMapService:
         effective_date = as_of or date.today().isoformat()
         as_of_date = date.fromisoformat(effective_date)
         window_end = as_of_date + timedelta(days=90)
-        records = self._records(product_class=product_class, record_type=record_type, as_of=effective_date)
         chain_records = self._records(product_class=product_class, as_of=effective_date)
+        records = [r for r in chain_records if r["record_type"] == record_type] if record_type else chain_records
         changes = self._open_changes(product_class=product_class)
 
         by_region: dict[str, dict[str, Any]] = {}
@@ -180,20 +187,17 @@ class RegulationMapService:
         regions.sort(key=lambda item: (-int(item["pending_changes"]), -int(item["knowledge_count"]), item["region_code"]))
 
         target_markets = []
+        records_by_region = _group_by_region(records)
+        chain_by_region = _group_by_region(chain_records) if record_type else records_by_region
+        changes_by_region = _group_by_region(changes)
         for market in TARGET_MARKETS:
-            scope_codes = set(knowledge_scope_codes(market.code))
-            scoped_records = [
-                item for item in records
-                if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
-            ]
-            chain_scoped_records = [
-                item for item in chain_records
-                if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
-            ]
-            scoped_changes = [
-                item for item in changes
-                if canonical_region_code(str(item.get("region_code") or "")) in scope_codes
-            ]
+            scope_codes = knowledge_scope_codes(market.code)
+            scoped_records = [item for code in scope_codes for item in records_by_region.get(code, ())]
+            chain_scoped_records = (
+                [item for code in scope_codes for item in chain_by_region.get(code, ())]
+                if record_type else scoped_records
+            )
+            scoped_changes = [item for code in scope_codes for item in changes_by_region.get(code, ())]
             if only_changed and not scoped_changes:
                 continue
             scoped_types = Counter(item.get("record_type") or "unknown" for item in scoped_records)
@@ -248,6 +252,9 @@ class RegulationMapService:
             })
 
         type_counts = Counter(record.get("record_type") or "unknown" for record in records)
+        product_counts = Counter(str(r.get("product_class") or "").strip() for r in records)
+        product_counts.pop("", None)
+        product_counts.pop("*", None)
         lifecycle_counts = Counter(record.get("lifecycle_state") or "unknown" for record in records)
         evidence_missing = sum(1 for record in records if not (record.get("source_document_id") and record.get("source_chunk_id")))
         upcoming = sum(region["upcoming_effective"] for region in regions)
@@ -273,6 +280,10 @@ class RegulationMapService:
                 "expiring_soon": expiring,
                 "evidence_missing": evidence_missing,
                 "type_counts": dict(type_counts),
+                "product_coverage": {
+                    "product_classes": len(product_counts),
+                    "top": [{"name": name, "count": count} for name, count in product_counts.most_common(8)],
+                },
             },
             "regions": regions,
             "target_markets": target_markets,

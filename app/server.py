@@ -35,7 +35,6 @@ DB_PATH = ROOT / "data" / "knowledge.db"
 SOURCE_DIR = ROOT.parent
 UPLOAD_DIR = ROOT / "data" / "uploads"
 STATIC_DIR = ROOT / "static"
-SETTINGS_PATH = ROOT / "data" / "runtime_settings.json"
 PROCESSING_TASK_PATH = ROOT / "data" / "processing_tasks.json"
 
 store = KnowledgeStore(DB_PATH)
@@ -48,7 +47,7 @@ graph_service = GraphGovernanceService(store)
 market_access = MarketAccessService(store, graph_service)
 graph_backend = GraphBackendRouter(graph_service)
 agent = KnowledgeAgent(store, graph_service=graph_service, graph_backend=graph_backend)
-runtime_settings = RuntimeSettingsStore(SETTINGS_PATH)
+runtime_settings = RuntimeSettingsStore()
 processing = DocumentProcessingService(store, UPLOAD_DIR, PROCESSING_TASK_PATH, change_monitor=change_monitor)
 parser_review = ParserReviewService(store)
 
