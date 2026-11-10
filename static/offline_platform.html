@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>法规认证知识平台 · 离线阅览</title>
+<style><!--NATIVE_CSS--></style>
+<style>
+html{scroll-behavior:auto}body{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif}
+.top{min-height:60px;height:auto;padding:15px max(18px,calc((100vw - 1440px)/2));gap:16px}
+.brand{color:white;text-decoration:none;flex-shrink:0}.edition{font-size:13px;color:#dce9f8}
+.shell{max-width:1480px;margin:auto;display:grid;grid-template-columns:182px minmax(0,1fr);gap:26px;padding:24px 20px 42px}
+nav{align-self:start;position:sticky;top:16px}nav h2{color:#62718a;font-size:12px;margin:17px 8px 7px}
+nav a{display:block;color:#253e5e;text-decoration:none;padding:8px 12px;margin:2px 0;border-radius:6px;font-size:14px}
+nav a:hover,nav a[aria-current=page]{background:#dfeaf6;color:#104d86}nav a[aria-current=page]{font-weight:700;box-shadow:inset 3px 0 #2a68a4}
+main{min-width:0}h1,h2,h3,p{overflow-wrap:anywhere}.hero{margin:0 0 16px;align-items:center}
+.hero h1{font-size:clamp(23px,3vw,34px);letter-spacing:-.035em}.hero p{max-width:64ch;line-height:1.65}
+.offhead{margin:0 0 18px}.offhead h1{font-size:28px;letter-spacing:-.035em;margin:0 0 6px}.offhead p,.sub,.note-line{color:#53667b;font-size:13px;line-height:1.7}
+.sub{display:block;margin-top:4px}.note-line{margin:8px 0}.card,.metric,.business-card{min-width:0}.card{margin-bottom:14px}
+.card h2{margin:0 0 12px;font-size:17px}.card h3{font-size:15px;margin:12px 0 6px}.card a,.rowlink{color:#205d92}
+.metrics{gap:12px}.metric{text-decoration:none;color:inherit}.metric:hover,.tile:hover{border-color:#548cbb}
+.business-grid{margin:14px 0}.business-card{display:flex;flex-direction:column;gap:7px}.business-card strong{font-size:24px}.business-card p{margin:0;flex:1}.business-link{text-decoration:none}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(255px,100%),1fr));gap:10px}
+.tile{display:block;padding:13px 14px;border:1px solid #dce5ee;border-radius:9px;background:white;text-decoration:none;overflow-wrap:anywhere}.tile b{color:#173b61;font-size:14px}.tile small{display:block;color:#53667b;margin-top:5px;line-height:1.6}
+.tools{display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-bottom:12px}.tools label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;color:#3c526d}
+.tools input,.tools select{padding:8px 10px;font-size:14px;background:white;color:#18324d;max-width:100%}.tools .query{flex:1 1 220px}
+button{cursor:pointer}a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #e5a747;outline-offset:2px}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.55}
+th{text-align:left;background:#eff4fa;color:#3d526d;font-size:12px}td,th{padding:10px;border-bottom:1px solid #e1e8ef;vertical-align:top}
+td{overflow-wrap:anywhere}td:first-child{min-width:140px}td a{font-weight:600}.pager,.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.pill-off{display:inline-block;border-radius:4px;padding:3px 7px;background:#edf3fa;color:#244b70;font-size:12px;margin:2px 4px 2px 0}
+.empty-off{padding:16px;color:#53667b;background:#f5f8fb;border-radius:6px;font-size:14px}
+.source-text{max-height:65vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;background:#f6f9fc;border-left:3px solid #afc9df;padding:14px;font:14px/1.7 Inter,"PingFang SC",sans-serif}
+.facts{display:grid;grid-template-columns:minmax(80px,auto) 1fr;gap:7px 15px;margin:10px 0 16px;font-size:14px;line-height:1.6}.facts dt{color:#566b82}.facts dd{margin:0;overflow-wrap:anywhere}
+.land,.coast2{fill:#c8d9e6;stroke:white;stroke-width:1}.ocean-line{stroke:#d3e0ea;stroke-width:1}#worldSvg{background:#f0f6fa;display:block;width:100%;height:auto;border-radius:8px}
+.pin{stroke:#fff;stroke-width:1.3}.pin.active{stroke:#102f52;stroke-width:2.5}.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.chips a,.pager a,.back{display:inline-block;text-decoration:none;font-size:13px;color:#164d80;background:#edf3f9;padding:5px 9px;border-radius:4px}
+.chips a[aria-current=true]{background:#164d80;color:white}.back{margin-bottom:10px}.card summary{cursor:pointer;font-weight:600;color:#1f507d}
+footer{grid-column:2;font-size:12px;line-height:1.6;color:#65758a;border-top:1px solid #dbe3ec;padding-top:12px}
+@media(max-width:900px){.shell{grid-template-columns:150px minmax(0,1fr);gap:14px}.two,.business-grid{grid-template-columns:1fr 1fr}.business-card strong{font-size:20px}}
+@media(max-width:700px){.shell{display:block;padding:10px}.top{padding:12px}.edition{font-size:11px}.brand{font-size:17px}nav{position:static;display:flex;overflow-x:auto;align-items:center;gap:3px;margin:0 0 15px}nav h2{display:none}nav a{white-space:nowrap;padding:8px;font-size:13px}.metrics,.business-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:1fr}.hero{padding:18px}.card{padding:14px}footer{margin-top:18px}.offhead h1{font-size:23px}}
+@media print{nav,.top,.tools,.pager,.back,footer{display:none}.shell{display:block}.source-text{max-height:none;overflow:visible}}
+</style>
+</head>
+<body>
+<header class="top"><a class="brand" href="#home"><i></i>法规认证知识平台</a><span class="edition" id="edition">离线阅览</span></header>
+<div class="shell"><nav id="nav" aria-label="业务导航"></nav><main id="view"><noscript>请在浏览器中允许此文件运行 JavaScript，以查看内置数据。</noscript></main>
+<footer>数据取自导出时的平台记录。新增采集、上传解析、模型回答与审核修改请在运行中的平台操作。</footer></div>
+<template id="world"><!--WORLD--></template>
+<script type="application/json" id="snapshot"><!--DATA--></script>
+<script><!--CLIENT--></script>
+</body>
+</html>
