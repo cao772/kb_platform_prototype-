@@ -141,9 +141,8 @@ class DocumentProcessingService:
             )
             self.tasks.update(task_id, stage="parsing", status="running", message="正在解析文档内容")
             document_id = ingest_file(self.store, saved["path"])
-            docs = [item for item in self.store.list_documents() if int(item.get("id") or 0) == int(document_id)]
-            parser_name = docs[0].get("parser", "") if docs else ""
-            detail = self.store.document_detail(int(document_id))
+            detail = self.store.document_detail(document_id, include_text=False)
+            parser_name = detail.get("parser", "")
             parse_summary = dict((detail.get("metadata") or {}).get("parse_summary") or {})
             indexed_message = "文档已解析，可进入知识识别"
             if parse_summary:

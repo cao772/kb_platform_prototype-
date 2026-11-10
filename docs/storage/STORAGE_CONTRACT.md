@@ -52,6 +52,10 @@
 
 Notion 不重复保存大文件本体。
 
+每次提交代码后，将提交推送到 GitHub 的对应开发分支，并在
+`drive_manifest.json` 指定的 `notion.change_log_page_id` 逐笔登记日期、提交链接、改动和实际检查范围。
+同步中断时，按完整提交 SHA 查找并补记缺失的条目。
+
 ## 2. ChatGPT 与 Codex 联调协议
 
 ### Codex 输出

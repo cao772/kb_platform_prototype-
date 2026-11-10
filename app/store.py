@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS chunks (
  id INTEGER PRIMARY KEY AUTOINCREMENT, document_id INTEGER NOT NULL, chunk_index INTEGER NOT NULL,
  text TEXT NOT NULL, metadata TEXT NOT NULL
 );
+CREATE INDEX IF NOT EXISTS idx_chunks_document_order ON chunks(document_id,chunk_index,id);
 CREATE VIRTUAL TABLE IF NOT EXISTS chunk_fts USING fts5(
  text, title UNINDEXED, filename UNINDEXED, tags UNINDEXED, chunk_id UNINDEXED, tokenize='unicode61'
 );
@@ -93,13 +94,17 @@ class KnowledgeStore:
     def upsert_document(self, *, filename: str, title: str, knowledge_type: str, tags: list[str], source_path: str,
                         full_text: str, mime_type: str = "", parser: str = "", metadata: dict[str, Any] | None = None,
                         chunks: list[dict[str, Any]]) -> int:
-        with self.lock:
+        with self.lock, self.conn:
             old = self.conn.execute("SELECT id FROM documents WHERE filename=?", (filename,)).fetchone()
             if old:
-                ids = [row["id"] for row in self.conn.execute("SELECT id FROM chunks WHERE document_id=?", (old["id"],))]
-                for chunk_id in ids:
-                    self.conn.execute("DELETE FROM chunk_fts WHERE chunk_id=?", (chunk_id,))
-                    self.conn.execute("DELETE FROM chunk_vectors WHERE chunk_id=?", (chunk_id,))
+                self.conn.execute(
+                    "DELETE FROM chunk_fts WHERE chunk_id IN (SELECT id FROM chunks WHERE document_id=?)",
+                    (old["id"],),
+                )
+                self.conn.execute(
+                    "DELETE FROM chunk_vectors WHERE chunk_id IN (SELECT id FROM chunks WHERE document_id=?)",
+                    (old["id"],),
+                )
                 self.conn.execute("DELETE FROM extraction_tasks WHERE document_id=?", (old["id"],))
                 self.conn.execute("DELETE FROM compliance_records WHERE source_document_id=?", (old["id"],))
                 self.conn.execute("DELETE FROM chunks WHERE document_id=?", (old["id"],))
@@ -121,7 +126,6 @@ class KnowledgeStore:
                     (chunk_id, "local-hashing-embedding-v1", len(vector), json.dumps(vector)))
             self.conn.execute("INSERT INTO ingestion_events(filename,source_path,status,message) VALUES(?,?,?,?)",
                 (filename, source_path, "success", f"Indexed {len(chunks)} chunks"))
-            self.conn.commit()
             return document_id
 
     def record_ingestion_failure(self, *, filename: str, source_path: str, message: str) -> None:
@@ -144,10 +148,13 @@ class KnowledgeStore:
             rows = self.conn.execute("SELECT id,filename,title,knowledge_type,mime_type,parser,ingestion_status,tags,created_at FROM documents ORDER BY id").fetchall()
         return [{**dict(row), "tags": json.loads(row["tags"])} for row in rows]
 
-    def document_detail(self, document_id: int) -> dict[str, Any]:
+    def document_detail(self, document_id: int, *, include_text: bool = True) -> dict[str, Any]:
+        columns = "id,filename,title,knowledge_type,mime_type,parser,ingestion_status,tags,source_path,metadata,created_at"
+        if include_text:
+            columns += ",full_text"
         with self.lock:
             row = self.conn.execute(
-                "SELECT id,filename,title,knowledge_type,mime_type,parser,ingestion_status,tags,source_path,full_text,metadata,created_at FROM documents WHERE id=?",
+                f"SELECT {columns} FROM documents WHERE id=?",
                 (int(document_id),),
             ).fetchone()
         if not row:
