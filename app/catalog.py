@@ -6,7 +6,7 @@ from datetime import date
 from typing import Any
 
 from app.governance import lifecycle_state
-from app.store import KnowledgeStore
+from app.store import KnowledgeStore, has_regulatory_evidence
 
 TYPE_LABELS = {
     "regulation": "法规",
@@ -29,7 +29,7 @@ def _normalize_record(record: dict[str, Any], *, as_of: str | None = None) -> di
     item["source_url"] = str(attrs.get("source_url") or "")
     item["legal_effect"] = str(attrs.get("legal_effect") or "")
     item["review_basis"] = str(attrs.get("review_basis") or "")
-    item["evidence_backed"] = bool(item.get("source_document_id") and item.get("source_chunk_id"))
+    item["evidence_backed"] = has_regulatory_evidence(item)
     return item
 
 

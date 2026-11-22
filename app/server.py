@@ -29,6 +29,9 @@ from app.runtime_settings import RuntimeSettingsStore
 from app.store import KnowledgeStore
 from app.structured_extraction import extract_review_candidates_v2
 from app.upload import ALLOWED_SUFFIXES, DEFAULT_MAX_BYTES, save_browser_upload
+from app.workspace_http import Workspace, PREFIX
+from app.source_registry import SourceRegistryService
+from app.site_extraction import SiteExtractionService
 
 ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = ROOT / "data" / "knowledge.db"
@@ -50,6 +53,10 @@ agent = KnowledgeAgent(store, graph_service=graph_service, graph_backend=graph_b
 runtime_settings = RuntimeSettingsStore()
 processing = DocumentProcessingService(store, UPLOAD_DIR, PROCESSING_TASK_PATH, change_monitor=change_monitor)
 parser_review = ParserReviewService(store)
+workspace = Workspace(store)
+source_registry = SourceRegistryService(store)
+site_extraction = SiteExtractionService(store, source_registry, ROOT / "data" / "source_downloads")
+workspace.connectors.site = site_extraction
 
 
 def json_bytes(payload: object) -> bytes:
@@ -77,7 +84,17 @@ def public_model_config(purpose: str) -> dict:
 
 
 class Handler(BaseHTTPRequestHandler):
+    def do_GET(self) -> None:
+        workspace.handle(self, "GET", self._business_get)
+
+    def do_POST(self) -> None:
+        workspace.handle(self, "POST", self._business_post)
+
     def _send_json(self, payload: object, status: int = 200) -> None:
+        path = urlparse(self.path).path
+        if self.command == "POST" and status < 400 and not path.startswith(PREFIX) and not (isinstance(payload, dict) and "error" in payload):
+            with store.lock, store.conn:
+                workspace.accounts.audit(self.workspace_actor, "业务操作", path)
         body = json_bytes(payload)
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -87,13 +104,20 @@ class Handler(BaseHTTPRequestHandler):
 
     def _read_json(self, *, max_bytes: int | None = None) -> dict:
         length = int(self.headers.get("Content-Length", "0"))
-        if max_bytes is not None and length > max_bytes:
+        if length < 0 or length > (max_bytes or 40*1024**2):
             raise ValueError(f"request body too large: {length} bytes")
         if not length:
             return {}
-        return json.loads(self.rfile.read(length).decode("utf-8"))
+        value = json.loads(self.rfile.read(length).decode("utf-8"))
+        if isinstance(value, dict) and not urlparse(self.path).path.startswith(PREFIX):
+            actor = getattr(self, "workspace_actor", {})
+            if actor.get("id"):
+                value["operator"] = actor["username"]
+                if actor["role"] == "reader" and urlparse(self.path).path in {"/api/answer", "/api/answer-v2"}:
+                    value["knowledge_type"] = "法规知识"
+        return value
 
-    def do_GET(self) -> None:
+    def _business_get(self) -> None:
         parsed = urlparse(self.path)
         params = parse_qs(parsed.query)
 
@@ -314,7 +338,10 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(graph_backend.status(ping=as_bool(params.get("ping", [""])[0])))
             return
         if parsed.path == "/api/graph/relations":
-            self._send_json({"items": graph_service.list_relations(status=params.get("status", [None])[0] or None)})
+            requested = params.get("status", [None])[0] or None
+            if "review" not in self.workspace_actor["permissions"]:
+                requested = "approved"
+            self._send_json({"items": graph_service.list_relations(status=requested)})
             return
         if parsed.path == "/api/graph/project":
             try:
@@ -346,12 +373,12 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path in {"/graph", "/graph.html"}:
             self._send_file(STATIC_DIR / "graph.html")
             return
-        if parsed.path in {"/", "/index.html"}:
+        if parsed.path in {"/", "/index.html", "/business"}:
             self._send_file(STATIC_DIR / "index.html")
             return
         self._send_json({"error": "not found"}, HTTPStatus.NOT_FOUND)
 
-    def do_POST(self) -> None:
+    def _business_post(self) -> None:
         parsed = urlparse(self.path)
 
         if parsed.path == "/api/admin/settings":
@@ -626,11 +653,14 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def log_message(self, fmt: str, *args: object) -> None:
+        if self.path.startswith("/auth/wechat/callback"):
+            return
         print(f"{self.address_string()} - {fmt % args}")
 
 
 def main() -> None:
     server = ThreadingHTTPServer(("127.0.0.1", 8765), Handler)
+    workspace.connectors.start()
     print("Knowledge platform running at http://127.0.0.1:8765")
     print("Formal knowledge catalog: http://127.0.0.1:8765/catalog")
     print("Regulation change & todo center: http://127.0.0.1:8765/changes")

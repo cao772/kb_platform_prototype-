@@ -6,6 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>法规认证知识平台 · 离线阅览</title>
 <style><!--NATIVE_CSS--></style>
+<style><!--WORKSPACE_CSS--></style>
 <style>
 html{scroll-behavior:auto}body{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif}
 .top{min-height:60px;height:auto;padding:15px max(18px,calc((100vw - 1440px)/2));gap:16px}
@@ -44,11 +45,15 @@ footer{grid-column:2;font-size:12px;line-height:1.6;color:#65758a;border-top:1px
 </style>
 </head>
 <body>
+<div id="ws-root" hidden></div>
 <header class="top"><a class="brand" href="#home"><i></i>法规认证知识平台</a><span class="edition" id="edition">离线阅览</span></header>
 <div class="shell"><nav id="nav" aria-label="业务导航"></nav><main id="view"><noscript>请在浏览器中允许此文件运行 JavaScript，以查看内置数据。</noscript></main>
 <footer>数据取自导出时的平台记录。新增采集、上传解析、模型回答与审核修改请在运行中的平台操作。</footer></div>
 <template id="world"><!--WORLD--></template>
 <script type="application/json" id="snapshot"><!--DATA--></script>
 <script><!--CLIENT--></script>
+<script><!--EXCEL_JS--></script>
+<script><!--LOCAL_JS--></script>
+<script><!--WORKSPACE_JS--></script>
 </body>
 </html>

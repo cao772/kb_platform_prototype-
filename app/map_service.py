@@ -7,7 +7,7 @@ from typing import Any
 
 from app.governance import lifecycle_state
 from app.regions import REGION_META, TARGET_MARKETS, canonical_region_code, knowledge_scope_codes
-from app.store import KnowledgeStore
+from app.store import KnowledgeStore, has_regulatory_evidence
 
 TYPE_LABELS = {
     "regulation": "法规",
@@ -126,7 +126,7 @@ class RegulationMapService:
             region["knowledge_count"] += 1
             region["type_counts"][record.get("record_type") or "unknown"] += 1
             region["lifecycle_counts"][record.get("lifecycle_state") or "unknown"] += 1
-            if not (record.get("source_document_id") and record.get("source_chunk_id")):
+            if not has_regulatory_evidence(record):
                 region["evidence_missing"] += 1
             start, end = _date(record.get("effective_from")), _date(record.get("effective_to"))
             if start and as_of_date < start <= window_end:
@@ -211,7 +211,7 @@ class RegulationMapService:
             expiring_soon = 0
             evidence_missing_market = 0
             for item in scoped_records:
-                if not (item.get("source_document_id") and item.get("source_chunk_id")):
+                if not has_regulatory_evidence(item):
                     evidence_missing_market += 1
                 start_date, end_date = _date(item.get("effective_from")), _date(item.get("effective_to"))
                 if start_date and as_of_date < start_date <= window_end:
@@ -256,7 +256,7 @@ class RegulationMapService:
         product_counts.pop("", None)
         product_counts.pop("*", None)
         lifecycle_counts = Counter(record.get("lifecycle_state") or "unknown" for record in records)
-        evidence_missing = sum(1 for record in records if not (record.get("source_document_id") and record.get("source_chunk_id")))
+        evidence_missing = sum(1 for record in records if not has_regulatory_evidence(record))
         upcoming = sum(region["upcoming_effective"] for region in regions)
         expiring = sum(region["expiring_soon"] for region in regions)
         return {
@@ -331,7 +331,7 @@ class RegulationMapService:
                 "chain_complete": chain_stage_count == len(TYPE_LABELS),
                 "lifecycle_counts": dict(lifecycle_counts),
                 "product_classes": [{"name": name, "count": count} for name, count in product_classes.most_common(12)],
-                "evidence_missing": sum(1 for item in records if not (item.get("source_document_id") and item.get("source_chunk_id"))),
+                "evidence_missing": sum(1 for item in records if not has_regulatory_evidence(item)),
             },
             "records": records[:120],
             "changes": changes[:80],

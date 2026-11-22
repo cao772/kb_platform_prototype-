@@ -8,6 +8,7 @@ import hashlib
 import json
 import re
 import sqlite3
+import struct
 import tempfile
 from contextlib import closing
 from datetime import datetime
@@ -19,6 +20,9 @@ from app.map_service import RegulationMapService
 from app.ontology import ontology_schema
 from app.regions import REGION_META
 from app.store import KnowledgeStore
+from app.workspace_accounts import ROLES
+from app.workspace_catalog import EXTRA, FIELDS, TYPES, STATUSES
+from app.workspace_data import workspace_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
@@ -172,12 +176,45 @@ def saved_question(conn, documents):
     return dict(question=r["question"], answer=r["answer"], citations=citations)
 
 
+def shareable_vectors(conn, document_ids):
+    """Copy existing vectors and source passages. Only vocabulary of shareable text leaves the host."""
+    vocabulary = {}
+    passages = []
+    marks = ",".join("?" for _ in document_ids) or "NULL"
+    data = conn.execute(f"""SELECT c.document_id,c.chunk_index,c.text,c.metadata,v.vector_json
+        FROM chunks c JOIN chunk_vectors v ON v.chunk_id=c.id WHERE v.model_name='local-hashing-embedding-v1'
+        AND v.dimensions=128 AND c.document_id IN ({marks}) ORDER BY c.document_id,c.chunk_index""", tuple(document_ids))
+    for row in data:
+        passage = row["text"]
+        packed = struct.pack("<128f", *json.loads(row["vector_json"]))
+        passages.append([row["document_id"],row["chunk_index"],json.loads(row["metadata"]).get("page_no"),
+                         passage,base64.b64encode(packed).decode("ascii")])
+        for token in re.findall(r"[a-z0-9_.+-]+|[\u4e00-\u9fff]+", passage.lower()):
+            words = [token]
+            if "\u4e00" <= token[0] <= "\u9fff":
+                words += list(token) + [token[i:i+2] for i in range(len(token)-1)]
+            for w in words:
+                if not w or len(w)>100 or w in vocabulary: continue
+                digest = hashlib.blake2b(w.encode(),digest_size=8).digest()
+                bucket = 1 + int.from_bytes(digest[:4],"big") % 128
+                vocabulary[w] = bucket if digest[4] % 2 == 0 else -bucket
+    return {"passages":passages,"vocabulary":vocabulary}
+
+
 def snapshot(conn):
     result = read_collection(conn)
     public_ids = {r["id"] for r in result["documents"]}
     records = rows(conn, """SELECT id,record_type,code,name,region_code,region_name,product_class,status,version,
-        effective_from,effective_to,source_document_id FROM compliance_records WHERE review_status='approved' ORDER BY id""")
+        effective_from,effective_to,source_document_id,attributes FROM compliance_records WHERE review_status='approved' ORDER BY id""")
     for r in records:
+        attributes = json.loads(r.pop("attributes") or "{}")
+        for key in EXTRA:
+            if key in {"body_zh","body_en","source_excerpt"} and r["source_document_id"] not in public_ids:
+                continue
+            value = attributes.get(key) or ""
+            if key == "source_url":
+                value = official_url(value)
+            r[key] = value
         if r["source_document_id"] not in public_ids:
             r["source_document_id"] = None
     changes = rows(conn, """SELECT id,title,event_type,severity,status,region_code,product_class,
@@ -185,7 +222,28 @@ def snapshot(conn):
     for r in changes:
         if r["source_document_id"] not in public_ids:
             r["source_document_id"] = None
-    result.update(
+    workspace = workspace_snapshot(conn)
+    supplied = supplied_material(conn)
+    shared_ids = public_ids | {r["id"] for r in supplied if r.get("full_text")}
+    workspace_index = shareable_vectors(conn, shared_ids)
+    if conn.execute("SELECT 1 FROM sqlite_master WHERE name='ws_facts'").fetchone():
+        workspace["facts"] = [dict(r) for r in conn.execute("""SELECT id,document_id,chunk_id,subject,predicate,object,excerpt,status
+            FROM ws_facts WHERE status='approved'""") if r["document_id"] in shared_ids]
+    hashes = {row["sha256"]:row["document_id"] for row in conn.execute(
+        "SELECT sha256,document_id FROM source_extracted_items WHERE document_id IS NOT NULL AND item_type='attachment'")
+        if row["document_id"] in shared_ids}
+    # Only fingerprints of the supplied legislation may leave the workstation.
+    for doc in conn.execute("SELECT id,filename,source_path FROM documents WHERE id IN (%s)" %
+            (",".join("?" for _ in shared_ids) or "NULL"),tuple(shared_ids)):
+        if doc["filename"] in SUPPLIED_LEGISLATION and Path(doc["source_path"]).is_file():
+            with Path(doc["source_path"]).open("rb") as f:
+                sig = hashlib.sha256()
+                for part in iter(lambda: f.read(1024*256), b""):
+                    sig.update(part)
+                hashes[sig.hexdigest()] = doc["id"]
+    workspace.update(fields=FIELDS,types=TYPES,statuses=STATUSES,document_hashes=hashes,
+        roles={k:v[0] for k,v in ROLES.items()},role_permissions={k:sorted(v[1]) for k,v in ROLES.items()})
+    result.update(workspace=workspace,
         created=datetime.now().astimezone().isoformat(timespec="seconds"),
         regions=REGION_META, map=RegulationMapService(SnapshotStore(conn)).overview(),
         catalog=records, changes=changes, ontology=ontology_schema(),
@@ -198,7 +256,7 @@ def snapshot(conn):
         counts=dict(documents=conn.execute("SELECT count(*) FROM documents").fetchone()[0],
                     pending=conn.execute("SELECT count(*) FROM extraction_tasks WHERE status='pending'").fetchone()[0]),
         products=load_json(DATA / "product_taxonomy.json")["product_families"], access=access_archive(),
-        supplied=supplied_material(conn), saved_question=saved_question(conn, public_ids),
+        supplied=supplied, search_index=workspace_index, saved_question=saved_question(conn, public_ids),
     )
     rounds = [(int(m.group(1)), p) for p in DATA.glob("first50_round*_status.json")
               if (m := re.fullmatch(r"first50_round(\d+)_status.json", p.name))]
@@ -225,8 +283,11 @@ def export(output):
         data = data.replace(char, "\\u%04x" % ord(char))
     template = (STATIC / "offline_platform.html").read_text()
     parts = {"NATIVE_CSS": css, "WORLD": '<svg id="worldSvg"' + world + '<g id="markers"></g></svg>',
-             "CLIENT": js, "DATA": data}
-    html = re.sub(r"<!--(NATIVE_CSS|WORLD|CLIENT|DATA)-->", lambda m: parts[m[1]], template)
+             "CLIENT": js, "DATA": data, "WORKSPACE_CSS": (STATIC/"workspace.css").read_text(),
+             "EXCEL_JS": (STATIC/"workspace_excel.js").read_text(),
+             "LOCAL_JS": (STATIC/"workspace_local.js").read_text(),
+             "WORKSPACE_JS": (STATIC/"workspace.js").read_text()}
+    html = re.sub(r"<!--("+"|".join(parts)+r")-->", lambda m: parts[m[1]], template)
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=output.parent, mode="w", encoding="utf-8", delete=False) as tmp:
         tmp.write(html)

@@ -2,14 +2,19 @@ from __future__ import annotations
 
 import json
 from http.server import ThreadingHTTPServer
+from http.cookiejar import CookieJar
+from urllib.error import HTTPError
 from threading import Thread
-from urllib.request import Request, urlopen
+from urllib.request import HTTPCookieProcessor, Request, build_opener
 
-from app.platform_server import Handler
+from app.platform_server import Handler, workspace
+
+
+client = build_opener(HTTPCookieProcessor(CookieJar()))
 
 
 def _get(base: str, path: str) -> tuple[int, str, str]:
-    with urlopen(base + path, timeout=10) as response:
+    with client.open(base + path, timeout=10) as response:
         return (
             response.status,
             response.headers.get("Content-Type", ""),
@@ -24,7 +29,7 @@ def _post_json(base: str, path: str, payload: dict) -> tuple[int, dict]:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urlopen(request, timeout=10) as response:
+    with client.open(request, timeout=10) as response:
         return response.status, json.loads(response.read().decode("utf-8"))
 
 
@@ -35,8 +40,17 @@ def main() -> None:
     base = f"http://127.0.0.1:{server.server_address[1]}"
 
     try:
+        try:
+            _get(base, "/api/admin/settings")
+        except HTTPError as error:
+            assert error.code == 401
+        else:
+            raise AssertionError("Guest accessed admin settings")
+        _, session = _post_json(base, "/api/workspace/auth/ticket", {"ticket": workspace.accounts.local_ticket()})
+        assert session["user"]["role"] == "admin"
         pages = {
             "/": "法规认证知识平台",
+            "/business": "产品准入",
             "/catalog": "正式知识目录",
             "/changes": "变化待办",
             "/map": "法规认证地图",
@@ -101,6 +115,11 @@ def main() -> None:
         readiness = json.loads(readiness_body)
         assert readiness["target_markets"] == 21
         assert readiness["checks"]["target_markets_21"] is True
+        _, _, content = _get(base, "/api/workspace/state")
+        state = json.loads(content)
+        assert len(state["requirements"]) == 41
+        assert len({row["module"] for row in state["requirements"]}) == 6
+        _post_json(base, "/api/workspace/auth/logout", {})
 
     finally:
         server.shutdown()

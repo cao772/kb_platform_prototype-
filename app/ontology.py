@@ -94,6 +94,7 @@ KNOWLEDGE_DOMAINS = (
 
 
 NODE_TYPES = (
+    OntologyNodeType("clause", "条款", "可定位到法规或标准原文的条款。", ("number", "document_id"), ("heading", "chunk_id"), ("document_id", "number")),
     OntologyNodeType("product", "产品", "具体产品或产品系列。", ("name",), ("model", "brand"), ("name", "model")),
     OntologyNodeType("product_class", "产品分类", "统一产品分类，用于跨国家知识映射。", ("name",), ("code",), ("name",)),
     OntologyNodeType("region", "国家/地区", "业务方确认的目标国家、地区或区域市场。", ("name", "code"), (), ("code",)),
@@ -111,12 +112,14 @@ NODE_TYPES = (
 
 
 RELATIONS = (
+    OntologyRelation("HAS_CLAUSE", "包含条款", ("regulation", "standard", "certification", "clause"), ("clause",), "从文件或上级条款定位到下级条款。"),
+    OntologyRelation("AMENDS", "修订", ("regulation", "standard", "certification", "clause"), ("regulation", "standard", "certification", "clause"), "明确记录修订对象及原文依据。"),
     OntologyRelation("IS_A", "属于", ("product", "product_class"), ("product_class",), "产品归属统一产品分类。"),
     OntologyRelation("APPLIES_TO", "适用于", ("regulation", "standard", "certification", "requirement"), ("product", "product_class"), "知识对象与适用产品建立关系。"),
     OntologyRelation("IN_REGION", "适用地区", ("regulation", "standard", "certification", "requirement", "authority"), ("region",), "明确知识对象适用的国家或地区。"),
     OntologyRelation("ISSUED_BY", "发布/管理机构", ("regulation", "standard", "certification"), ("authority",), "关联发布、管理或认证主管机构。"),
     OntologyRelation("REQUIRES", "要求", ("regulation", "standard", "certification"), ("requirement", "test_item", "certification"), "表达法规、标准、认证之间的要求链。"),
-    OntologyRelation("REFERENCES", "引用", ("regulation", "standard", "requirement"), ("regulation", "standard"), "表达显式引用或采用关系。"),
+    OntologyRelation("REFERENCES", "引用", ("regulation", "standard", "certification", "requirement", "clause"), ("regulation", "standard", "clause"), "表达显式引用或采用关系。"),
     OntologyRelation("HAS_VERSION", "具有版本", ("regulation", "standard", "certification"), ("version",), "挂接版本与时间有效性。"),
     OntologyRelation("HAS_APPLICABILITY", "具有适用规则", ("regulation", "standard", "certification", "requirement"), ("applicability_rule",), "挂接适用范围和判定条件。"),
     OntologyRelation("HAS_EXCEPTION", "具有例外条件", ("regulation", "standard", "certification", "requirement", "applicability_rule"), ("exception",), "挂接豁免和例外条件。"),
@@ -156,7 +159,7 @@ def domains_for_record_type(record_type: str) -> list[str]:
 
 def ontology_schema() -> dict[str, Any]:
     return {
-        "version": "2026.09-business-ontology-v3",
+        "version": "2026.11-business-ontology-v4",
         "principle": (
             "公共本体统一产品、国家/地区、机构、版本、证据等基础对象；"
             "法规知识库、标准知识库、认证知识库按领域扩展；"

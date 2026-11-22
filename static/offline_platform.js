@@ -1,5 +1,6 @@
 "use strict";
 const data = JSON.parse(document.getElementById("snapshot").textContent);
+window.PlatformPublicSnapshot = data;
 const view = document.getElementById("view");
 const sections = [
   ["工作台", [["home","工作台"],["map","法规认证地图"],["access","产品准入"],["qa","法规问答"]]],
@@ -211,6 +212,7 @@ function qa() {
 const views={home,sources,source,collection,item,docs,doc,supplied,runs,catalog,changes,governance,ontology,graph,map:market,access,qa};
 function render() {
   const [raw,query=""]=location.hash.slice(1).split("?");
+  if (!raw || raw.startsWith("w/")) return;
   page=Object.hasOwn(views,raw)?raw:"home";
   params=new URLSearchParams(query);
   const active=sectionOf[page]||page;
@@ -233,5 +235,10 @@ view.addEventListener("click",e=>{
   setTimeout(()=>URL.revokeObjectURL(url),60000);
 });
 document.getElementById("edition").textContent="离线阅览 · "+asDay(data.created);
+const workspaceEntry=document.createElement("a");
+workspaceEntry.href="#w/overview";
+workspaceEntry.className="top-link";
+workspaceEntry.textContent="业务工作台";
+document.querySelector("header.top").insertBefore(workspaceEntry,document.getElementById("edition"));
 window.addEventListener("hashchange",()=>{render();window.scrollTo(0,0);});
 render();

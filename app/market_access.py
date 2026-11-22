@@ -7,7 +7,7 @@ from app.governance import analyze_product_access_v2
 from app.graph_governance import GraphGovernanceService
 from app.product_taxonomy import ProductTaxonomyService
 from app.regions import REGION_META, canonical_region_code
-from app.store import KnowledgeStore
+from app.store import KnowledgeStore, has_regulatory_evidence
 
 
 STAGE_ORDER = (
@@ -55,7 +55,7 @@ class MarketAccessService:
             "source_url": attrs.get("source_url", ""),
             "source_document_id": record.get("source_document_id"),
             "source_chunk_id": record.get("source_chunk_id"),
-            "evidence_backed": bool(record.get("source_document_id") and record.get("source_chunk_id")),
+            "evidence_backed": has_regulatory_evidence(record),
         }
 
     def evaluate(
@@ -133,7 +133,12 @@ class MarketAccessService:
         ]
         source_record_ids = sorted({item["id"] for item in all_items if item["id"]})
 
+        from app.workspace_data import applicable_mappings
+        with self.store.lock:
+            maintained = applicable_mappings(self.store.conn, classification.get("family_id"),
+                classification.get("product_type_id"), requested, product_class or product)
         return {
+            "maintained_mappings": maintained,
             "product": product,
             "product_class": product_class,
             "product_classification": classification,

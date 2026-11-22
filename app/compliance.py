@@ -4,7 +4,7 @@ import re
 from collections import Counter, defaultdict
 from typing import Any
 
-from app.store import KnowledgeStore
+from app.store import KnowledgeStore, has_regulatory_evidence
 
 REGION_ALIASES = {
     "欧盟": ("EU", "欧盟"),
@@ -128,9 +128,9 @@ def build_world_map(store: KnowledgeStore, *, include_demo: bool = False) -> dic
     regions = []
     for (code, name), items in sorted(grouped.items()):
         type_counts = Counter(item["record_type"] for item in items)
-        evidence_count = sum(1 for item in items if item.get("source_document_id") and item.get("source_chunk_id"))
+        evidence_count = sum(1 for item in items if has_regulatory_evidence(item))
         regions.append({"region_code": code, "region_name": name, "record_count": len(items), "type_counts": dict(type_counts), "product_classes": sorted({item.get("product_class") for item in items if item.get("product_class")}), "evidence_coverage": round(evidence_count / len(items), 4) if items else 0.0, "records": items})
-    return {"demo_data": demo_data, "warning": "当前为演示结构数据，不代表真实法规或认证结论。" if demo_data else "", "regions": regions, "summary": {"regions": len(regions), "records": len(records), "pending_review": len(store.list_extraction_tasks(status="pending")), "evidence_backed": sum(1 for item in records if item.get("source_document_id") and item.get("source_chunk_id"))}}
+    return {"demo_data": demo_data, "warning": "当前为演示结构数据，不代表真实法规或认证结论。" if demo_data else "", "regions": regions, "summary": {"regions": len(regions), "records": len(records), "pending_review": len(store.list_extraction_tasks(status="pending")), "evidence_backed": sum(1 for item in records if has_regulatory_evidence(item))}}
 
 
 def analyze_product_access(store: KnowledgeStore, *, product: str, product_class: str, region_code: str, include_demo: bool = False) -> dict[str, Any]:
@@ -145,6 +145,6 @@ def analyze_product_access(store: KnowledgeStore, *, product: str, product_class
     groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for item in records:
         groups[item["record_type"]].append(item)
-    evidence_backed = sum(1 for item in records if item.get("source_document_id") and item.get("source_chunk_id"))
+    evidence_backed = sum(1 for item in records if has_regulatory_evidence(item))
     status = "insufficient_data" if not records else ("evidence_ready" if evidence_backed == len(records) else "needs_evidence_review")
     return {"product": product, "product_class": product_class, "region_code": region_code, "status": status, "demo_data": demo_data, "summary": {"matched_records": len(records), "evidence_backed": evidence_backed, "regulations": len(groups.get("regulation", [])), "standards": len(groups.get("standard", [])), "certifications": len(groups.get("certification", [])), "requirements": len(groups.get("requirement", [])), "test_items": len(groups.get("test_item", []))}, "groups": {key: value for key, value in groups.items()}, "decision_boundary": "这里只返回已审核知识记录及其证据覆盖情况，不自动给出“已合规/可出口”法律结论。", "next_action": "请先导入并审核该地区/产品分类的法规认证资料。" if status == "insufficient_data" else "核对记录版本、生效状态、适用范围与证据后，再形成正式准入结论。"}

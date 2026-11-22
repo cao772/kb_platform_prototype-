@@ -6,7 +6,7 @@ from typing import Any
 
 from app.compliance import DEMO_RECORDS
 from app.regions import REGION_META, canonical_region_code, knowledge_scope_codes
-from app.store import KnowledgeStore
+from app.store import KnowledgeStore, has_regulatory_evidence
 
 ALLOWED_RECORD_TYPES = {"regulation", "standard", "certification", "requirement", "test_item"}
 ALLOWED_STATUSES = {"unknown", "draft", "active", "transition", "repealed", "withdrawn", "superseded"}
@@ -144,7 +144,7 @@ def world_map_v2(store: KnowledgeStore, *, include_demo: bool = False, as_of: st
     for (code, name), items in sorted(grouped.items()):
         states = Counter(item["lifecycle_state"] for item in items)
         types = Counter(item["record_type"] for item in items)
-        evidence = sum(1 for item in items if item.get("source_document_id") and item.get("source_chunk_id"))
+        evidence = sum(1 for item in items if has_regulatory_evidence(item))
         coord = REGION_META.get(canonical_region_code(code), {})
         regions.append({
             "region_code": code,
@@ -170,7 +170,7 @@ def world_map_v2(store: KnowledgeStore, *, include_demo: bool = False, as_of: st
             "active_or_transition": sum(r["active_count"] for r in regions),
             "pending_review": len(store.list_extraction_tasks(status="pending")),
             "evidence_backed": sum(
-                1 for item in records if item.get("source_document_id") and item.get("source_chunk_id")
+                1 for item in records if has_regulatory_evidence(item)
             ),
         },
     }
@@ -226,7 +226,7 @@ def analyze_product_access_v2(
 
     current = [x for x in prepared if x["lifecycle_state"] in {"active", "transition"}]
     unknown = [x for x in prepared if x["lifecycle_state"] in {"unknown", "date_invalid", "future"}]
-    evidence_backed = sum(1 for x in prepared if x.get("source_document_id") and x.get("source_chunk_id"))
+    evidence_backed = sum(1 for x in prepared if has_regulatory_evidence(x))
     exception_review = sum(1 for x in prepared if x["needs_exception_review"])
 
     if not prepared:

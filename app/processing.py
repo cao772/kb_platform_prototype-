@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from app.ingest import ingest_file
+from app.document_profiles import FAMILIES
 from app.runtime_settings import current_parser_settings
 from app.structured_extraction import extract_review_candidates_v2
 from app.upload import save_browser_upload
@@ -121,7 +122,11 @@ class DocumentProcessingService:
         if not filename:
             raise ValueError("filename is required")
         parser_settings = current_parser_settings()
+        family = payload.get("document_family") or ""
+        if family and family not in FAMILIES:
+            raise ValueError("请选择有效的文件结构。")
         options = {
+            "document_family": family,
             "auto_extract": bool(payload.get("auto_extract", parser_settings.get("auto_extract", True))),
             "use_model": bool(payload.get("use_model", parser_settings.get("use_model_extraction", True))),
         }
@@ -138,9 +143,14 @@ class DocumentProcessingService:
                 filename=str(payload.get("filename") or ""),
                 content_base64=str(payload.get("content_base64") or ""),
                 upload_dir=self.upload_dir,
+                versioned=bool(options["document_family"]),
             )
             self.tasks.update(task_id, stage="parsing", status="running", message="正在解析文档内容")
-            document_id = ingest_file(self.store, saved["path"])
+            if options["document_family"]:
+                document_id = ingest_file(self.store, saved["path"], document_family=options["document_family"],
+                                          content_digest=saved["sha256"])
+            else:
+                document_id = ingest_file(self.store, saved["path"])
             detail = self.store.document_detail(document_id, include_text=False)
             parser_name = detail.get("parser", "")
             parse_summary = dict((detail.get("metadata") or {}).get("parse_summary") or {})

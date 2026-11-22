@@ -4,6 +4,7 @@ import io
 import json
 import os
 import re
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from pathlib import Path
@@ -16,6 +17,7 @@ from app.runtime_settings import current_parser_settings
 from app.vendor_path import activate_vendor
 
 activate_vendor()
+_local_parse = ContextVar("local_parse", default=False)
 
 
 @dataclass
@@ -79,18 +81,30 @@ def _ocr_enabled() -> bool:
     mode = str(current_parser_settings().get("ocr_mode") or "auto").lower()
     if mode == "off":
         return False
+    if _local_parse.get():
+        return bool(local_ocr_configuration())
     return (mode == "auto" and bool(local_ocr_configuration())) or current_model_config("vision").configured
 
 
 def recognize_image(image_bytes: bytes, mime_type: str, *, instruction: str | None = None):
+    if _local_parse.get():
+        return local_ocr_recognize(image_bytes)
     if current_parser_settings().get("ocr_mode") == "auto" and local_ocr_configuration():
         return local_ocr_recognize(image_bytes)
     return call_vision_ocr(image_bytes, mime_type, instruction=instruction)
 
 
-def parse_file(path: str | Path) -> StandardDocument:
+def parse_file(path: str | Path, *, local_only: bool = False) -> StandardDocument:
+    token = _local_parse.set(local_only)
+    try:
+        return _parse_file(path)
+    finally:
+        _local_parse.reset(token)
+
+
+def _parse_file(path: str | Path) -> StandardDocument:
     file_path = Path(path)
-    if _parser_backend() == "docling":
+    if not _local_parse.get() and _parser_backend() == "docling":
         try:
             return parse_docling_standard(file_path)
         except Exception:

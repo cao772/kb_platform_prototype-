@@ -74,6 +74,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_compliance_record_unique
 """
 
 
+def evidence_kind(record):
+    if record.get("source_role") == "project_background":
+        return "background"
+    if record.get("source_document_id") and record.get("source_chunk_id"):
+        if "source_chunk_index" not in record or record["source_chunk_index"] is not None:
+            return "located"
+    attributes = record.get("attributes") or {}
+    if isinstance(attributes, str):
+        attributes = json.loads(attributes or "{}")
+    if attributes.get("source_excerpt") and (attributes.get("source_url") or attributes.get("pdfs")):
+        return "excerpt"
+    return "missing"
+
+
+def has_regulatory_evidence(record):
+    return evidence_kind(record) in {"located", "excerpt"}
+
+
 class KnowledgeStore:
     def __init__(self, db_path: str | Path):
         self.db_path = Path(db_path)
@@ -96,6 +114,11 @@ class KnowledgeStore:
                         chunks: list[dict[str, Any]]) -> int:
         with self.lock, self.conn:
             old = self.conn.execute("SELECT id FROM documents WHERE filename=?", (filename,)).fetchone()
+            if old and (metadata or {}).get("source_digest"):
+                existing = self.conn.execute("SELECT metadata FROM documents WHERE id=?", (old["id"],)).fetchone()
+                if json.loads(existing[0]).get("source_digest") == metadata["source_digest"]:
+                    return old["id"]
+                raise ValueError("同名资料标识冲突，请核对原件。")
             if old:
                 self.conn.execute(
                     "DELETE FROM chunk_fts WHERE chunk_id IN (SELECT id FROM chunks WHERE document_id=?)",
@@ -270,8 +293,9 @@ class KnowledgeStore:
         params.append(-1 if limit is None else limit)
         with self.lock:
             rows = self.conn.execute(
-                f"SELECT r.*,d.filename source_filename,c.chunk_index source_chunk_index FROM compliance_records r "
-                f"LEFT JOIN documents d ON d.id=r.source_document_id LEFT JOIN chunks c ON c.id=r.source_chunk_id "
+                f"SELECT r.*,d.filename source_filename,json_extract(d.metadata,'$.dataset_role') source_role, "
+                f"c.chunk_index source_chunk_index FROM compliance_records r LEFT JOIN documents d ON d.id=r.source_document_id "
+                f"LEFT JOIN chunks c ON c.id=r.source_chunk_id AND c.document_id=r.source_document_id "
                 f"{where} ORDER BY r.region_code,r.record_type,r.name LIMIT ?", params).fetchall()
         output = []
         for row in rows:

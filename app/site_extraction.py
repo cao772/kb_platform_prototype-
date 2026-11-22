@@ -1702,12 +1702,16 @@ class SiteExtractionService:
         max_pages: int | None = None,
         max_items: int | None = None,
         auto_ingest: bool = False,
+        watch_keywords: tuple[str, ...] = (),
     ) -> dict[str, Any]:
         source = self.source_registry.by_key(source_key)
         plan_record = self.plan(source_key)
         if not plan_record.get("enabled"):
             raise ValueError("site extraction plan is disabled")
         config = self._validate_config(dict(plan_record.get("config") or {}))
+        keywords = tuple(w.casefold() for w in watch_keywords if w)
+        if source.get("harvestability") == "metadata_only" or source.get("access_method") == "metadata_only":
+            config["document_policy"] = "metadata_only"
         limits = dict(config.get("limits") or {})
         page_limit = min(int(max_pages or limits["max_pages"]), limits["max_pages"], 100)
         item_limit = min(int(max_items or limits["max_items"]), limits["max_items"], 5000)
@@ -1746,7 +1750,7 @@ class SiteExtractionService:
 
         try:
             archive_config = dict(config.get("archives") or {})
-            if archive_config.get("enabled") and archive_config.get("urls"):
+            if config.get("document_policy") != "metadata_only" and archive_config.get("enabled") and archive_config.get("urls"):
                 archive_urls = list(archive_config.get("urls") or [])[
                     : int(archive_config.get("max_archives") or 4)
                 ]
@@ -1774,6 +1778,7 @@ class SiteExtractionService:
                         )
                         archive_digest = hashlib.sha256(archive_body).hexdigest()
                         archive_metadata = {
+                            "run_id": run_id,
                             "archive_dataset": True,
                             "http_status": archive_status,
                             "relevance": {
@@ -1852,6 +1857,7 @@ class SiteExtractionService:
                                     link_text=member_name,
                                 )
                             metadata = {
+                                "run_id": run_id,
                                 "archive_dataset": True,
                                 "archive_url": archive_url,
                                 "archive_member": member_name,
@@ -1910,7 +1916,7 @@ class SiteExtractionService:
                 parsed: ParsedPage | None = None
                 fields: dict[str, Any] = {}
                 excerpt = ""
-                metadata: dict[str, Any] = {"depth": depth, "http_status": status}
+                metadata: dict[str, Any] = {"depth": depth, "http_status": status, "run_id": run_id}
 
                 is_binary_attachment = (
                     item_type == "attachment"
@@ -1992,6 +1998,10 @@ class SiteExtractionService:
 
                 if bool(discovery.get("follow_details", True)):
                     for link in links["detail"]:
+                        if keywords and item_type == "listing" and not any(
+                            word in (link.get("text", "") + " " + link["url"]).casefold() for word in keywords
+                        ):
+                            continue
                         if details_queued >= detail_limit:
                             break
                         if link["url"] not in visited:

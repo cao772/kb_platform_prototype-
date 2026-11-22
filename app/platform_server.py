@@ -9,10 +9,8 @@ from app.map_service import RegulationMapService
 from app.ontology_governance import OntologyGovernanceService
 from app.ontology_registry import OntologyRegistryService
 from app.regions import target_market_catalog
-from app.source_registry import SourceRegistryService
 from app.source_verification import SourceVerificationService
 from app.source_collection import SourceCollectionService
-from app.site_extraction import SiteExtractionService
 from app.collection_experience import CollectionExperienceService
 from app.source_diff import SourceDifferenceService
 from app.source_impact import SourceImpactService
@@ -22,15 +20,13 @@ from app.candidate_normalization import CandidateNormalizationService
 from app.gma_bilingual import GmaBilingualService
 from app.pipeline_readiness import PipelineReadinessService
 from app.server import Handler as BaseHandler
-from app.server import ROOT, STATIC_DIR, change_monitor, graph_service, store
+from app.server import ROOT, STATIC_DIR, change_monitor, graph_service, site_extraction, source_registry, store, workspace
 
 regulation_map = RegulationMapService(store)
 ontology_governance = OntologyGovernanceService(store)
 ontology_registry = OntologyRegistryService(store)
-source_registry = SourceRegistryService(store)
 source_verification = SourceVerificationService(source_registry)
 source_collection = SourceCollectionService(store, source_registry, ROOT / "data" / "source_downloads", change_monitor=change_monitor)
-site_extraction = SiteExtractionService(store, source_registry, ROOT / "data" / "source_downloads")
 collection_experience = CollectionExperienceService(source_registry, site_extraction)
 source_diff = SourceDifferenceService(store)
 source_impact = SourceImpactService(store, source_diff, graph_service)
@@ -44,7 +40,7 @@ pipeline_readiness = PipelineReadinessService(store, ontology_registry, source_r
 class Handler(BaseHandler):
     """Current platform handler with business map and ontology governance endpoints."""
 
-    def do_GET(self) -> None:
+    def _business_get(self) -> None:
         parsed = urlparse(self.path)
         params = parse_qs(parsed.query)
 
@@ -537,7 +533,7 @@ class Handler(BaseHandler):
 
         # Keep the static business home page unchanged on disk, but surface the
         # current operational pages from the runtime entrypoint.
-        if parsed.path in {"/", "/index.html"}:
+        if parsed.path in {"/", "/index.html", "/business"}:
             text = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
             anchor = '<div class="top-actions">'
             links = (
@@ -552,6 +548,8 @@ class Handler(BaseHandler):
             )
             if anchor in text and 'href="/ontology"' not in text:
                 text = text.replace(anchor, anchor + links, 1)
+            if anchor in text and 'href="/workspace"' not in text:
+                text = text.replace(anchor, anchor + '<a class="top-link" href="/workspace">业务工作台</a>', 1)
             body = text.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -560,9 +558,9 @@ class Handler(BaseHandler):
             self.wfile.write(body)
             return
 
-        super().do_GET()
+        super()._business_get()
 
-    def do_POST(self) -> None:
+    def _business_post(self) -> None:
         parsed = urlparse(self.path)
         if parsed.path == "/api/collection/diff-review":
             try:
@@ -927,11 +925,12 @@ class Handler(BaseHandler):
             except Exception as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
-        super().do_POST()
+        super()._business_post()
 
 
 def main() -> None:
     server = ThreadingHTTPServer(("127.0.0.1", 8765), Handler)
+    workspace.connectors.start()
     print("Knowledge platform running at http://127.0.0.1:8765")
     print("Source registry: http://127.0.0.1:8765/sources")
     print("Source collection: http://127.0.0.1:8765/collection")

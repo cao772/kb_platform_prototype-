@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import re
+from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +32,7 @@ def save_browser_upload(
     content_base64: str,
     upload_dir: str | Path,
     max_bytes: int = DEFAULT_MAX_BYTES,
+    versioned: bool = False,
 ) -> dict[str, Any]:
     safe_name = sanitize_filename(filename)
     try:
@@ -43,14 +45,17 @@ def save_browser_upload(
         raise ValueError(f"file too large: {len(data)} bytes, max {max_bytes}")
 
     target_dir = Path(upload_dir)
+    digest = hashlib.sha256(data).hexdigest()
+    if versioned:
+        target_dir = target_dir / digest
     target_dir.mkdir(parents=True, exist_ok=True)
     target = target_dir / safe_name
-    temp = target.with_suffix(target.suffix + ".uploading")
-    temp.write_bytes(data)
-    temp.replace(target)
+    with NamedTemporaryFile(dir=target_dir, delete=False) as temp:
+        temp.write(data)
+    Path(temp.name).replace(target)
     return {
         "filename": safe_name,
         "path": str(target.resolve()),
         "size": len(data),
-        "sha256": hashlib.sha256(data).hexdigest(),
+        "sha256": digest,
     }

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from app.document_profiles import extract_profile
 
 from app.parsers import parse_file
 from app.store import KnowledgeStore
@@ -12,10 +13,20 @@ SUPPORTED_SUFFIXES = {
 }
 
 
-def ingest_file(store: KnowledgeStore, path: str | Path) -> int:
+def ingest_file(store: KnowledgeStore, path: str | Path, *, document_family: str = "", content_digest: str = "") -> int:
     file_path = Path(path)
-    parsed = parse_file(file_path)
-    knowledge_type = infer_knowledge_type(file_path.name, parsed.full_text)
+    filename = file_path.name
+    if document_family:
+        filename = f"{file_path.stem[:80]}-{document_family}-{content_digest}{file_path.suffix}"
+        with store.lock:
+            known = store.conn.execute("SELECT id FROM documents WHERE filename=? AND json_extract(metadata,'$.source_digest')=?",
+                                       (filename, content_digest)).fetchone()
+        if known:
+            return known[0]
+    parsed = parse_file(file_path, local_only=True) if document_family else parse_file(file_path)
+    if document_family and parsed.parser == "image-metadata":
+        raise ValueError("当前图片没有取得可读正文，请检查本机 OCR 配置和原图质量。")
+    knowledge_type = "法规知识" if document_family else infer_knowledge_type(file_path.name, parsed.full_text)
     tags = infer_tags(parsed.full_text)
     chunks = [
         {
@@ -33,8 +44,11 @@ def ingest_file(store: KnowledgeStore, path: str | Path) -> int:
     ]
     if not chunks:
         raise ValueError("document contains no indexable text")
+    if document_family:
+        parsed.metadata.update(document_family=document_family, source_digest=content_digest, original_filename=file_path.name,
+                               profile_fields=extract_profile(document_family, chunks))
     return store.upsert_document(
-        filename=file_path.name,
+        filename=filename,
         title=parsed.title,
         knowledge_type=knowledge_type,
         tags=tags,
