@@ -13,11 +13,11 @@ const groups=[
 ];
 const navNames=Object.fromEntries(groups.flatMap(g=>g[1]));
 const requiredMenu={review:"review",scores:"review",logs:"admin"};
-const actions={create:"新增",edit:"修改",delete:"删除",enable:"启用",disable:"停用",import:"导入",
+const actions={create:"新增",edit:"修改",delete:"删除",enable:"启用",disable:"停用",import:"导入",evidence:"补充原文依据",
  pending:"待审批",approved:"已通过",rejected:"已退回",superseded:"已被新申请替代",open:"待处理",resolved:"已处理",disabled:"已停用",deleted:"已移除"};
 const fieldDefault=["name","code","record_type","region_name","status","version"];
 let model,route="",stateId=0,dialog,main,msg,activeThread=0,history={turns:[],files:[]},filter={},columns=[...fieldDefault],size=15,number=1;
-let selected=new Set(),queryOutput="",moduleFilter="",focusId=null,feedbackTurn=null;
+let selected=new Set(),queryOutput="",moduleFilter="",feedbackTurn=null,evidenceDraft=null,focusSearch=false,searchTerm="";
 const escape=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $=s=>root.querySelector(s);
 const cap=n=>model.user.permissions.includes(n);
@@ -59,16 +59,16 @@ const get=(k,p)=>offline?local.get(k,p):request(k,p,"GET");
 async function refresh(){
  const previous=model?.user.id;
  model=offline?local.state():await request("state",null,"GET");
- if(previous!==undefined&&previous!==model.user.id){activeThread=0;history={turns:[],files:[]};selected.clear();}
+ if(previous!==undefined&&previous!==model.user.id){activeThread=0;history={turns:[],files:[]};feedbackTurn=null;evidenceDraft=null;filter={};columns=[...fieldDefault];number=1;size=15;queryOutput="";searchTerm="";selected.clear();}
 }
 function shell(){
  const group=groups.find(([,arr])=>arr.some(x=>x[0]===route))?.[0]||"工作台";
- root.innerHTML=`<header class="wtop"><a class="wordmark" href="${href("overview")}"><i></i>法规认证知识平台</a><div class="role-w"><span>${offline?"离线交互原型 · "+local.snapshot.created.slice(0,10):"本地业务平台"}</span>${anchor("inbox","消息","")} ${anchor("accounts",model.user.username,"")}</div></header>
+ root.innerHTML=`<button class="skip-w" data-act="skip">跳到主要内容</button><header class="wtop"><a class="wordmark" href="${href("overview")}"><i></i>法规认证知识平台</a><div class="role-w"><span>${offline?"离线交互原型 · "+local.snapshot.created.slice(0,10):"本地业务平台"}</span><button type="button" class="find-w" data-act="quick-search" aria-keyshortcuts="/">搜索 <kbd>/</kbd></button>${anchor("inbox","消息","")} ${anchor("accounts",model.user.username,"")}</div></header>
  <div class="wlayout"><nav class="wnav" aria-label="平台功能">${groups.map(([g,arr])=>`<h2>${escape(g)}</h2>${arr.filter(([k])=>!requiredMenu[k]||cap(requiredMenu[k])).map(([k,t])=>`<a href="${href(k)}"${k===route?' aria-current="page"':""}>${escape(t)}</a>`).join("")}`).join("")}</nav>
- <main><div class="crumb">${anchor("overview","平台首页","")}　/　${escape(group)}　/　${escape(navNames[route])}</div><div id="wbody"></div><div class="msg-w" role="status" aria-live="polite"></div></main></div><dialog id="wmodal"><div data-modal></div></dialog>`;
+ <main><div class="crumb">${anchor("overview","平台首页","")}　/　${escape(group)}　/　${escape(navNames[route])}</div><div id="wbody" tabindex="-1"></div><div class="msg-w" role="status" aria-live="polite"></div></main></div><dialog id="wmodal" aria-labelledby="ws-modal-title"><div data-modal></div></dialog>`;
  main=$("#wbody");dialog=$("#wmodal");msg=$(".msg-w");
 }
-function showModal(title,html){dialog.querySelector("[data-modal]").innerHTML=`<h2>${escape(title)}</h2>${html}${tools(button("close","关闭"))}`;if(!dialog.open)dialog.showModal();}
+function showModal(title,html){dialog.querySelector("[data-modal]").innerHTML=`<h2 id="ws-modal-title" tabindex="-1">${escape(title)}</h2>${html}${tools(button("close","关闭"))}`;if(!dialog.open)dialog.showModal();dialog.querySelector("h2").focus();}
 const dataLink={
  home:["/business","#home","监管数据工作台"],source:["/sources","#sources","来源台账"],items:["/collection","#collection","采集结果"],
  docs:["/parse-review","#docs","查阅解析结果"],govern:["/admin","#governance","资料与模型配置"],schema:["/ontology","#ontology","对象与关系定义"],
@@ -83,9 +83,9 @@ function overview(){
 }
 function quality(){
  const q=model.quality,names={located:"已定位原文片段",excerpt:"已附出处及摘录",background:"仅关联项目背景资料",missing:"待补原文证据"};
- return box(offline?"导出时的正式知识":"正式知识依据",small("按条检查已审核记录的原始依据和适用地区。")+
+ return box(offline?"随附目录与本地试操作":"正式知识依据",small("按条检查已审核记录的原始依据和适用地区。")+
  info({"已定位原文片段":q.located,"已附出处及摘录":q.excerpt,"仅有项目背景依据":q.background,"待补原文证据":q.missing,"未标注地区":q.without_region}))+
- box("逐条核对",table(["知识名称","适用地区","证据状态","操作"],q.items.map(x=>[escape(x.name),escape(x.region||"待标注"),escape(names[x.kind]),button("detail","查看资料",x.id)])));
+ box("逐条核对",table(["知识名称","适用地区","证据状态","操作"],q.items.map(x=>[escape(x.name),escape(x.region||"待标注"),escape(names[x.kind]),tools(button("detail","查看资料",x.id),cap("edit")?button("attach-evidence","提交原文依据",x.id):"")])));
 }
 function requirements(){
  const ms=Object.fromEntries([...new Set(model.requirements.map(r=>r.module))].map(k=>[k,k]));
@@ -173,8 +173,17 @@ function parsePage(){
  box("已接入法规资料",table(["资料名称","解析方式","解析结果"],model.docs.map(d=>[escape(d.title),escape(d.parser),docAnchor(d.id)])));
 }
 function docAnchor(id){
- if(offline){const k=local.snapshot.documents.some(d=>d.id===+id)?"doc":"supplied";return rawlink("#"+k+"?id="+Number(id),"查阅原文");}
+ if(offline){
+  const collected=local.snapshot.documents.some(d=>d.id===+id),doc=local.snapshot.supplied.find(d=>d.id===+id);
+  return rawlink("#"+(collected?"doc":"supplied")+"?id="+Number(id),collected||doc?.full_text?"查阅原文":"查看题录");
+ }
  return cap("edit")?button("read-document","解析审阅",id):anchor("accounts","登录后审阅");
+}
+function passageAction(source){
+ if(source.document_id!=null&&Number.isInteger(Number(source.document_id))&&Number(source.document_id)>0&&source.chunk!=null&&cap("ask")){
+  return button("passage","定位原文",Number(source.document_id)+"/"+Number(source.chunk));
+ }
+ return source.record_id?button("detail","查看正式记录",source.record_id):"";
 }
 function vector(){
  return box("文档向量索引",table(["索引模型","维度","文档","分片"],model.vectors.map(v=>[escape(v.model_name),v.dimensions,v.documents,v.chunks])))+
@@ -231,7 +240,7 @@ function chat(){
  const compose=current?form("ask",area("question","问题或追问","","required")+fields(select("scope","证据范围",{library:"法规知识库",document:"本会话上传资料"}),select("lang","回答语言",{auto:"跟随问题",zh:"中文",en:"English"}))+
  tools(!offline?check("generate","使用已配置的问答模型"):"",submit("发送问题"))):small("新建一个对话即可提问。");
  const upload=current?`<details><summary>上传文件并基于文档提问</summary>${small(offline?"可读取本地文本，或匹配文件中已有解析结果的 PDF。新图片与扫描件的识别在在线平台进行。":"支持照片、扫描件、PDF、Word 与文本。文件仅在本会话中用于检索。")}${form("chat-upload",tools(input("file","选择文件","","file",'accept=".pdf,.docx,.png,.jpg,.jpeg,.tiff,.txt,.md,.csv" required'),submit("读取文件")))}${escape((history.files||[]).map(f=>f.name).join(" · "))}</details>`:"";
- const messages=turns.map(t=>`<article><h3>${escape(t.question)}</h3><pre>${escape(t.answer)}</pre><details><summary>${t.citations.length} 条原文出处</summary>${t.citations.map((c,i)=>`<h3>[${i+1}] ${escape(c.title)} · ${c.page?"第 "+escape(c.page)+" 页":c.chunk!=null?"分片 "+escape(c.chunk):"正式目录 #"+escape(c.record_id)}</h3><blockquote>${escape(c.excerpt)}</blockquote>`).join("")}</details>${tools(button("vote-up",t.vote===1?"已点赞":"点赞",t.id),button("vote-down",t.vote===-1?"已点踩":"点踩",t.id),button("turn-feedback","提出纠错",t.id))}</article>`).join("");
+ const messages=turns.map(t=>`<article><h3>${escape(t.question)}</h3><pre>${escape(t.answer)}</pre><details><summary>${t.citations.length} 条原文出处</summary>${t.citations.map((c,i)=>`<h3>[${i+1}] ${escape(c.title)} · ${c.page?"第 "+escape(c.page)+" 页":c.chunk!=null?"分片 "+escape(c.chunk):"正式目录 #"+escape(c.record_id)}</h3><blockquote>${escape(c.excerpt)}</blockquote>${passageAction(c)}`).join("")}</details>${tools(button("vote-up",t.vote===1?"已点赞":"点赞",t.id),button("vote-down",t.vote===-1?"已点踩":"点踩",t.id),button("turn-feedback","提出纠错",t.id))}</article>`).join("");
  const intent=turns.some(t=>/采购|报价|咨询|购买|quotation|purchase|contact/i.test(t.question));
  return box("我的对话",threadTools)+box(current?.title||"法规知识问答",messages+upload+compose+(intent?tools(anchor("leads","登记咨询或采购意向")):""))+tools(jump("qa"),anchor("leads","联系业务人员"));
 }
@@ -246,7 +255,7 @@ function leads(){
  box(cap("contacts")?"咨询登记":"我的咨询",table(["登记时间","联系信息","咨询意向"],model.leads.map(l=>[escape(l.created_at),escape(l.contact),escape(l.intent)])));
 }
 function search(){
- return box("查询法规、资料、来源与采集记录",form("search",tools(input("q","编号、名称或关键词","","text","required"),submit("全局搜索")))+queryOutput);
+ return box("查询法规、资料、来源与采集记录",form("search",tools(input("q","编号、名称或关键词",searchTerm,"text","required"),submit("全局搜索")))+queryOutput);
 }
 function renderView(){
  if(!main)return;
@@ -257,9 +266,10 @@ function renderView(){
 }
 async function boot(){
  const hash=location.hash.slice(1),active=!offline||!hash||hash.startsWith("w/");
+ if(dialog?.open)dialog.close();
+ const serial=++stateId;
  document.body.classList.toggle("ws-active",active);root.hidden=!active;
  if(!active)return;
- const serial=++stateId;
  try{
   if(!offline&&hash.startsWith("ticket=")){const ticket=hash.slice(7);window.history.replaceState(null,"",location.pathname+"#w/accounts");await request("auth/ticket",{ticket});}
   const wanted=location.hash.replace(/^#(?:w\/)?/,"")||"overview";route=Object.hasOwn(navNames,wanted)?wanted:"overview";
@@ -267,16 +277,63 @@ async function boot(){
   if(route==="chat"){if(!model.threads.some(t=>t.id===activeThread))activeThread=model.threads[0]?.id||0;history=activeThread?await get("thread",{id:activeThread}):{turns:[],files:[]};}
   if(serial!==stateId)return;
   shell();renderView();document.title=navNames[route]+" · 法规认证知识平台";window.scrollTo(0,0);
+  if(focusSearch&&route==="search"){$('[data-form="search"] [name="q"]').focus();focusSearch=false;}
  }catch(e){root.textContent="工作台读取失败。"+e.message;}
 }
 function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
 function read64(file){if(!file||!file.size||file.size>12*1024**2)return Promise.reject(Error("请选择 12 MB 以内的文件。"));return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=()=>reject(Error("文件读取失败。"));reader.readAsDataURL(file);});}
-async function changed(note){await refresh();if(route==="chat"&&activeThread)history=await get("thread",{id:activeThread});shell();renderView();message(note);}
+async function changed(note){await refresh();if(route==="chat"&&activeThread)history=await get("thread",{id:activeThread});shell();renderView();message([note,model.storageNotice].filter(Boolean).join(" "));}
 function pdfLink(r,id){
  return offline?button("pdf","保存原附件",id):rawlink("/api/workspace/pdf?record="+Number(r.id)+"&id="+Number(id),"保存原附件");
 }
+function focusGlobalSearch(){
+ const field=!root.hidden&&route==="search"&&$('[data-form="search"] [name="q"]');
+ if(field){field.focus();field.select();return;}
+ focusSearch=true;location.hash=href("search");
+}
+function resultAction(r){
+ if(r.kind==="法规")return button("detail","查看法规",r.id);
+ if(r.kind==="资料")return docAnchor(r.id);
+ if(r.kind==="来源")return offline?rawlink("#source?key="+encodeURIComponent(r.id),"查看来源"):button("source-result","查看来源",r.id);
+ return offline?rawlink("#item?id="+Number(r.id),"查看采集记录"):button("collected-item","查看采集记录",r.id);
+}
+function passagePosition(p){
+ return [p.page?"第 "+p.page+" 页":"", "片段 "+p.chunk].filter(Boolean).join(" · ");
+}
+function previewPassage(){
+ const picker=dialog.querySelector('[name="chunk"]'),preview=dialog.querySelector("[data-source-preview]");
+ if(picker&&preview)preview.textContent=evidenceDraft?.chunks.find(c=>c.chunk===Number(picker.value))?.text||"";
+}
 async function act(name,id){
  const r=model.records.find(x=>x.id===Number(id));
+ if(name==="skip"){main.focus();return;}
+ if(name==="quick-search"){focusGlobalSearch();return;}
+ if(name==="source-result"||name==="source-page"){
+  const [key,page]=name==="source-result"?[id,1]:JSON.parse(id),res=await get("source",{key,page}),s=res.source;
+  showModal(s.source_name,info({"来源编码":key,"市场":s.region_code,"机构":s.authority})+
+   small("已采集 "+res.total+" 条"+(res.pages>1?" · 第 "+res.page+" / "+res.pages+" 页":""))+
+   table(["关联采集记录","查阅"],res.items.map(x=>[escape(x.title),button("collected-item","查看采集记录",x.id)]),"此来源暂无收录的采集记录。")+
+   tools(res.page>1?button("source-page","上一页",JSON.stringify([key,res.page-1])):"",res.page<res.pages?button("source-page","下一页",JSON.stringify([key,res.page+1])):""));return;
+ }
+ if(name==="passage"){
+  const [docId,chunk]=id.split("/").map(Number),p=await get("passage",{id:docId,chunk});
+  let link="";
+  if(offline){
+   const k=local.snapshot.documents.some(d=>d.id===docId)?"doc":"supplied";
+   link=rawlink("#"+k+"?id="+docId+"&chunk="+chunk,"在随附全文中查看");
+  }else if(cap("edit")&&p.page&&model.docs.some(d=>d.id===docId&&d.mime_type==="application/pdf")){
+   link=rawlink("/parse-review?document_id="+docId+"&page="+Number(p.page),"打开对应 PDF 原页");
+  }
+  showModal(p.title,small(passagePosition(p))+"<blockquote class=\"passage-w\">"+escape(p.text)+"</blockquote>"+tools(link));return;
+ }
+ if(name==="attach-evidence"){
+  if(!r||!cap("edit"))throw Error("当前记录无法提交依据。");
+  const docs=offline?[...local.snapshot.documents,...local.snapshot.supplied].filter(d=>d.full_text):model.docs.filter(d=>d.parser!=="image-metadata");
+  if(!docs.length)throw Error("暂无可选择的已解析原文。");
+  evidenceDraft={id:r.id,revision:r.revision,chunks:[]};
+  showModal("为「"+r.name+"」提交原文依据",form("source-document",select("doc","原始资料",pairs(docs,"id","title"))+
+   input("keyword","在原文内筛选（可选）")+tools(submit("选择原文片段"))));return;
+ }
  if(name==="collected-item"){
   const item=await get(name,{id});
   showModal(item.title,info({"采集来源":item.source_key,"最近采集":item.date,...item.fields})+
@@ -293,8 +350,11 @@ async function act(name,id){
  if(name==="clear"){filter={};number=1;selected.clear();renderView();return;}
  if(name==="prev"||name==="next"){number=Math.max(1,number+(name==="next"?1:-1));renderView();return;}
  if(name==="detail"){
+  if(!r)throw Error("此记录不可用。");
+  const located=model.quality.items.some(x=>x.id===r.id&&x.kind==="located");
   showModal(r.name,info(Object.fromEntries(Object.entries(model.fields).map(([k,t])=>[t,labelValue(r,k)])))+
-   tools(...(r.pdfs||[]).map(id=>pdfLink(r,id)),!offline&&cap("edit")?rawlink("/catalog?record_id="+r.id,"目录与版本沿革"):""));return;}
+   tools(...(r.pdfs||[]).map(id=>pdfLink(r,id)),located?passageAction({document_id:r.source_document_id,chunk:r.source_chunk_index}):"",
+    cap("edit")?button("attach-evidence","提交原文依据",r.id):"",!offline&&cap("edit")?rawlink("/catalog?record_id="+r.id,"目录与版本沿革"):""));return;}
  if(name==="pdf"){const f=local.pdf(id);if(!f)throw Error("离线试传的 PDF 仅在本次打开期间可保存。");const bytes=Uint8Array.from(atob(f.data),c=>c.charCodeAt(0));download(new Blob([bytes],{type:"application/pdf"}),f.name);return;}
  if(name==="new"||name==="edit"){editor(r||{});return;}
  if(name==="columns"){
@@ -315,7 +375,11 @@ async function act(name,id){
   const operation=name.split("-")[1];showModal("确认提交"+actions[operation],form("bulk",`<input type="hidden" name="action" value="${operation}"><input type="hidden" name="ids" value="${ids.join(",")}">`+small(`对 ${ids.length} 条记录提交${actions[operation]}申请，经审核后生效。`)+submit("提交申请")));return;}
  if(name==="request"){
   const req=await get("request",{id});const payload=req.payload;
-  const rows=payload.items.map(i=>{const v=i.values||i;return [escape(i.id||"新增"),escape(v.name||model.records.find(r=>r.id===i.id)?.name||""),`<details><summary>字段明细</summary>${info(Object.fromEntries(Object.entries(model.fields).map(([k,vv])=>[vv,labelValue(v,k)])))}${i.pdf?small("含待审 PDF 附件"):""}</details>`];});
+  const rows=payload.items.map(i=>{
+   const v=i.values||i,e=i.evidence;
+   const detail=e?small(e.title+" · "+passagePosition(e))+'<blockquote class="passage-w">'+escape(e.text)+'</blockquote>':
+    `<details><summary>字段明细</summary>${info(Object.fromEntries(Object.entries(model.fields).map(([k,vv])=>[vv,labelValue(v,k)])))}${i.pdf?small("含待审 PDF 附件"):""}</details>`;
+   return [escape(i.id||"新增"),escape(v.name||model.records.find(r=>r.id===i.id)?.name||""),detail];});
   showModal("审批单 #"+id,table(["目标","名称","明细"],rows)+(req.status==="pending"&&cap("review")?form("review",`<input type="hidden" name="id" value="${+id}">`+fields(select("decision","决定",{approve:"审核通过",reject:"退回"}),input("note","审核意见"))+submit("确认审核")):status(req.status)));return;}
  if(name==="new-node"){nodeModal(id);return;}
  if(name==="edit-node"){const n=model.nodes.find(x=>x.key===id);nodeModal(n.kind,n);return;}
@@ -334,6 +398,22 @@ async function act(name,id){
 }
 async function onForm(name,f){
  const formData=new FormData(f),p=Object.fromEntries(formData);
+ if(name==="source-document"){
+  if(!evidenceDraft)throw Error("请重新选择要补充依据的法规。");
+  const d=await get("document",{id:p.doc}),term=p.keyword.trim().toLowerCase();
+  const chunks=d.chunks.filter(c=>c.text?.trim()&&(!term||c.text.toLowerCase().includes(term)));
+  if(!chunks.length)throw Error("未找到可选的片段，请修改关键词或资料。");
+  Object.assign(evidenceDraft,{doc:Number(p.doc),chunks});
+  const choices=Object.fromEntries(chunks.map(c=>[c.chunk,passagePosition(c)+" · "+c.text.slice(0,65)]));
+  showModal(d.title,form("submit-evidence",select("chunk","待审核原文片段",choices)+
+   '<blockquote class="passage-w" data-source-preview aria-live="polite"></blockquote>'+tools(submit("提交专家审核"))));
+  previewPassage();return;
+ }
+ if(name==="submit-evidence"){
+  if(!evidenceDraft)throw Error("请重新选择待审原文。");
+  const {id,revision,doc}=evidenceDraft,res=await mutate("record",{action:"evidence",items:[{id,revision,document_id:doc,chunk:Number(p.chunk)}]});
+  evidenceDraft=null;await changed("已提交原文依据，审批单 #"+res.request_id);return;
+ }
  if(name==="match-file"){const d=await mutate(name,p);showModal(d.title,small("文件摘要匹配，解析方式为 "+d.parser)+tools(docAnchor(d.id)));return;}
  if(name==="module"){moduleFilter=p.module;renderView();return;}
  if(name==="filter"){filter=p;number=1;selected.clear();renderView();return;}
@@ -355,8 +435,9 @@ async function onForm(name,f){
  if(name==="entities"){const res=await mutate(name,p);await changed("已新增 "+res.created+" 条候选关系。");return;}
  if(name==="lookup"){const res=await mutate(name,p);queryOutput=table(["编号","名称","版本","来源"],[...res.local.map(r=>({...r,src:"正式目录"})),...res.external.map(r=>({...r,src:"机构接口"}))].map(r=>[escape(r.code),escape(r.name),escape(r.version),r.src]),res.configured?"未匹配此编号。":"本地目录未匹配此编号，外部能力库待接入。");renderView();return;}
  if(name==="search"||name==="vector"){
-  const res=await mutate(name,p);queryOutput=name==="vector"?table(["出处","相似度","原文片段"],res.items.map(r=>[escape(r.title)+" · "+escape(r.chunk),Number(r.score).toFixed(3),escape(r.text)])):
-    table(["类别","名称","编号 / 来源","查看"],res.items.map(r=>[escape(r.kind),escape(r.title),escape(r.detail),r.kind==="法规"?button("detail","详情",r.id):r.kind==="资料"?docAnchor(r.id):r.kind==="来源"?external("/sources","#source?key="+encodeURIComponent(r.id),"来源台账"):external("/collection","#item?id="+Number(r.id),"采集结果")]));
+  const res=await mutate(name,p);if(name==="search")searchTerm=p.q;
+  queryOutput=name==="vector"?table(["出处","相似度","原文片段","定位"],res.items.map(r=>[escape(r.title)+" · "+escape(passagePosition(r)),Number(r.score).toFixed(3),escape(r.text),passageAction(r)])):
+    table(["类别","名称","编号 / 来源","查看"],res.items.map(r=>[escape(r.kind),escape(r.title),escape(r.detail),resultAction(r)]));
   renderView();return;}
  if(name==="thread"){const res=await mutate(name,p);activeThread=res.id;await changed("已新建会话。");return;}
  if(name==="open-thread"){activeThread=+p.id;await changed("");return;}
@@ -371,9 +452,14 @@ function fail(e){if(dialog?.open){let err=dialog.querySelector("[data-error]");i
 root.addEventListener("click",async e=>{const btn=e.target.closest("[data-act]");if(!btn||btn.disabled)return;btn.disabled=true;try{await act(btn.dataset.act,btn.dataset.id);}catch(x){fail(x);}finally{btn.disabled=false;}});
 root.addEventListener("submit",async e=>{const f=e.target.closest("[data-form]");if(!f)return;e.preventDefault();const btn=e.submitter||f.querySelector('[type="submit"]');if(btn?.disabled)return;if(btn)btn.disabled=true;try{await onForm(f.dataset.form,f);}catch(x){fail(x);}finally{if(btn)btn.disabled=false;}});
 root.addEventListener("change",e=>{const input=e.target;
+ if(input.name==="chunk"&&dialog?.open)previewPassage();
  if(input.name==="pageSize"){size=+input.value;number=1;renderView();}
  if(input.matches("[data-pick]")){const id=+input.dataset.pick;if(input.checked)selected.add(id);else selected.delete(id);renderView();}
  if(input.matches("[data-pick-page]")){filtered().slice((number-1)*size,number*size).forEach(r=>input.checked?selected.add(r.id):selected.delete(r.id));renderView();}
+});
+document.addEventListener("keydown",e=>{
+ if(e.key==="/"&&!e.ctrlKey&&!e.altKey&&!e.metaKey&&!e.isComposing&&!e.defaultPrevented&&!document.querySelector("dialog[open]")&&
+    !e.target.closest?.("input,textarea,select,[contenteditable=true]")){e.preventDefault();focusGlobalSearch();}
 });
 window.addEventListener("hashchange",boot);boot();
 })();

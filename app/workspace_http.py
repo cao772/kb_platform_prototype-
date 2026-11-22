@@ -6,6 +6,7 @@ import json
 import os
 import sqlite3
 import time
+import unicodedata
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlsplit
 
@@ -21,6 +22,7 @@ from app.workspace_catalog import (
     export_excel,
     import_excel,
     records,
+    source_passage,
 )
 from app.workspace_connectors import Connectors, provider
 from app.workspace_data import (
@@ -177,9 +179,14 @@ def response(h, data, mime, status=200, headers=()):
     h.wfile.write(data)
 
 
+def search_key(text):
+    return "".join(c for c in unicodedata.normalize("NFKC", text or "").lower() if c.isalnum())
+
+
 class Workspace:
     def __init__(self, store):
         self.store, self.db = store, store.conn
+        self.db.create_function("kb_search_key", 1, search_key, deterministic=True)
         self.accounts = Accounts(store)
         self.catalog = WorkspaceCatalog(store, self.accounts)
         initialize(store)
@@ -193,7 +200,7 @@ class Workspace:
             d = workspace_snapshot(self.db)
             source_rows = table(
                 self.db,
-                "SELECT source_key,source_name,region_code,source_type,verification_status FROM knowledge_sources ORDER BY region_code,source_key",
+                "SELECT source_key,source_name,region_code,source_type,authority,harvestability,verification_status FROM knowledge_sources ORDER BY region_code,source_key",
             )
             d.update(
                 user=actor,
@@ -322,6 +329,7 @@ class Workspace:
                         title=r["title"],
                         chunk=r["chunk_index"],
                         document_id=r["document_id"],
+                        page=(r.get("metadata") or {}).get("page_no"),
                         score=r["semantic_score"],
                         text=r["text"][:650],
                     )
@@ -333,6 +341,7 @@ class Workspace:
                 q = clean_text(p.get("q"), 300).lower()
                 if not q:
                     raise ValueError("请输入检索词。")
+                compact = search_key(q)
                 self.accounts.audit(actor, "全局查询")
                 results = []
                 for kind, sql in (
@@ -351,8 +360,9 @@ class Workspace:
                     ("采集", "SELECT id,title,source_key detail FROM source_extracted_items"),
                 ):
                     for r in self.db.execute(
-                        "SELECT * FROM (" + sql + ") WHERE instr(lower(title||' '||detail),?)>0 LIMIT 100",
-                        (q,),
+                        "SELECT * FROM (" + sql + ") WHERE instr(lower(title||' '||detail),?)>0"
+                        " OR (length(?)>0 AND instr(kb_search_key(title||' '||detail),?)>0) LIMIT 100",
+                        (q, compact, compact),
                     ):
                         results.append(dict(r, kind=kind))
                 return {"items": results}
@@ -533,6 +543,22 @@ class Workspace:
                     return self.xlsx(h, export_excel([], list(FIELDS)), "regulation-template.xlsx")
                 if op == "standards":
                     return h._send_json(self.connectors.lookup(params.get("code")))
+                if op == "source":
+                    key = clean_text(params.get("key"), 180)
+                    size = 25
+                    with self.store.lock:
+                        source = self.db.execute(
+                            "SELECT source_key,source_name,region_code,authority FROM knowledge_sources WHERE source_key=?",
+                            (key,),
+                        ).fetchone()
+                        if not source:
+                            raise ValueError("未找到此来源。")
+                        total = self.db.execute("SELECT count(*) FROM source_extracted_items WHERE source_key=?", (key,)).fetchone()[0]
+                        pages = max(1, (total + size - 1) // size)
+                        page = min(pages, max(1, int(params.get("page", 1))))
+                        items = table(self.db, """SELECT id,title FROM source_extracted_items WHERE source_key=?
+                            ORDER BY last_seen_at DESC,id DESC LIMIT ? OFFSET ?""", (key, size, (page - 1) * size))
+                    return h._send_json(dict(source=dict(source),items=items,total=total,page=page,pages=pages))
                 if op == "collected-item":
                     with self.store.lock:
                         row = self.db.execute(
@@ -555,6 +581,12 @@ class Workspace:
                             else "",
                         }
                     )
+                if op == "passage":
+                    require(actor, "ask")
+                    with self.store.lock:
+                        passage = source_passage(self.db, params["id"], params["chunk"],
+                                                 regulations_only="edit" not in actor["permissions"])
+                    return h._send_json(passage)
                 if op == "document":
                     require(actor, "edit")
                     doc = self.store.document_detail(int(params["id"]), include_text=False)

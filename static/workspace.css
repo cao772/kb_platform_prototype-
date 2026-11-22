@@ -38,5 +38,10 @@ body:has(#ws-root){margin:0}#ws-root *{box-sizing:border-box}#ws-root[hidden],#w
 #ws-root dialog::backdrop{background:#0a213b70}#ws-root .msg-w{position:sticky;bottom:12px;z-index:2;background:#e5f3ee;color:#15594d;padding:10px 14px;border-radius:6px;white-space:pre-wrap}
 #ws-root .msg-w:empty{display:none}#ws-root .msg-w.error{background:#fff1e9;color:#823819}#ws-root .pair-w{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
 #ws-root .btn-w{display:inline-block;padding:5px 8px;background:#edf3f8;border-radius:4px}#ws-root .role-w{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#ws-root .skip-w{position:fixed;left:12px;top:-100px;z-index:10}
+#ws-root .skip-w:focus{top:10px}
+#ws-root .find-w{display:inline-flex;align-items:center;gap:10px;color:#163d59;background:#f4f8fb;border:1px solid #a9bfcd}
+#ws-root kbd{font:12px ui-monospace,monospace;border:1px solid #a2b9c9;border-radius:3px;padding:1px 4px}
+#ws-root .passage-w{line-height:1.7}
 @media(max-width:820px){#ws-root .wlayout{grid-template-columns:145px minmax(0,1fr);gap:12px;padding:12px}#ws-root .pair-w{display:block}}
 @media(max-width:640px){#ws-root .wlayout{display:block;padding:10px}#ws-root .wnav{position:static;display:flex;overflow:auto;gap:4px;margin:0 0 12px}#ws-root .wnav h2{display:none}#ws-root .wnav a{white-space:nowrap}#ws-root .whero{padding:16px}#ws-root .box{padding:12px}#ws-root .grid-w,.metrics-w{grid-template-columns:1fr 1fr}#ws-root .wtop{align-items:start;flex-wrap:wrap}#ws-root .stat-w{display:block}}

@@ -120,10 +120,13 @@ def decode_file(value, limit):
 
 def public_record(row):
     fields = dict(row)
+    chunk_index = fields.pop("source_chunk_index", None)
+    revision = hashlib.sha256(dump(fields).encode()).hexdigest()
     attrs = json.loads(fields.pop("attributes") or "{}")
     fields.update({k: attrs.get(k, "") for k in EXTRA})
     fields["pdfs"] = attrs.get("pdfs", [])
-    fields["revision"] = hashlib.sha256(dump(dict(row)).encode()).hexdigest()
+    fields["revision"] = revision
+    fields["source_chunk_index"] = chunk_index
     return fields
 
 
@@ -132,9 +135,35 @@ def records(conn, include_disabled=False):
     return [
         public_record(r)
         for r in conn.execute(
-            "SELECT * FROM compliance_records WHERE review_status " + where + " ORDER BY id DESC"
+            "SELECT r.*, c.chunk_index AS source_chunk_index FROM compliance_records r "
+            "LEFT JOIN chunks c ON c.id=r.source_chunk_id AND c.document_id=r.source_document_id "
+            "WHERE r.review_status " + where + " ORDER BY r.id DESC"
         )
     ]
+
+
+def source_passage(conn, document_id, chunk_index, *, regulations_only=False):
+    row = conn.execute(
+        """SELECT d.id document_id,d.title,d.knowledge_type,c.id chunk_id,c.chunk_index chunk,c.text,
+                  json_extract(c.metadata,'$.page_no') page
+           FROM documents d JOIN chunks c ON c.document_id=d.id
+           WHERE d.id=? AND c.chunk_index=? AND trim(c.text)<>''
+             AND d.knowledge_type<>'项目背景资料' AND d.parser<>'image-metadata'
+             AND COALESCE(json_extract(c.metadata,'$.block_type'),'') NOT IN ('page_unreadable','image')
+             AND COALESCE(json_extract(d.metadata,'$.dataset_role'),'')<>'project_background'""",
+        (int(document_id), int(chunk_index)),
+    ).fetchone()
+    if not row:
+        raise ValueError("此原文片段不可用，请重新选择已解析的法规资料。")
+    if regulations_only and row["knowledge_type"] != "法规知识" and not conn.execute(
+        "SELECT 1 FROM compliance_records WHERE review_status='approved' AND source_document_id=? AND source_chunk_id=?",
+        (row["document_id"], row["chunk_id"]),
+    ).fetchone():
+        raise ValueError("此原文片段超出已开放的法规资料范围。")
+    result = dict(row)
+    result.pop("knowledge_type")
+    result["digest"] = hashlib.sha256(result["text"].encode("utf-8")).hexdigest()
+    return result
 
 
 def normalize(values):
@@ -238,7 +267,7 @@ class WorkspaceCatalog:
     def submit(self, actor, action, items, pdf=None, correction=None):
         require(actor, "edit")
         if (
-            action not in {"create", "edit", "enable", "disable", "delete", "import"}
+            action not in {"create", "edit", "enable", "disable", "delete", "import", "evidence"}
             or not isinstance(items, list)
             or not 1 <= len(items) <= 2000
         ):
@@ -279,6 +308,8 @@ class WorkspaceCatalog:
                 if item.get("revision") != current["revision"]:
                     raise ValueError("资料已变化，请刷新后重试。")
                 entry["revision"] = current["revision"]
+            if action == "evidence":
+                entry["evidence"] = source_passage(self.db, item["document_id"], item["chunk"])
             if action in {"create", "edit", "import"}:
                 entry["values"] = normalize(item)
                 if pdf_id:
@@ -367,6 +398,15 @@ class WorkspaceCatalog:
                 rid = self.db.execute(
                     f"INSERT INTO compliance_records({keys}) VALUES({marks})", values
                 ).lastrowid
+        elif action == "evidence":
+            previous = change["evidence"]
+            current = source_passage(self.db, previous["document_id"], previous["chunk"])
+            if (current["chunk_id"], current["digest"]) != (previous["chunk_id"], previous["digest"]):
+                raise ValueError("原文在审批期间已变化，请退回并重新选取片段。")
+            self.db.execute(
+                "UPDATE compliance_records SET source_document_id=?,source_chunk_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (current["document_id"], current["chunk_id"], rid),
+            )
         else:
             state = {"enable": "approved", "disable": "disabled", "delete": "deleted"}[action]
             self.db.execute(

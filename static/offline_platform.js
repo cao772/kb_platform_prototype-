@@ -43,7 +43,10 @@ const tiles = (items, fallback="暂无记录。")=>items.length ? `<div class="t
 const metrics = entries=>`<div class="metrics">${entries.map(([name,n,route,values])=>`<a class="metric" href="${h(addr(route,values))}"><span>${h(name)}</span><strong>${h(n)}</strong></a>`).join("")}</div>`;
 const asDay = s=>(s||"").slice(0,10);
 const sourceLink = k=>sourceMap.has(k)?link("source",k,{key:k}):h(k);
-const docLink = id=>documentMap.has(id)?link("doc","阅读解析原文",{id}):"";
+function docLink(id,chunk){
+  const kind=documentMap.has(id)?"doc":data.supplied.some(d=>d.id===id&&d.full_text)?"supplied":"";
+  return kind?link(kind,chunk==null?"阅读解析原文":"定位原文片段",{id,chunk}):"";
+}
 const itemsFor = key=>data.items.filter(i=>i.source_key===key);
 const docsFor = key=>data.documents.filter(d=>d.source_key===key);
 const sourceOf = i=>sourceMap.get(i.source_key)||{};
@@ -116,10 +119,20 @@ function docs() {
   const suppliedList=card("接入的法规与标准",table(["资料名称","页数 / 工作表数","随附内容"],suppliedDocs.map(d=>[link("supplied",d.title,{id:d.id}),h(d.pages?d.pages+" 页":d.sheets?d.sheets+" 张工作表":"—"),h(d.full_text?"解析全文":"题录与解析信息")])));
   return head("解析原文",`平台共接入 ${data.counts.documents} 份资料，本文件随附 ${data.documents.length} 份公开采集原文及 ${data.supplied.length} 份法规标准资料的题录。`)+card("公开资料",form([selector("source","来源",sourceOptions(data.documents))],"在标题或全文中搜索")+paged(docs,["资料名称","来源","解析方式","正文字符"],d=>[link("doc",d.title,{id:d.id}),sourceLink(d.source_key),h(d.parser),String(d.full_text.length)]))+(val("source")?"":suppliedList);
 }
+function citedPassage(d) {
+  if(!params.has("chunk"))return "";
+  const n=Number(val("chunk")),rows=data.search_index.passages.filter(row=>row[0]===d.id);
+  const index=rows.findIndex(row=>row[1]===n);
+  if(index<0)return card("引用位置",empty("此片段未随本文件提供。"));
+  const row=rows[index],position=(row[2]?"第 "+row[2]+" 页 · ":"")+"片段 "+n;
+  const nearby=[rows[index-1],rows[index+1]].filter(Boolean).map(r=>
+    link(page,"片段 "+r[1],{id:d.id,chunk:r[1]},"btn")).join(" ");
+  return card("引用原文",'<p>'+h(position)+'</p><blockquote class="source-text">'+h(row[3])+'</blockquote><div class="actions">'+nearby+'</div>');
+}
 function doc() {
   const d=documentMap.get(Number(val("id")));if(!d)return empty("该资料未随本文件提供。");
   const relates=data.items.filter(i=>i.document_id===d.id);
-  return link("docs","← 解析原文",{},"back")+head(d.title,d.source_key+" · "+d.parser)+
+  return link("docs","← 解析原文",{},"back")+head(d.title,d.source_key+" · "+d.parser)+citedPassage(d)+
     card("来源依据",sourceLink(d.source_key)+officialAddress(d.url)+tiles(relates.map(i=>["item",i.title,say(i.item_type)+(data.files[i.id]?" · 内附原件":""),{id:i.id}]),"来源于平台的入口页快照。"))+
     card("解析全文",`<div class="source-text" tabindex="0">${h(d.full_text)}</div>`);
 }
@@ -134,7 +147,7 @@ function runs() {
 }
 function catalog() {
   const records=data.catalog.filter(r=>match(r.name,r.code,r.region_code,r.region_name,r.product_class));
-  return head("正式知识目录","目录收录平台已审核的记录。效力状态与审核状态分别列示。")+card("正式知识",form()+ (records.length?records.map(r=>`<h3>${h(r.name)}</h3>${badge(say(r.record_type))}${badge("已审核")}${details([["市场",r.region_name||r.region_code],["产品分类",r.product_class],["编号",r.code||"未标注"],["效力状态",say(r.status)],["版本",r.version||"未标注"],["生效日期",r.effective_from],["失效日期",r.effective_to]])}${docLink(r.source_document_id)}`).join("<hr>"):empty("没有符合条件的正式知识。")));
+  return head("正式知识目录","目录收录平台已审核的记录。效力状态与审核状态分别列示。")+card("正式知识",form()+ (records.length?records.map(r=>`<h3>${h(r.name)}</h3>${badge(say(r.record_type))}${badge("已审核")}${details([["市场",r.region_name||r.region_code],["产品分类",r.product_class],["编号",r.code||"未标注"],["效力状态",say(r.status)],["版本",r.version||"未标注"],["生效日期",r.effective_from],["失效日期",r.effective_to]])}${docLink(r.source_document_id,r.source_chunk_index)}`).join("<hr>"):empty("没有符合条件的正式知识。")));
 }
 function changes() {
   return head("变化待办","按记录时间查看系统识别的变化及其处理状态。")+card("变化记录",form([selector("severity","优先级",uniq(data.changes.map(x=>x.severity)).map(k=>[k,say(k)]))])+
@@ -183,14 +196,14 @@ function access() {
 }
 function supplied() {
   const d=data.supplied.find(x=>x.id===Number(val("id"))); if(!d)return empty("未找到这份资料。");
-  return link("docs","← 解析原文",{},"back")+head(d.title,"平台接入的法规与标准资料")+
+  return link("docs","← 解析原文",{},"back")+head(d.title,"平台接入的法规与标准资料")+citedPassage(d)+
     card("解析信息",details([["PDF 页数",d.pages],["工作表数",d.sheets],["解析方式",d.parser],["接入日期",asDay(d.created_at)]]))+
     (d.full_text?card("解析全文",'<div class="source-text" tabindex="0">'+h(d.full_text)+'</div>'):empty("本文件随附此资料的题录与解析信息。"));
 }
 function savedAnswer() {
   const a=data.saved_question;
   if(!a)return "";
-  const refs=a.citations.map((r,i)=>'<details><summary>来源 '+(i+1)+' · '+h(documentMap.get(r.doc).title)+'</summary><blockquote class="source-text">'+h(r.text)+'</blockquote>'+docLink(r.doc)+'</details>').join("");
+  const refs=a.citations.map((r,i)=>'<details><summary>来源 '+(i+1)+' · '+h(documentMap.get(r.doc).title)+'</summary><blockquote class="source-text">'+h(r.text)+'</blockquote>'+docLink(r.doc,r.chunk)+'</details>').join("");
   return card("平台历史问答",'<h3>'+h(a.question)+'</h3><p class="note-line">采集批次为 2026-09-21。关于测试程序的位置，历史回答引用了 2017 年提案，仍需根据现行 eCFR 复核。</p><details><summary>查看当次回答及 '+a.citations.length+' 条引用</summary><div class="source-text">'+h(a.answer)+'</div>'+refs+'</details>');
 }
 const vocabulary = [["电视","television"],["能效","energy"],["冰箱","refrigerat"],["制冷","refrigerat"],["洗碗机","dishwasher"],["产品安全","prodsg"],["德国","prodsg"],["美国","energy"],["市场准入","market access"],["欧盟","directive"],["印尼","permen"]];
@@ -219,6 +232,9 @@ function render() {
   document.getElementById("nav").innerHTML=sections.map(([group,items])=>`<h2>${h(group)}</h2>${items.map(([r,n])=>`<a href="${addr(r)}"${active===r?' aria-current="page"':""}>${h(n)}</a>`).join("")}`).join("");
   document.title=(titles.get(active)||"工作台")+" · 法规认证知识平台";
   view.innerHTML=views[page]();
+  const cited=(page==="doc"||page==="supplied")&&params.has("chunk")&&view.querySelector(".card h2");
+  if(cited){cited.tabIndex=-1;cited.focus();}
+  else window.scrollTo(0,0);
 }
 view.addEventListener("submit",e=>{
   if(!e.target.matches("[data-filter]"))return;

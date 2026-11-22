@@ -169,10 +169,10 @@ def saved_question(conn, documents):
         match = re.fullmatch(r"doc-(\d+)-chunk-(\d+)", ref["evidence_id"])
         if not match or int(match[1]) not in documents:
             return None
-        row = conn.execute("SELECT text FROM chunks WHERE document_id=? AND id=?", match.groups()).fetchone()
+        row = conn.execute("SELECT text,chunk_index FROM chunks WHERE document_id=? AND id=?", match.groups()).fetchone()
         if not row:
             return None
-        citations.append(dict(doc=int(match[1]), chunk=int(match[2]), text=row[0]))
+        citations.append(dict(doc=int(match[1]), chunk=row["chunk_index"], text=row["text"]))
     return dict(question=r["question"], answer=r["answer"], citations=citations)
 
 
@@ -204,8 +204,12 @@ def shareable_vectors(conn, document_ids):
 def snapshot(conn):
     result = read_collection(conn)
     public_ids = {r["id"] for r in result["documents"]}
-    records = rows(conn, """SELECT id,record_type,code,name,region_code,region_name,product_class,status,version,
-        effective_from,effective_to,source_document_id,attributes FROM compliance_records WHERE review_status='approved' ORDER BY id""")
+    supplied = supplied_material(conn)
+    shared_ids = public_ids | {r["id"] for r in supplied if r.get("full_text")}
+    records = rows(conn, """SELECT r.id,r.record_type,r.code,r.name,r.region_code,r.region_name,r.product_class,
+        r.status,r.version,r.effective_from,r.effective_to,r.source_document_id,r.attributes,c.chunk_index source_chunk_index
+        FROM compliance_records r LEFT JOIN chunks c ON c.id=r.source_chunk_id AND c.document_id=r.source_document_id
+        WHERE r.review_status='approved' ORDER BY r.id""")
     for r in records:
         attributes = json.loads(r.pop("attributes") or "{}")
         for key in EXTRA:
@@ -215,16 +219,15 @@ def snapshot(conn):
             if key == "source_url":
                 value = official_url(value)
             r[key] = value
-        if r["source_document_id"] not in public_ids:
+        if r["source_document_id"] not in shared_ids:
             r["source_document_id"] = None
+            r["source_chunk_index"] = None
     changes = rows(conn, """SELECT id,title,event_type,severity,status,region_code,product_class,
         source_document_id,created_at FROM knowledge_change_tasks ORDER BY id DESC""")
     for r in changes:
         if r["source_document_id"] not in public_ids:
             r["source_document_id"] = None
     workspace = workspace_snapshot(conn)
-    supplied = supplied_material(conn)
-    shared_ids = public_ids | {r["id"] for r in supplied if r.get("full_text")}
     workspace_index = shareable_vectors(conn, shared_ids)
     if conn.execute("SELECT 1 FROM sqlite_master WHERE name='ws_facts'").fetchone():
         workspace["facts"] = [dict(r) for r in conn.execute("""SELECT id,document_id,chunk_id,subject,predicate,object,excerpt,status

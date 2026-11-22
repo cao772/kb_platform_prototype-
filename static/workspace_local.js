@@ -5,18 +5,27 @@ const key="kb-local-workspace-v2:"+snapshot.created;
 const clone=x=>JSON.parse(JSON.stringify(x));
 const today=()=>new Date().toISOString().slice(0,19).replace("T"," ");
 const next=rows=>Math.max(0,...rows.map(x=>Number(x.id)||0))+1;
-let storage, saved={}, files=new Map();
+let storage, saved={}, files=new Map(), storageNotice="";
 try{storage=localStorage;saved=JSON.parse(storage.getItem(key)||"{}");}catch{}
 const baseDocs=[...snapshot.documents,...snapshot.supplied];
 const db=Object.assign({role:"admin",records:snapshot.catalog.map(r=>({...r,revision:"initial:"+r.id,review_status:"approved",pdfs:[]})),
  nodes:meta.nodes,mapping:meta.mapping,requests:[],preferences:{},threads:[],turns:[],feedback:[],leads:[],scores:[],facts:meta.facts||[],audit:[],watches:[],independent:false},saved);
 const ids={reader:1,product:2,expert:3,manager:4,admin:5};
 const actor=()=>({id:ids[db.role],username:meta.roles[db.role]+"体验",role:db.role,permissions:meta.role_permissions[db.role]||[]});
-function save(){try{storage?.setItem(key,JSON.stringify(db));}catch{ /* The open tab retains the in-memory edits. */ }}
+function save(){try{if(!storage)throw Error();storage.setItem(key,JSON.stringify(db));storageNotice="";}catch{storageNotice="当前浏览器无法保存本次试操作，结果仅在此标签页有效。";}}
 const requireRole=cap=>{if(cap&&!actor().permissions.includes(cap))throw Error("请在账户页切换到相应的体验角色。");};
 const caps={record:"edit",import:"edit",review:"review",policy:"admin",node:"manage",mapping:"manage",score:"review",role:"admin",watch:"collect",watchRun:"collect",entities:"edit","fact-review":"review","feedback-resolve":"review"};
 function state(){
- const u=actor();return {...meta,...db,user:u,docs:baseDocs.map(d=>({id:d.id,title:d.title,parser:d.parser,filename:d.title})),
+ const quality={located:0,excerpt:0,background:0,missing:0,without_region:0,items:[]};
+ const original=new Map(meta.quality.items.map(x=>[x.id,x.kind]));
+ for(const row of db.records.filter(r=>r.review_status==="approved")){
+  let kind=row.evidence_kind||original.get(row.id)||"missing";
+  if(!["located","background"].includes(kind)&&row.revision!=="initial:"+row.id)
+    kind=row.source_excerpt&&(row.source_url||row.pdfs?.length)?"excerpt":"missing";
+  quality[kind]++;if(!row.region_code)quality.without_region++;
+  quality.items.push({id:row.id,name:row.name,kind,region:row.region_code});
+ }
+ const u=actor();return {...meta,...db,quality,storageNotice,user:u,docs:baseDocs.map(d=>({id:d.id,title:d.title,parser:d.parser,filename:d.title})),
  sources:snapshot.sources,counts:snapshot.counts,collected:snapshot.items.length,recent:snapshot.items.slice(0,12),
  records:db.records.filter(r=>r.review_status==="approved"||u.permissions.includes("edit")&&r.review_status==="disabled"),
  threads:db.threads.filter(x=>x.owner===u.id),feedback:db.feedback.filter(x=>x.actor===u.id||u.permissions.includes("review")),
@@ -49,7 +58,7 @@ function searchPassages(q,docs){
 const index=snapshot.search_index||{vocabulary:{},passages:[]};
 const titles=new Map(baseDocs.map(d=>[d.id,d.title]));
 let indexed;
-function vectorPassages(query){
+function vectorPassages(query,allowedIds=null){
  const vocabulary=index.vocabulary,terms=String(query).toLowerCase().match(/[a-z0-9_.+-]+|[\u4e00-\u9fff]+/g)||[];
  const concepts=[["电视","television"],["冰箱","refrigerator"],["能效","energy"],["欧盟","directive"],["泄漏电流","leakage"],["电压","voltage"]];
  for(const [zh,en] of concepts)if(query.includes(zh))terms.push(en);
@@ -69,6 +78,7 @@ function vectorPassages(query){
  });
  const results=[];
  for(const row of indexed){
+  if(allowedIds&&!allowedIds.has(row.document_id))continue;
   let dot=0;for(let i=0;i<q.length;i++)dot+=q[i]*row.vector[i];
   if(dot<=0)continue;
   const lower=row.text.toLowerCase();
@@ -91,7 +101,9 @@ function stage(action,items,p){
  const pending=items.map(row=>{
   if(["create","import","edit"].includes(action))validate(row);
   if(!["create","import"].includes(action)&&db.records.find(r=>r.id===row.id)?.revision!==row.revision)throw Error("数据已变化，请刷新。");
-  return clone(row);
+  const change=clone(row);
+  if(action==="evidence")change.evidence=get("passage",{id:row.document_id,chunk:row.chunk});
+  return change;
  });
  const id=next(db.requests);
  db.requests.push({id,actor:actor().id,username:actor().username,kind:action,status:"pending",amount:items.length,created_at:today(),payload:{items:pending,correction:p.correction}});
@@ -111,6 +123,10 @@ function publish(p){
    if(["edit","create","import"].includes(r.kind)){
     Object.assign(target,Object.fromEntries(Object.entries(value).filter(([k])=>Object.hasOwn(meta.fields,k))));
     if(files.has("pdfR"+r.id)){target.pdfs=[...(target.pdfs||[]),r.id];}
+   }else if(r.kind==="evidence"){
+    const source=get("passage",{id:value.document_id,chunk:value.chunk});
+    if(source.text!==value.evidence?.text)throw Error("原文已变化，请退回并重新选取。");
+    Object.assign(target,{source_document_id:source.document_id,source_chunk_index:source.chunk,evidence_kind:"located"});
    }else target.review_status=({enable:"approved",disable:"disabled",delete:"deleted"})[r.kind];
    target.revision="rev:"+r.id;published.push(target.id);
   }
@@ -124,6 +140,7 @@ function publish(p){
 async function op(name,p={}){
  requireRole(caps[name]);
  let result={ok:true};const uid=actor().id;
+ if(["ask","chat-upload"].includes(name)&&!db.threads.some(t=>t.id===p.thread_id&&t.owner===uid))throw Error("此会话不可用。");
  if(name==="demo-role"){if(!Object.hasOwn(ids,p.role))throw Error("角色无效。");db.role=p.role;}
  else if(name==="match-file"){
   const digest=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",await p.file.arrayBuffer()))).map(b=>b.toString(16).padStart(2,"0")).join("");
@@ -207,7 +224,9 @@ async function op(name,p={}){
   const docs=p.scope==="document"?(files.get("chat"+p.thread_id)||[]):baseDocs;
   if(!docs.length)throw Error("请先为本会话上传资料。");
   const query=[...ts.slice(-2).map(t=>t.question),p.question].join(" ");
-  const hits=(p.scope==="document"?searchPassages(query,docs):vectorPassages(query)).slice(0,4);
+  const hits=(p.scope==="document"?
+   [...vectorPassages(query,new Set(docs.map(d=>d.id))),...searchPassages(query,docs.filter(d=>d.id==="upload"))].sort((a,b)=>b.score-a.score):
+   vectorPassages(query)).slice(0,4);
   const en=p.lang==="en"||p.lang==="auto"&&!/[\u3400-\u9fff]/.test(p.question);
   const answer=hits.length?(en?"Matching source passages":"匹配的原文片段")+"\n"+hits.map((r,i)=>`[${i+1}] ${r.text.slice(0,300)}`).join("\n\n"):(en?"Insufficient evidence.":"所选资料中未找到足够依据。");
   const turn={id:next(db.turns),thread_id:p.thread_id,question:p.question,answer,citations:hits.map(r=>({...r,excerpt:r.text})),vote:0};db.turns.push(turn);result=turn;
@@ -218,13 +237,34 @@ async function op(name,p={}){
  else if(name==="lookup")result={local:db.records.filter(r=>r.review_status==="approved"&&r.record_type==="standard"&&r.code?.toLowerCase()===p.code.toLowerCase()),external:[],configured:false};
  else if(name==="watch"){const old=db.watches.find(x=>x.source_key===p.source_key);if(old)Object.assign(old,p);else db.watches.push(p);}
  else if(name==="vector")return {items:vectorPassages(p.q)};
- else if(name==="search"){const q=p.q.trim().toLowerCase();return {items:[...db.records.filter(r=>r.review_status==="approved").map(r=>({kind:"法规",title:r.name,detail:r.code,id:r.id})),...baseDocs.map(d=>({kind:"资料",title:d.title,detail:d.parser,id:d.id})),...snapshot.sources.map(s=>({kind:"来源",title:s.source_name,detail:s.source_key,id:s.source_key})),...snapshot.items.map(i=>({kind:"采集",title:i.title,detail:i.source_key,id:i.id}))].filter(r=>(r.title+" "+r.detail).toLowerCase().includes(q)).slice(0,250)};}
+ else if(name==="search"){
+  const q=p.q.trim().toLowerCase(),key=s=>s.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu,""),normalized=key(q);
+  if(!q)throw Error("请输入检索词。");
+  const rows=[...db.records.filter(r=>r.review_status==="approved").map(r=>({kind:"法规",title:r.name,detail:r.code,id:r.id})),
+   ...baseDocs.map(d=>({kind:"资料",title:d.title,detail:d.parser,id:d.id})),
+   ...snapshot.sources.map(s=>({kind:"来源",title:s.source_name,detail:s.source_key,id:s.source_key})),
+   ...snapshot.items.map(i=>({kind:"采集",title:i.title,detail:i.source_key,id:i.id}))];
+  return {items:rows.filter(r=>{const text=r.title+" "+r.detail;return text.toLowerCase().includes(q)||(normalized&&key(text).includes(normalized));}).slice(0,250)};
+ }
  else throw Error("此操作使用运行中的平台服务。");
  db.audit.push({id:next(db.audit),username:actor().username,action:name,subject:"本地试操作",at:today()});save();return result;
 }
 function get(name,p){
- if(name==="request"){const r=db.requests.find(x=>x.id===+p.id);if(!r)throw Error("申请不存在。");return r;}
- if(name==="thread")return {turns:db.turns.filter(x=>x.thread_id===+p.id),files:(files.get("chat"+p.id)||[]).map(d=>({name:d.title}))};
+ if(name==="document"||name==="passage"){
+  const doc=baseDocs.find(d=>d.id===Number(p.id)&&d.full_text);if(!doc)throw Error("当前文件仅附题录。");
+  const chunks=index.passages.filter(row=>row[0]===doc.id).map(row=>({chunk:row[1],page:row[2],text:row[3]}));
+  if(name==="document")return {title:doc.title,chunks};
+  const part=chunks.find(c=>c.chunk===Number(p.chunk));if(!part)throw Error("当前分享文件未附此片段。");
+  return {...part,document_id:doc.id,title:doc.title};
+ }
+ if(name==="request"){
+  const r=db.requests.find(x=>x.id===+p.id&&(x.actor===actor().id||actor().permissions.includes("review")));
+  if(!r)throw Error("申请不存在。");return r;
+ }
+ if(name==="thread"){
+  if(!db.threads.some(t=>t.id===+p.id&&t.owner===actor().id))throw Error("此会话不可用。");
+  return {turns:db.turns.filter(x=>x.thread_id===+p.id),files:(files.get("chat"+p.id)||[]).map(d=>({name:d.title}))};
+ }
 }
 return {state,op,get,pdf:id=>files.get("pdfR"+id),snapshot};
 };

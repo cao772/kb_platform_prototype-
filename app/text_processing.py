@@ -59,6 +59,10 @@ def chunk_blocks(blocks: list, *, max_chars: int = 650, overlap: int = 90) -> li
             "section_title": block.section_title,
             **(block.metadata or {}),
         }
+        if current and current_meta.get("page_no") != block_meta.get("page_no"):
+            chunks.append({"text": current, "metadata": current_meta})
+            current = ""
+            current_meta = {}
         if len(current) + len(text) + 1 <= max_chars:
             current = f"{current}\n{text}".strip()
             current_meta = current_meta or block_meta
